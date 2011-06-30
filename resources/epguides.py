@@ -2,7 +2,7 @@ import re as _re
 import urllib2 as _urllib2
 from contextlib import closing as _closing
 
-from Utils import Episode as _Episode
+from Utils import *
 
 _pattern = r"""
             ^		            # Start of the string
@@ -24,15 +24,19 @@ _pattern = r"""
 
     
 def poll(title):
+    title = prepareTitle(title)
     episodes = []
     regex = _re.compile(_pattern, _re.X|_re.I )
     url = "http://www.epguides.com/{0}".format(title)
-    
-    with _closing(_urllib2.urlopen( url )) as request:
+    fd  = getURLdescriptor(url)
+
+    if fd is None: return []
+
+    with _closing( fd ) as request:
         if request.getcode() == 200:
             data = request.readlines()
         else: return []
-
+    
     for line in data:
         info = regex.match(line)
         if info is not None:

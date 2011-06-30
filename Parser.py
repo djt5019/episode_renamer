@@ -13,7 +13,7 @@ class EpParser(object):
         ''' Proper title is used for the database/url while the display
         title is used for error messages/display purposes'''
         self.properTitle = Utils.prepareTitle( showTitle.lower() )
-        self.displayTitle = showTitle
+        self.title = showTitle
         self.episodeList = []
         self.cache = cache
         self.verbose = verbose
@@ -60,7 +60,7 @@ class EpParser(object):
         ''' Passes the sites contents through the regex to seperate episode
         information such as name, episode number, and title.  After getting
         the data from the regex we will occupy the episode list '''  
-        episodes = sources.locate_show(self.properTitle, self.verbose)
+        episodes = sources.locate_show(self.title, self.verbose)
         
         if not episodes:
             exit("ERROR: Show was not found, check spelling and try again")

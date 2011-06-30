@@ -1,4 +1,87 @@
 #!/usr/bin/env python
 
+import urllib #for escaping urls
+import urllib2
+import os
+import zipfile
+from tempfile import TemporaryFile
+from contextlib import closing
+
+from Utils import *
+
+try:
+    from BeautifulSoup import BeautifulStoneSoup as Soup
+except ImportError:
+    Soup = None
+    pass
+
+# Load my TVDB api key
+with open('resources/tvdb.apikey' ,'r') as api:
+    API_KEY = api.readline()
+
 def poll(title):
-    return []
+    if Soup is None:
+        return []
+    episodes = []
+
+    title = urllib.quote_plus(title)
+
+    #1) First we need to find the series ID
+    seriesIdLoc = "http://www.thetvdb.com/api/GetSeries.php?seriesname={0}".format(title)
+    seriesFileDesc = getURLdescriptor( seriesIdLoc )
+
+    if seriesFileDesc is None:
+        return []
+
+    seriesIdXml = Soup( seriesFileDesc )
+    seriesIds   = seriesIdXml.findAll('series')
+
+    if not seriesIds: return []
+
+    if len(seriesIds) > 1:
+        #TODO: potential name conflict, deal with this later
+        pass
+
+    seriesID = seriesIds[0].seriesid.getString()
+    seriesIdXml.close()
+
+
+    #2) Get base info zip file
+    infoLoc = "http://www.thetvdb.com/api/{0}/series/{1}/all/en.zip".format(API_KEY, seriesID)
+    infoFileDesc = getURLdescriptor(infoLoc)
+    if infoFileDesc is None: return []
+    
+    tempZip = TemporaryFile(suffix='.zip')
+    tempZip.seek(0)
+    
+    with closing(infoFileDesc) as z:
+        # download the entire zipfile into the tempfile, f
+        while True:
+            packet = z.read()
+            if not packet:
+                break
+            tempZip.write(packet)
+
+    with zipfile.ZipFile(tempZip, 'r') as z:
+        with z.open('en.xml') as d:
+            soup = Soup( d )
+
+
+    #3) Now we have the xml data in the soup variable, just populate the list
+    for data in soup.findAll('episode'):
+        name   = data.episodename.getText()
+        season = int(data.seasonnumber.getText())
+        num    = int(data.episodenumber.getText())
+
+        if int(season) < 1: continue
+        
+        episodes.append( Episode(name, num, season) )
+                                         
+    soup.close()
+    tempZip.close()
+        
+    return episodes
+
+if __name__ == '__main__':
+    # Test it out
+    poll("baccano")

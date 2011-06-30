@@ -1,5 +1,8 @@
 # output display format, season is padded with zeros
 # Season - Episode Number - Episode Title
+
+import urllib2
+
 _DISPLAY = "Season {0} - Episode {1} - {2}".decode('utf-8')
 
 class Episode(object):
@@ -28,3 +31,12 @@ def to_unicode(text, encoding='utf-8'):
             text = unicode(text, encoding)
     return text
 
+def getURLdescriptor(url):
+    fd = None
+    try:
+        fd = urllib2.urlopen(url)
+    except:
+        pass
+    finally:
+        return fd
+    
