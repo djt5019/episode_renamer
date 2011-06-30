@@ -3,6 +3,7 @@
 # program: cache.py
 
 import atexit
+import os
 try:
     import sqlite3
 except ImportError:
@@ -12,11 +13,12 @@ from Utils import Episode
 
 class Cache(object):
     ''' Our database logic class'''
-    _sqlquery = '''        
+    _sqlquery = '''
         CREATE TABLE shows (
             sid INTEGER PRIMARY KEY,
             title TEXT
         );
+        
         CREATE TABLE episodes (
             eid INTEGER PRIMARY KEY,
             sid INTEGER,
@@ -27,21 +29,35 @@ class Cache(object):
         );'''
     
     def __init__(self, recreate=False, dbName="resources/episodes.db", verbose=False):
-        self.connection = sqlite3.connect(dbName)
+        
+        if not os.path.exists(dbName):
+            self.connection = sqlite3.connect(dbName)
+            self.connection.executescript( Cache._sqlquery )
+        else:
+            self.connection = sqlite3.connect(dbName)
+            
         self.verbose = verbose
         
         if recreate:
-            if self.verbose:
-                global _sqlquery
-                print "Making a new cache"
-                self.connection.executescript( _sqlquery )
+            if self.verbose:  print "Making a new cache"
+
+            self.__executeQuery("DROP TABLE shows")
+            self.__executeQuery("DROP TABLE episodes")
+            
+            self.connection.executescript( Cache._sqlquery )
+            
             
         self.cursor = self.connection.cursor()
         
         #Make sure everything is utf-8
-        self.connection.text_factory = lambda x: unicode(x, 'utf-8', 'ignore')
+        self.connection.text_factory = lambda x: unicode(x, 'utf-8')
         atexit.register( self.close )
 
+    def __executeQuery(self, query):
+        try:
+            self.connection.execute( query )
+        except:
+            pass
 
     def close(self):
         ''' Commits any changes to the database then closes connections to it'''
