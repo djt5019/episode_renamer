@@ -45,6 +45,6 @@ def poll(title):
             season = int(info.group('season'))
             name = _re.sub('<.*?>', '', name).strip()               
 
-            episodes.append( _Episode(name, episode, season) )
+            episodes.append( Episode(name, episode, season) )
             
     return episodes
