@@ -1,12 +1,12 @@
 # output display format, season is padded with zeros
 # Season - Episode Number - Episode Title
-
+# -*- encoding: utf-8 -*-
 import urllib2
 import os
 from collections import OrderedDict
 from itertools import izip
 
-_DISPLAY = "Season {0} - Episode {1} - {2}".decode('utf-8')
+_DISPLAY = u"Season {0} - Episode {1} - {2}"
 _VIDEO_EXTS = set( ['.mkv', '.ogm', '.asf', '.asx', '.avi', '.flv',
                     '.mov', '.mp4', '.mpg', '.rm',  '.swf', '.vob',
                     '.wmv', '.mpeg'])
@@ -15,12 +15,16 @@ class Episode(object):
     ''' A simple class to organize the episodes, an alternative would be
         to use a namedtuple though this is easier '''
     def __init__(self, title, epNumber, season):
-        self.title = to_unicode(title)
+        self.title = encode(title)
         self.season = season
         self.episode = epNumber
         
-    def __repr__(self):
-        return _DISPLAY.format(self.season, self.episode, self.title).encode('utf-8')
+    def display(self):
+        s = self.season
+        e = self.episode
+        t = self.title
+        d = _DISPLAY.format(s,e,t)
+        return d
     
 def prepareTitle(title):
     '''Remove any punctuation and whitespace from the title'''
@@ -29,7 +33,7 @@ def prepareTitle(title):
         title.remove('the')
     return ''.join(title)
 
-def to_unicode(text, encoding='utf-8'):
+def encode(text, encoding='utf-8'):
     if isinstance(text, basestring):
         if not isinstance(text, unicode):
             text = unicode(text, encoding)

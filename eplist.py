@@ -15,12 +15,14 @@ by season along with other options on the command line interface.
 
 import argparse
 import os
+import sys
 
 import Utils
 from Parser import EpParser
 from Cache import Cache
  
 def main():
+    
     ''' Our main function for our command line interface'''
     cmd = argparse.ArgumentParser(description="TV Show Information Parser")
 
@@ -93,7 +95,7 @@ def main():
         if currSeason != eps.season and (display or verbose) :
             print "\nSeason {0}".format(eps.season)
             print "----------"
-        print eps
+        print eps.display()
         currSeason = eps.season
 
 
