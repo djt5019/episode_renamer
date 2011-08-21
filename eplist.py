@@ -34,9 +34,6 @@ def main():
     
     cmd.add_argument('-v', '--verbose', action="store_true", 
         help="Be verbose, enable additional output")
-
-    cmd.add_argument('-n', '--newcache', action="store_true", 
-        help="Will recreate the cache from scratch, be sure you want to")
     
     cmd.add_argument('-s', '--season', default=-1, type=int, metavar='n', 
         help="The specific season to search for")
@@ -55,11 +52,9 @@ def main():
     verbose   = namespace.verbose
     title     = namespace.title
     season    = namespace.season
-    newCache  = namespace.newcache
     pathname  = namespace.pathname
     testpath  = namespace.testpath
     display   = namespace.display_header
-
     
     path      = pathname or testpath
     testRun   = testpath is not None
@@ -68,7 +63,7 @@ def main():
     if path is not None and not os.path.exists(path):
         exit("ERROR - Path provided does not exist")
 
-    cache = Cache(recreate=newCache, verbose=verbose)
+    cache = Cache( verbose=verbose )
     episodeParser = EpParser(title, cache, verbose=verbose)
     results = episodeParser.parseData()
 

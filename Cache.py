@@ -14,21 +14,23 @@ from Utils import Episode
 class Cache(object):
     ''' Our database logic class'''
     _sqlquery = '''
+        PRAGMA foreign_keys = ON;
+        
         CREATE TABLE shows (
             sid INTEGER PRIMARY KEY,
-            title TEXT
+            title TEXT NOT NULL
         );
         
         CREATE TABLE episodes (
             eid INTEGER PRIMARY KEY,
-            sid INTEGER,
-            eptitle TEXT,
-            season INTEGER,
-            showNumber INTEGER,			
+            sid INTEGER NOT NULL,
+            eptitle TEXT NOT NULL,
+            season INTEGER NOT NULL,
+            showNumber INTEGER NOT NULL,			
             FOREIGN KEY(sid) REFERENCES shows(sid)
         );'''
     
-    def __init__(self, recreate=False, dbName="resources/episodes.db", verbose=False):
+    def __init__(self, dbName=u"resources/episodes.db", verbose=False):
         
         if not os.path.exists(dbName):
             self.connection = sqlite3.connect(dbName)
@@ -37,14 +39,15 @@ class Cache(object):
             self.connection = sqlite3.connect(dbName)
             
         self.verbose = verbose
-        
-        if recreate:
-            if self.verbose:  print "Making a new cache"
 
-            self.__executeQuery("DROP TABLE shows")
-            self.__executeQuery("DROP TABLE episodes")
-            
-            self.connection.executescript( Cache._sqlquery )
+        
+        ##if recreate:
+        ##    if self.verbose:  print "Making a new cache"
+        ##
+        ##    self.("DROP TABLE shows")
+        ##    self.__executeQuery("DROP TABLE episodes")
+        ##   
+        ##    self.connection.executescript( Cache._sqlquery )
             
             
         self.cursor = self.connection.cursor()
@@ -52,12 +55,6 @@ class Cache(object):
         #Make sure everything is utf-8
         self.connection.text_factory = lambda x: unicode(x, 'utf-8')
         atexit.register( self.close )
-
-    def __executeQuery(self, query):
-        try:
-            self.connection.execute( query )
-        except:
-            pass
 
     def close(self):
         ''' Commits any changes to the database then closes connections to it'''
@@ -68,7 +65,7 @@ class Cache(object):
     def getShowId(self, showTitle):
         ''' Polls the database for the shows title then returns its show id'''
         title = (showTitle, )
-        self.cursor.execute("SELECT sid FROM shows WHERE title=?", title)
+        self.cursor.execute("SELECT sid FROM shows WHERE title=? LIMIT 1", title)
         result = self.cursor.fetchone()
         if result is not None:
             return result[0]
