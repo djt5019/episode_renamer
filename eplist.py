@@ -60,36 +60,32 @@ def main():
     cache = Cache( verbose=verbose )
     episodeParser = EpParser(title, cache, verbose=verbose)
     results = episodeParser.parseData()
-
+    
+    if formatStr is not None:
+        Utils.Episode.setFormat(formatStr)
+        
+    # If the user specified a specific season we will filter our results
+    # this also checks to make sure its a reasonable season number
+    if 0 < season <= results[-1].season:
+        results = [ x for x in results if x.season == season ]
 
     if rename:
         Utils.renameFiles(pathname, results)
         return
-
 
     if display or verbose and not rename:
         print "\nShow: {0}".format(title)
         print "Number of episodes: {0}".format(len(results))
         print "Number of seasons: {0}".format( results[-1].season )
         print "-" * 30
-
     
-    # If the user specified a specific season we will filter our results
-    # this also checks to make sure its a reasonable season number
-    if 0 < season <= results[-1].season:
-        results = [ x for x in results if x.season == season ]
-
-    if formatStr is not None:
-        Utils.printFormat(formatStr, results)
-    else:
-        # If there isnt a custom format just use the old one
-        currSeason = results[0].season
-        for eps in results:
-            if currSeason != eps.season and (display or verbose) :
-                print "\nSeason {0}".format(eps.season)
-                print "----------"
-            print eps.display()
-            currSeason = eps.season
+    currSeason = results[0].season
+    for eps in results:
+        if currSeason != eps.season and (display or verbose) :
+            print "\nSeason {0}".format(eps.season)
+            print "----------"
+        print eps.display()
+        currSeason = eps.season
 
 
 if __name__ == '__main__':

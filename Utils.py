@@ -19,38 +19,59 @@ regex = re.compile(r"<.*?>", re.I | re.X)
 class Episode(object):
     ''' A simple class to organize the episodes, an alternative would be
         to use a namedtuple though this is easier '''
+    
+    _format = _DISPLAY 
+    _args = ()
+    _tokens_ = ["series", "title", "episode", "season"]
+        
     def __init__(self, series, title, epNumber, season):
         self.series = encode(series)
         self.title = encode(title)
         self.season = season
         self.episode = epNumber
+        self.args = ()
         
     def display(self):
-        s = self.season
-        e = self.episode
-        t = self.title
-        d = _DISPLAY.format(s,e,t)
-        d.encode('utf-8', 'backslashreplace')
-        return d
-
-def printFormat(fmt, eps):
-    tokens = regex.findall(fmt)
-    argCount = 0
-
-    # Iterate through the tokens and check to see if the episode has the
-    # attribute we are trying to substitute
-    for token in tokens:
-        if hasattr(eps[0], token[1:-1]):
-            fmt = fmt.replace( token, "{{{0}}}".format(argCount) )
-            argCount += 1
-
-    # Print the episode information according to the format
-    for e in eps:
-        args = ()
-        for token in tokens:
-            args += (getattr(e, token[1:-1]),)
-        print fmt.format(*args)
+        if Episode._format == _DISPLAY:
+            d = Episode._format.format(self.season,self.episode,self.title)
+            d.encode('utf-8', 'backslashreplace')
+            return d
             
+        args = []
+        for token in Episode._args:
+            token = token[1:-1]
+            try:
+                args.append( getattr(self, token) )
+            except AttributeError as ex:
+                print "Invalid token <{0}>".format(token)
+                print "Valid tokens are: {0}".format(Episode._tokens_)
+                exit(1)
+          
+        args = tuple(args)
+        
+        return Episode._format.format( *args )
+        
+    @staticmethod   
+    def setFormat(fmt):
+        Episode._format, Episode._args = Episode._compileFormat(fmt)
+        
+    @staticmethod
+    def _compileFormat(fmt):
+        tokens = regex.findall(fmt)
+        argCount = 0
+        
+        # Create a test episode to check attributes against
+        testEp = Episode("series", "title", 1, 1)
+    
+        # Iterate through the tokens and check to see if the episode has the
+        # attribute we are trying to substitute
+        for token in tokens:
+            if hasattr(testEp, token[1:-1]):
+                fmt = fmt.replace( token, "{{{0}}}".format(argCount) )
+                argCount += 1
+    
+        return fmt, tokens
+## End of Episode Class
                 
 def prepareTitle(title):
     '''Remove any punctuation and whitespace from the title'''
