@@ -37,30 +37,24 @@ def main():
     
     cmd.add_argument('-s', '--season', default=-1, type=int, metavar='n', 
         help="The specific season to search for")
-
-    group = cmd.add_mutually_exclusive_group(required=False)
-  
-    group.add_argument('-t', '--testrename', dest='testpath', metavar='p', 
-        help="Will test rename the files in the path provided ")
     
-    group.add_argument('-r', '--renamefiles', dest='pathname', metavar='p',
-        help="Will rename the files in the path provided")
+    cmd.add_argument('-r', '--rename', dest='pathname', metavar='p',
+        help="Rename the files in the path provided, a confirmation is required")
 
-
+    cmd.add_argument('-f', '--format', dest="format", metavar='s',
+        help="Rename the files in a directory with a custom format")
     
     namespace = cmd.parse_args()
     verbose   = namespace.verbose
     title     = namespace.title
     season    = namespace.season
     pathname  = namespace.pathname
-    testpath  = namespace.testpath
     display   = namespace.display_header
-    
-    path      = pathname or testpath
-    testRun   = testpath is not None
-    rename    = testpath is not None or pathname is not None
+    formatStr = namespace.format
 
-    if path is not None and not os.path.exists(path):
+    rename = pathname is not None
+
+    if rename and not os.path.exists(pathname):
         exit("ERROR - Path provided does not exist")
 
     cache = Cache( verbose=verbose )
@@ -69,7 +63,7 @@ def main():
 
 
     if rename:
-        Utils.renameFiles(path, results, testRun)
+        Utils.renameFiles(pathname, results)
         return
 
 
@@ -85,13 +79,17 @@ def main():
     if 0 < season <= results[-1].season:
         results = [ x for x in results if x.season == season ]
 
-    currSeason = results[0].season
-    for eps in results:
-        if currSeason != eps.season and (display or verbose) :
-            print "\nSeason {0}".format(eps.season)
-            print "----------"
-        print eps.display()
-        currSeason = eps.season
+    if formatStr is not None:
+        Utils.printFormat(formatStr, results)
+    else:
+        # If there isnt a custom format just use the old one
+        currSeason = results[0].season
+        for eps in results:
+            if currSeason != eps.season and (display or verbose) :
+                print "\nSeason {0}".format(eps.season)
+                print "----------"
+            print eps.display()
+            currSeason = eps.season
 
 
 if __name__ == '__main__':

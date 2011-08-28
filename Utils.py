@@ -1,6 +1,7 @@
 # output display format, season is padded with zeros
 # Season - Episode Number - Episode Title
 # -*- encoding: utf-8 -*-
+import re
 import urllib2
 import os
 from collections import OrderedDict
@@ -13,10 +14,13 @@ _VIDEO_EXTS = set( ['.mkv', '.ogm', '.asf', '.asx', '.avi', '.flv',
                     '.mov', '.mp4', '.mpg', '.rm',  '.swf', '.vob',
                     '.wmv', '.mpeg'])
 
+regex = re.compile(r"<.*?>", re.I | re.X)
+
 class Episode(object):
     ''' A simple class to organize the episodes, an alternative would be
         to use a namedtuple though this is easier '''
-    def __init__(self, title, epNumber, season):
+    def __init__(self, series, title, epNumber, season):
+        self.series = encode(series)
         self.title = encode(title)
         self.season = season
         self.episode = epNumber
@@ -28,7 +32,26 @@ class Episode(object):
         d = _DISPLAY.format(s,e,t)
         d.encode('utf-8', 'backslashreplace')
         return d
-    
+
+def printFormat(fmt, eps):
+    tokens = regex.findall(fmt)
+    argCount = 0
+
+    # Iterate through the tokens and check to see if the episode has the
+    # attribute we are trying to substitute
+    for token in tokens:
+        if hasattr(eps[0], token[1:-1]):
+            fmt = fmt.replace( token, "{{{0}}}".format(argCount) )
+            argCount += 1
+
+    # Print the episode information according to the format
+    for e in eps:
+        args = ()
+        for token in tokens:
+            args += (getattr(e, token[1:-1]),)
+        print fmt.format(*args)
+            
+                
 def prepareTitle(title):
     '''Remove any punctuation and whitespace from the title'''
     title = removePunc(title).split()
@@ -52,7 +75,7 @@ def getURLdescriptor(url):
         return fd
     
 
-def renameFiles( path=None, episodes = None, testRun=True ):
+def renameFiles( path=None, episodes = None):
     '''
     We will sort dictionary with respect to key value by
     removing all punctuation then adding each entry into
@@ -64,6 +87,10 @@ def renameFiles( path=None, episodes = None, testRun=True ):
     global _VIDEO_EXTS
     
     files = os.listdir(path)
+    renamedFiles = []
+
+    # Filter out anything that doesnt have the correct extenstion and
+    # filter out any directories
     files = filter(lambda x: os.path.isfile(os.path.join(path,x)), files)
     files = filter(lambda x: os.path.splitext(x)[1].lower() in _VIDEO_EXTS, files)
     
@@ -84,9 +111,17 @@ def renameFiles( path=None, episodes = None, testRun=True ):
         print ("OLD: {0}".format(os.path.split(fileName)[1]))
         print ("NEW: {0}".format(os.path.split(newName)[1]))
         print ""
+
+        renamedFiles.append( (fileName, newName,) )
                 
-        if not testRun: 
-            os.rename(fileName, newName)
+
+    resp = raw_input("\nDo you wish to rename these files [y|N]: ").lower()
+
+    if resp.startswith('y'):
+        for old, new in renamedFiles:
+            os.rename(old, new)
+    else:
+        print "Changes were not commited to the files"
 
 def removePunc(title):
     '''Remove any punctuation and whitespace from the title'''

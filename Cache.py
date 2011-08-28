@@ -72,7 +72,7 @@ class Cache(object):
         else:
             return -1
 
-    def getEpisodes(self, showId):
+    def getEpisodes(self, showId, showTitle):
         ''' Using the show id return the shows associated with that id'''
         sid = (showId, )
         self.cursor.execute(
@@ -84,7 +84,7 @@ class Cache(object):
         
         if result is not None:
             for episode in result:
-                eps.append( Episode(episode[0], episode[1], episode[2]) )
+                eps.append( Episode(showTitle, episode[0], episode[1], episode[2]) )
 
         return eps
 

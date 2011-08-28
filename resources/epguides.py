@@ -1,10 +1,9 @@
-import re as _re
-import urllib2 as _urllib2
-from contextlib import closing as _closing
+import re 
+from contextlib import closing
 
 from Utils import *
 
-_pattern = r"""
+pattern = r"""
             ^		            # Start of the string
             (?:[\s]*?[\d]*\.?)	    # Number on list
             [\s]{2,}		    # Ignore whitespace
@@ -24,15 +23,15 @@ _pattern = r"""
 
     
 def poll(title):
-    title = prepareTitle(title)
+    cleanTitle = prepareTitle(title)
     episodes = []
-    regex = _re.compile(_pattern, _re.X|_re.I )
-    url = "http://www.epguides.com/{0}".format(title)
+    regex = re.compile(pattern, re.X|re.I )
+    url = "http://www.epguides.com/{0}".format(cleanTitle)
     fd  = getURLdescriptor(url)
 
     if fd is None: return []
 
-    with _closing( fd ) as request:
+    with closing( fd ) as request:
         if request.getcode() == 200:
             data = request.readlines()
         else: return []
@@ -43,8 +42,8 @@ def poll(title):
             name = info.group('name')
             episode = info.group('episode')
             season = int(info.group('season'))
-            name = _re.sub('<.*?>', '', name).strip()               
+            name = re.sub('<.*?>', '', name).strip()               
 
-            episodes.append( Episode(name, episode, season) )
+            episodes.append( Episode(title, name, episode, season) )
             
     return episodes

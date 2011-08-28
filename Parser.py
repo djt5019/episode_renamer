@@ -54,7 +54,7 @@ class EpParser(object):
         if showId == -1: 
             return []
 
-        return self.cache.getEpisodes(showId)
+        return self.cache.getEpisodes(showId, self.title)
                 
     def parseHTMLData(self):
         ''' Passes the sites contents through the regex to seperate episode

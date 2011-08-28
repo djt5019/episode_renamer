@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 
 import urllib #for escaping urls
-import urllib2
-import os
 import zipfile
 from tempfile import TemporaryFile
 from contextlib import closing
@@ -16,18 +14,21 @@ except ImportError:
     pass
 
 # Load my TVDB api key
-with open('resources/tvdb.apikey' ,'r') as api:
-    API_KEY = api.readline()
+try:
+    with open('resources/tvdb.apikey' ,'r') as api:
+        API_KEY = api.readline()
+except IOError:
+    raise IOError("A TVDB api key is required to poll their website")
 
 def poll(title):
     if Soup is None:
         return []
     episodes = []
 
-    title = urllib.quote_plus(title)
+    cleanTitle = urllib.quote_plus(title)
 
     #1) First we need to find the series ID
-    seriesIdLoc = "http://www.thetvdb.com/api/GetSeries.php?seriesname={0}".format(title)
+    seriesIdLoc = "http://www.thetvdb.com/api/GetSeries.php?seriesname={0}".format(cleanTitle)
     seriesFileDesc = getURLdescriptor( seriesIdLoc )
 
     if seriesFileDesc is None:
@@ -75,7 +76,7 @@ def poll(title):
 
         if int(season) < 1: continue
         
-        episodes.append( Episode(name, num, season) )
+        episodes.append( Episode(title, name, num, season) )
                                          
     soup.close()
     tempZip.close()
