@@ -34,7 +34,7 @@ class Episode(object):
     def display(self):
         if Episode._format == _DISPLAY:
             d = Episode._format.format(self.season,self.episode,self.title)
-            d.encode('utf-8', 'backslashreplace')
+            d.encode('utf-8')
             return d
             
         args = []
@@ -125,16 +125,15 @@ def renameFiles( path=None, episodes = None):
         _, ext   = os.path.splitext(f)
         newName  = n.display() + ext
         newName  = removeInvalidPathChars(newName)
+        
+        print ("OLD: {0}".format(fileName))
+        print ("NEW: {0}".format(newName))
+        print ""
 
         fileName = os.path.join(path, fileName)
         newName  = os.path.join(path, newName)
 
-        print ("OLD: {0}".format(os.path.split(fileName)[1]))
-        print ("NEW: {0}".format(os.path.split(newName)[1]))
-        print ""
-
-        renamedFiles.append( (fileName, newName,) )
-                
+        renamedFiles.append( (fileName, newName,) )                
 
     resp = raw_input("\nDo you wish to rename these files [y|N]: ").lower()
 
@@ -152,10 +151,9 @@ def removePunc(title):
     return name+ext
 
 def removeInvalidPathChars(path):
-    dir, file = os.path.split(path)
-    exclude = set('"?<>/\\|*:')
-    file = ''.join(ch for ch in file if ch not in exclude)
-    return os.path.join(dir,file)
+    exclude = set('\\/"?<>|*:')
+    path = ''.join(ch for ch in path if ch not in exclude)
+    return path
 
 def orderedDictSort(dictionary):
     ''' "Sorts" a dictionary by sorting keys then adding them
@@ -163,7 +161,3 @@ def orderedDictSort(dictionary):
     keys = dictionary.keys()
     keys.sort()
     return OrderedDict(izip(keys, [dictionary[k] for k in keys]))
-
-
-       
-            
