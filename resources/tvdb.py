@@ -40,6 +40,7 @@ def poll(title):
     if not seriesIds: return []
 
     if len(seriesIds) > 1:
+        print seriesIds
         #TODO: potential name conflict, deal with this later
         pass
 

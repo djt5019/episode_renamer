@@ -15,7 +15,6 @@ by season along with other options on the command line interface.
 
 import argparse
 import os
-import sys
 
 import Utils
 from Parser import EpParser

@@ -9,11 +9,13 @@ from itertools import izip
 
 _DISPLAY = u"Season {0} - Episode {1} - {2}"
 
-
 _VIDEO_EXTS = set( ['.mkv', '.ogm', '.asf', '.asx', '.avi', '.flv',
                     '.mov', '.mp4', '.mpg', '.rm',  '.swf', '.vob',
                     '.wmv', '.mpeg'])
 
+# The regex will match tokens like <title>, <episode>, etc.  After they
+# have been tokenized they will be replaced with their actual data in the
+# format provided in the display function
 regex = re.compile(r"<.*?>", re.I | re.X)
 
 class Episode(object):
@@ -25,18 +27,20 @@ class Episode(object):
     _tokens_ = ["series", "title", "episode", "season"]
         
     def __init__(self, series, title, epNumber, season):
-        self.series = encode(series)
+        self.series = encode(series.title())
         self.title = encode(title)
         self.season = season
         self.episode = epNumber
         self.args = ()
         
     def display(self):
+    ## If no custom format was provided just use the default one, make sure its unicode too
         if Episode._format == _DISPLAY:
-            d = Episode._format.format(self.season,self.episode,self.title)
-            d.encode('utf-8')
-            return d
+            return Episode._format.format(self.season,self.episode,self.title)            
             
+        ## Lookup the tokens and append their representations to a tuple so they can be inserted
+        ## into the custom format.
+        
         args = []
         for token in Episode._args:
             token = token[1:-1]
@@ -54,6 +58,7 @@ class Episode(object):
     @staticmethod   
     def setFormat(fmt):
         Episode._format, Episode._args = Episode._compileFormat(fmt)
+        Episode._format = encode( Episode._format )
         
     @staticmethod
     def _compileFormat(fmt):
@@ -83,7 +88,7 @@ def prepareTitle(title):
 def encode(text, encoding='utf-8'):
     if isinstance(text, basestring):
         if not isinstance(text, unicode):
-            text = unicode(text, encoding)
+            text = unicode(text, encoding, "backslashreplace")
     return text
 
 def getURLdescriptor(url):
@@ -126,8 +131,8 @@ def renameFiles( path=None, episodes = None):
         newName  = n.display() + ext
         newName  = removeInvalidPathChars(newName)
         
-        print ("OLD: {0}".format(fileName))
-        print ("NEW: {0}".format(newName))
+        print (u"OLD: {0}".format(fileName))
+        print (u"NEW: {0}".format(newName))
         print ""
 
         fileName = os.path.join(path, fileName)
@@ -140,6 +145,7 @@ def renameFiles( path=None, episodes = None):
     if resp.startswith('y'):
         for old, new in renamedFiles:
             os.rename(old, new)
+        print "Files were successfully renamed"
     else:
         print "Changes were not commited to the files"
 
