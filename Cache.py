@@ -8,6 +8,7 @@ try:
     import sqlite3
 except ImportError:
     exit("sqlite3 not found")
+    
 
 from Utils import Episode
 

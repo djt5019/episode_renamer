@@ -20,8 +20,7 @@ import Utils
 from Parser import EpParser
 from Cache import Cache
  
-def main():
-    
+def main():    
     ''' Our main function for our command line interface'''
     cmd = argparse.ArgumentParser(description="TV Show Information Parser")
 

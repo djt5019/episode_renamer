@@ -93,10 +93,15 @@ def encode(text, encoding='utf-8'):
 
 def getURLdescriptor(url):
     fd = None
+    req = urllib2.Request(url)
+    
     try:
-        fd = urllib2.urlopen(url)
-    except:
-        pass
+        fd = urllib2.urlopen(req)
+    except urllib2.URLError as e:
+        if hasattr(e, 'reason'):
+            print 'ERROR: {} appears to be down at the moment'.format(url)
+        elif hasattr(e, 'code'):
+            print 'ERROR: {0} Responded with code {1}'.format(url,e.code)
     finally:
         return fd
     
@@ -142,12 +147,17 @@ def renameFiles( path=None, episodes = None):
 
     resp = raw_input("\nDo you wish to rename these files [y|N]: ").lower()
 
-    if resp.startswith('y'):
-        for old, new in renamedFiles:
-            os.rename(old, new)
-        print "Files were successfully renamed"
-    else:
+    if not resp.startswith('y'):
         print "Changes were not commited to the files"
+        return
+        
+    for old, new in renamedFiles:
+        try:
+            os.rename(old, new)
+        except:    
+            print u"File {0} could not be renamed".format(old)
+            print "Files were successfully renamed"
+        
 
 def removePunc(title):
     '''Remove any punctuation and whitespace from the title'''
