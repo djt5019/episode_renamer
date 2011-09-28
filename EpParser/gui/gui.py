@@ -6,7 +6,7 @@
 import sys
 from PySide import QtGui
 
-import src.Parser as Parser
+import EpParser.src.Parser as Parser
 
 class Window(QtGui.QMainWindow):
 		def __init__(self, parent=None):

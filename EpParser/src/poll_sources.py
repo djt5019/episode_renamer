@@ -5,7 +5,7 @@
 import sources.epguides as epguides
 import sources.tvdb as tvdb
 
-_modules = [epguides, tvdb]
+_modules = [tvdb, epguides]
 
 def locate_show(title, verbose=False):
 	episodes = []

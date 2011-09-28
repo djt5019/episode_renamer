@@ -1,7 +1,7 @@
 import re 
 from contextlib import closing
 
-from src.Utils import  Episode, getURLdescriptor, prepareTitle
+from EpParser.src.Utils import  Episode, getURLdescriptor, prepareTitle
 
 pattern = r"""
 			^		                # Start of the string

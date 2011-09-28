@@ -3,6 +3,7 @@
 # -*- encoding: utf-8 -*-
 
 import os
+import re
 from itertools import izip
 from urllib2 import Request, urlopen, URLError
 
@@ -10,6 +11,14 @@ _VIDEO_EXTS = set( ['.mkv', '.ogm', '.asf', '.asx', '.avi', '.flv',
 					'.mov', '.mp4', '.mpg', '.rm',  '.swf', '.vob',
 					'.wmv', '.mpeg'])
 					
+PROJECTPATH  = os.path.join( os.getcwd(), "EpParser" )
+RESOURCEPATH = os.path.join( os.getcwd(), 'resources')
+
+_REGEX = (  re.compile( r'^\[.*\][-_\s](?P<series>.*)[_\s]?-[_\s]?(?P<episode>[\d]*)'), #Horrible Subs
+			re.compile( r'^(?P<series>.*) - Episode (?P<episode>[\d]*) - [\w]*'), #My usual format
+		 )
+			#Will add more in the future
+
 class Show(object):
 	def __init__(self, seriesTitle):
 		self.title = encode(seriesTitle)
@@ -112,9 +121,6 @@ def renameFiles( path, show):
 	this to ensure the file list is in somewhat of a natural
 	ordering, otherwise we will have misnamed files
 	'''
-
-	global _VIDEO_EXTS
-
 	files = os.listdir(path)
 	renamedFiles = []
 
@@ -123,13 +129,22 @@ def renameFiles( path, show):
 	files = filter(lambda x: os.path.isfile(os.path.join(path,x)), files)
 	files = filter(lambda x: os.path.splitext(x)[1].lower() in _VIDEO_EXTS, files)
 
-	clean = (removePunc(f) for f in files)
+	cleanFiles = []
+	
+	for f in files:
+		for regex in _REGEX:
+			g = regex.search( f )
+			if g:
+				ep = int(g.groups()[1])
+				cleanFiles.append( (ep, os.path.join(path,f)) )
+				break # This regex matched so we continue on to the next file
+		
+				
+	cleanFiles = sorted(cleanFiles)
+	_, cleanFiles = zip( *cleanFiles )
 
-	cleanFiles = dict(izip(clean, files))
-	cleanFiles = orderedDictSort(cleanFiles)
-
-	for f, n in izip(cleanFiles.iterkeys(), show.episodeList):
-		fileName = cleanFiles[f]
+	for f, n in izip(cleanFiles, show.episodeList):
+		fileName = f
 		_, ext   = os.path.splitext(f)
 		newName  = show.formatter.display(n) + ext
 		newName  = removeInvalidPathChars(newName)
@@ -147,7 +162,7 @@ def renameFiles( path, show):
 
 	if not resp.startswith('y'):
 		print "Changes were not commited to the files"
-		return
+		exit(0)
 
 	errors = []
 	
@@ -175,11 +190,3 @@ def removeInvalidPathChars(path):
 	exclude = set('\\/"?<>|*:')
 	path = ''.join(ch for ch in path if ch not in exclude)
 	return path
-
-def orderedDictSort(dictionary):
-	''' "Sorts" a dictionary by sorting keys then adding them
-	into an ordered dict object'''
-	from collections import OrderedDict
-	keys = dictionary.keys()
-	keys.sort()
-	return OrderedDict(izip(keys, [dictionary[k] for k in keys]))

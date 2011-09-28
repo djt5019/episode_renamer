@@ -16,9 +16,9 @@ by season along with other options on the command line interface.
 import argparse
 import os
 
-import src.Utils as Utils
-from src.Parser import EpParser
-from src.Cache import Cache
+import EpParser.src.Utils as Utils
+from EpParser.src.Parser import EpParser as Parser
+from EpParser.src.Cache import Cache
 
 def main():    
 	''' Our main function for our command line interface'''
@@ -41,6 +41,9 @@ def main():
 
 	cmd.add_argument('-f', '--format', dest="format", metavar='s',
 		help="Rename the files in a directory with a custom format")
+		
+	cmd.add_argument('-g', '--gui-enabled', action="store_true",
+		help="Use the gui rather than the command line, preempts all other switches except the format switch")
 	
 	namespace = cmd.parse_args()
 	verbose   = namespace.verbose
@@ -49,6 +52,11 @@ def main():
 	pathname  = namespace.pathname
 	display   = namespace.display_header
 	formatStr = namespace.format
+	useGui    = namespace.gui_enabled
+	
+	if useGui:
+		import EpParser.gui.gui
+		raise NotImplementedError("I haven't gotten used to PySide/Qt yet")
 	
 	rename = pathname is not None
 
@@ -56,7 +64,7 @@ def main():
 		exit("ERROR - Path provided does not exist")
 
 	cache = Cache( verbose=verbose )
-	episodeParser = EpParser(title, cache=None, verbose=verbose)
+	episodeParser = Parser(title, cache, verbose=verbose)
 	episodeParser.show.formatter.setFormat( formatStr )
 	show = episodeParser.parseData()
 	

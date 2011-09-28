@@ -4,20 +4,20 @@ import urllib #for escaping urls
 import zipfile
 from tempfile import TemporaryFile
 from contextlib import closing
+from os.path import join
 
-from src.Utils import *
+from EpParser.src.Utils import *
 
 try:
 	from BeautifulSoup import BeautifulStoneSoup as Soup
 except ImportError:
-	print u"Error: BeautifulSoup was not found"
+	print u"Error: BeautifulSoup was not found, unable to parse theTVdb"
 	Soup = None
 	pass
 
 # Load my TVDB api key
-
 try:
-	with open('resources/tvdb.apikey' ,'r') as api:
+	with open( join(RESOURCEPATH,'tvdb.apikey') ,'r') as api:
 		API_KEY = api.readline()
 except IOError:
 	raise IOError("A TVDB api key is required to poll their website")

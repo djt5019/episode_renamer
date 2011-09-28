@@ -11,7 +11,7 @@ except ImportError:
 	exit("sqlite3 not found")
 	
 
-from Utils import Episode
+from Utils import Episode, RESOURCEPATH
 
 class Cache(object):
 	''' Our database logic class'''
@@ -35,8 +35,8 @@ class Cache(object):
 	def __init__(self, dbName=u"episodes.db", verbose=False):
 	
 		if dbName != ':memory:':
-			dbName = 'resources/' + dbName
-			
+			dbName = os.path.join(RESOURCEPATH, dbName)
+		
 		try:
 			if not os.path.exists(dbName) and dbName != ':memory:':
 				self.connection = sqlite3.connect(dbName)
@@ -48,7 +48,6 @@ class Cache(object):
 			return
 			
 		self.verbose = verbose
-
 		
 		##if recreate:
 		##    if self.verbose:  print "Making a new cache"
