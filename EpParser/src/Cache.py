@@ -4,6 +4,8 @@
 
 import atexit
 import os
+import datetime
+
 
 try:
 	import sqlite3
@@ -20,7 +22,8 @@ class Cache(object):
 		
 		CREATE TABLE shows (
 			sid INTEGER PRIMARY KEY,
-			title TEXT NOT NULL
+			title TEXT NOT NULL,
+			time TIMESTAMP 
 		);
 		
 		CREATE TABLE episodes (
@@ -39,10 +42,10 @@ class Cache(object):
 		
 		try:
 			if not os.path.exists(dbName) and dbName != ':memory:':
-				self.connection = sqlite3.connect(dbName)
+				self.connection = sqlite3.connect(dbName, detect_types=sqlite3.PARSE_DECLTYPES)
 				self.connection.executescript( Cache._sqlquery )
 			else:
-				self.connection = sqlite3.connect(dbName)
+				self.connection = sqlite3.connect(dbName, detect_types=sqlite3.PARSE_DECLTYPES)
 		except sqlite3.OperationalError as e:
 			print e
 			return
@@ -52,7 +55,7 @@ class Cache(object):
 		##if recreate:
 		##    if self.verbose:  print "Making a new cache"
 		##
-		##    self.("DROP TABLE shows")
+		##    self.__executeQuery("DROP TABLE shows")
 		##    self.__executeQuery("DROP TABLE episodes")
 		##   
 		##    self.connection.executescript( Cache._sqlquery )
@@ -71,14 +74,29 @@ class Cache(object):
 		self.connection.close()
 
 	def getShowId(self, showTitle):
-		''' Polls the database for the shows title then returns its show id'''
+		''' Polls the database for the shows title then returns its show id as well
+		    as the timestamp.  If the timestamp is more than a week old update the
+			show.  This is to take into account newer episodes being aired.'''
 		title = (showTitle, )
-		self.cursor.execute("SELECT sid FROM shows WHERE title=? LIMIT 1", title)
-		result = self.cursor.fetchone()
-		if result is not None:
-			return result[0]
-		else:
+		now = datetime.datetime.now()
+		
+		self.cursor.execute("SELECT sid, time FROM shows WHERE title=? LIMIT 1", title)
+		
+		result = self.cursor.fetchone()	
+
+		if result is None:
 			return -1
+			
+		diffDays = (datetime.datetime.now() - result[1])
+		
+		if diffDays.days >= 7:
+			#If the show is older than a week remove it then return not found
+			print "WARNING: Show older than a week, updating..."
+			removeShow(sid)
+			return -1
+		else:
+			return result[0]
+		
 
 	def getEpisodes(self, showId, showTitle):
 		''' Using the show id return the shows associated with that id'''
@@ -102,11 +120,22 @@ class Cache(object):
 	def addShow(self, showTitle, episodes):
 		''' If we find a show on the internet that is not in our database
 		we can use this function to add it into our database for the future'''
-		title = (showTitle, )
-		self.cursor.execute("INSERT INTO shows values (NULL, ?)", title)
+		title = showTitle
+		time = datetime.datetime.now()
+		
+		self.cursor.execute("INSERT INTO shows values (NULL, ?, ?)", (title, time))
+		
 		showId = self.getShowId(showTitle)
+		
 		for eps in episodes:
 			show = (showId, eps.title, eps.season, eps.episode,)
 			self.cursor.execute(
 				"INSERT INTO episodes values (NULL, ?, ?, ?, ?)", show)
 
+				
+	def removeShow(self, sid):
+		try:
+			self.cursor.execute("DELETE from SHOWS where sid = ", (sid,) )
+			self.cursor.execute("DELETE from EPISODES where sid = ", (sid,) )
+		except Exception:
+			pass

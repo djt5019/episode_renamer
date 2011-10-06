@@ -42,6 +42,7 @@ def poll(title):
 	if not seriesIds: return []
 
 	if len(seriesIds) > 1:
+		print "CONFLICT WITH IDS\n\n\n"
 		print seriesIds
 		#TODO: potential name conflict, deal with this later
 		pass
@@ -77,13 +78,13 @@ def poll(title):
 		name   = data.episodename.getText()
 		season = int(data.seasonnumber.getText())
 		num    = int(data.episodenumber.getText())
-
+		
 		if int(season) < 1: continue
 		
 		episodes.append( Episode(title, name, num, season, count ) )
 		
 		count += 1
-										
+	
 	soup.close()
 	tempZip.close()
 		

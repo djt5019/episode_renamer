@@ -1,7 +1,8 @@
-# output display format, season is padded with zeros
-# Season - Episode Number - Episode Title
-# -*- encoding: utf-8 -*-
+# -*- coding: utf-8 -*-
+# author:  Dan Tracy
+# program: Utils.py
 
+import EpParser
 import os
 import re
 from itertools import izip
@@ -11,20 +12,26 @@ _VIDEO_EXTS = set( ['.mkv', '.ogm', '.asf', '.asx', '.avi', '.flv',
 					'.mov', '.mp4', '.mpg', '.rm',  '.swf', '.vob',
 					'.wmv', '.mpeg'])
 					
-PROJECTPATH  = os.path.join( os.getcwd(), "EpParser" )
-RESOURCEPATH = os.path.join( os.getcwd(), 'resources')
+PROJECTPATH  = os.path.dirname(EpParser.__file__)
+RESOURCEPATH = os.path.join( PROJECTPATH, 'resources')
 
-_REGEX = (  re.compile( r'^\[.*\][-_\s](?P<series>.*)[_\s]?-[_\s]?(?P<episode>[\d]*)'), #Horrible Subs
-			re.compile( r'^(?P<series>.*) - Episode (?P<episode>[\d]*) - [\w]*'), #My usual format
-		 )
-			#Will add more in the future
+_REGEX = (  re.compile( r'^\[.*\][-_\s](?P<series>.*)[-_\s]+(?P<episode>[\d]+)', re.I),
+			re.compile( r'^\[.*\][-_\s](?P<series>.*)[-_\s]+(?P<season>S[\d]+)[-_\s]+(?P<episode>[\d]+)', re.I ), 
+			re.compile( r'^(?P<series>.*) - Episode (?P<episode>[\d]+) - [\w]*', re.I), #My usual format
+			re.compile( r'^(?P<series>.*) - Season (?P<season>[\d]+) - Episode (?P<episode>[\d]*) - [\w]*', re.I), #Also mine
+			re.compile( r'^.*', re.I),
+			)
+
 
 class Show(object):
+	'''A convenience class to keep track of the list of episodes as well as
+	   to keep track of the custom formatter for those episodes'''
 	def __init__(self, seriesTitle):
 		self.title = encode(seriesTitle)
 		self.properTitle = prepareTitle(self.title)
 		self.episodeList = []
 		self.formatter = EpisodeFormatter()
+
 				
 class Episode(object):
 	''' A simple class to organize the episodes, an alternative would be
@@ -36,8 +43,10 @@ class Episode(object):
 		self.episode = epNumber
 		self.count = episodeCount
 
+
 class EpisodeFormatter(object):
 	def __init__(self, fmt = None):
+		'''Allows printing of custom formatted episode information'''
 		if fmt is None:
 			self.format = u"Season <season> - Episode <episode> - <title>"
 		else:
@@ -46,16 +55,18 @@ class EpisodeFormatter(object):
 		self.tokens = self.format.split()
 		self.episodeNumberTokens = set( ["<episode>", "<ep>"] )
 		self.seasonTokens = set( [ "<season>", "<s>"] )
-		self.episodeNameTokens = set( [ "<title>", "<name>"] )
+		self.episodeNameTokens = set( [ "<title>", "<name>", "<epname>"] )
 		self.seriesNameTokens = set( ["<show>", "<series>"] )
 		self.episodeCounterTokens = set( ["<count>", "<number>"] )
 
 	def setFormat(self, fmt):
+		'''Set the format string for the formatter'''
 		if fmt is None: return
 		self.format = encode( fmt )
 		self.tokens = self.format.split()
 		
 	def display(self, ep):
+		'''Displays the episode according to the users format'''
 		output = self.format
 
 		for t in self.tokens:
@@ -79,22 +90,6 @@ class EpisodeFormatter(object):
 		return output
 
 
-def prepareTitle(title):
-	'''Remove any punctuation and whitespace from the title'''
-	title = removePunc(title).split()
-	if title == []: 
-		return ""
-		
-	if title[0] == 'the':
-		title.remove('the')
-	return ''.join(title)
-
-def encode(text, encoding='utf-8'):
-	if isinstance(text, basestring):
-		if not isinstance(text, unicode):
-			text = unicode(text, encoding, "ignore")
-	return text
-
 def getURLdescriptor(url):
 	fd = None
 	req = Request(url)
@@ -113,43 +108,50 @@ def getURLdescriptor(url):
 		return fd
 
 
-def renameFiles( path, show):
-	'''
-	We will sort dictionary with respect to key value by
-	removing all punctuation then adding each entry into
-	a ordered dictionary to preserve sorted order.  We do
-	this to ensure the file list is in somewhat of a natural
-	ordering, otherwise we will have misnamed files
-	'''
-	files = os.listdir(path)
-	renamedFiles = []
+## Renaming utility functions
+def cleanFiles( path, files ):
+	cleanFiles = []
 
 	# Filter out anything that doesnt have the correct extenstion and
 	# filter out any directories
 	files = filter(lambda x: os.path.isfile(os.path.join(path,x)), files)
 	files = filter(lambda x: os.path.splitext(x)[1].lower() in _VIDEO_EXTS, files)
 
-	cleanFiles = []
+	if files == []:
+		print "No video files were found in {}".format( path )
+		exit(1)
 	
+	# TODO: Fix this so that it takes into account seasons when sorting
 	for f in files:
 		for regex in _REGEX:
 			g = regex.search( f )
 			if g:
-				ep = int(g.groups()[1])
-				cleanFiles.append( (ep, os.path.join(path,f)) )
-				break # This regex matched so we continue on to the next file
+				try:
+					ep = int(g.group('episode'))
+					cleanFiles.append( (ep, os.path.join(path,f)) )
+					break # This regex matched so we continue on to the next file
+				except Exception as ex:
+					print ex
+					print g.groups()
+					exit(1)
 		
-				
 	cleanFiles = sorted(cleanFiles)
 	_, cleanFiles = zip( *cleanFiles )
+	
+	return cleanFiles
+	
+	
+def renameFiles( path, show):
+	renamedFiles = []
+	files = cleanFiles(path, os.listdir(path) )
 
-	for f, n in izip(cleanFiles, show.episodeList):
+	for f, n in izip(files, show.episodeList):
 		fileName = f
 		_, ext   = os.path.splitext(f)
 		newName  = show.formatter.display(n) + ext
-		newName  = removeInvalidPathChars(newName)
+		newName  = replaceInvalidPathChars(newName)
 
-		print (u"OLD: {0}".format(fileName))
+		print (u"OLD: {0}".format( os.path.split(fileName)[1] ))
 		print (u"NEW: {0}".format(newName))
 		print ""
 
@@ -174,19 +176,41 @@ def renameFiles( path, show):
 	
 	if errors:
 		for e in errors:
-			print "File {0} could not be renamed".format( e )
+			print "File {0} could not be renamed".format( os.path.split(e)[1] )
 	else:
 		print "Files were successfully renamed"
 
 
+## Text based functions
 def removePunc(title):
 	'''Remove any punctuation and whitespace from the title'''
 	name, ext = os.path.splitext(title)
 	exclude = set('!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~')
-	name = ''.join(ch for ch in name if ch not in exclude)
+	name = ''.join( ch for ch in name if ch not in exclude )
 	return name+ext
 
-def removeInvalidPathChars(path):
+
+def replaceInvalidPathChars(path, replacement='-'):
+	'''Replace invalid path character with a different, acceptable, character'''
 	exclude = set('\\/"?<>|*:')
-	path = ''.join(ch for ch in path if ch not in exclude)
+	path = ''.join( ch if ch not in exclude else replacement for ch in path )
 	return path
+
+
+def prepareTitle(title):
+	'''Remove any punctuation and whitespace from the title'''
+	title = removePunc(title).split()
+	if title == []: 
+		return ""
+		
+	if title[0] == 'the':
+		title.remove('the')
+	return ''.join(title)
+
+
+def encode(text, encoding='utf-8'):
+	if isinstance(text, basestring):
+		if not isinstance(text, unicode):
+			text = unicode(text, encoding, "ignore")
+	return text
+

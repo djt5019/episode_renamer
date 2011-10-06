@@ -2,8 +2,8 @@
 # author:  Dan Tracy
 # program: poll_sources.py
 
-import sources.epguides as epguides
-import sources.tvdb as tvdb
+import web_sources.epguides as epguides
+import web_sources.tvdb as tvdb
 
 _modules = [tvdb, epguides]
 

@@ -2,10 +2,6 @@
 # author:  Dan Tracy
 # program: utils.py
 
-# -*- coding: utf-8 -*-
-# author:  Dan Tracy
-# program: Parser.py
-
 import poll_sources
 import Utils
 
