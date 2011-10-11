@@ -88,7 +88,7 @@ def main():
     
     currSeason = show.episodeList[0].season
     for eps in show.episodeList:
-        if currSeason != eps.season and (display or verbose) :
+        if currSeason != eps.season and display:
             print "\nSeason {0}".format(eps.season)
             print "----------"
             

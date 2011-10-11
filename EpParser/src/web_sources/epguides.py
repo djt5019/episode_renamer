@@ -34,9 +34,7 @@ def poll(title):
 		
 	regex = re.compile(pattern, re.X | re.I)
 
-	
-	count = 1
-	for line in data:
+	for count, line in enumerate(data, start=1):
 		info = regex.match(line)
 		if info is not None:
 			name = info.group('name')

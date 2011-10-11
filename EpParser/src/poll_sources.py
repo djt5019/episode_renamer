@@ -8,14 +8,20 @@ import web_sources.tvdb as tvdb
 _modules = [tvdb, epguides]
 
 def locate_show(title, verbose=False):
+	'''Polls the web sources looking for the show'''
 	episodes = []
 	
 	for source in _modules:
-		if verbose: print "\nPolling {0}".format(source.__name__)
+		if verbose:
+			print "\nPolling {0}".format(source.__name__)
+			
 		episodes = source.poll(title)
+		
 		if episodes:
-			if verbose: print "LOCATED {0}\n".format(title)
+			if verbose:
+				print "LOCATED {0}\n".format(title)
 			break
-		if verbose: print "FAILED to locate {0} at {1}\n".format(title, source.__name__)
+		if verbose:
+			print "FAILED to locate {0} at {1}\n".format(title, source.__name__)
 		
 	return episodes

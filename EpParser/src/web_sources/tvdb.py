@@ -73,8 +73,8 @@ def poll(title):
 
 
 	#3) Now we have the xml data in the soup variable, just populate the list
-	count = 1
-	for data in soup.findAll('episode'):
+	
+	for count, data in enumerate( soup.findAll('episode'), start=1 ):
 		name   = data.episodename.getText()
 		season = int(data.seasonnumber.getText())
 		num    = int(data.episodenumber.getText())
@@ -82,8 +82,6 @@ def poll(title):
 		if int(season) < 1: continue
 		
 		episodes.append( Episode(title, name, num, season, count ) )
-		
-		count += 1
 	
 	soup.close()
 	tempZip.close()

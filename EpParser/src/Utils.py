@@ -15,10 +15,13 @@ _VIDEO_EXTS = set( ['.mkv', '.ogm', '.asf', '.asx', '.avi', '.flv',
 PROJECTPATH  = os.path.dirname(EpParser.__file__)
 RESOURCEPATH = os.path.join( PROJECTPATH, 'resources')
 
-_REGEX = (  re.compile( r'^\[.*\][-_\s](?P<series>.*)[-_\s]+(?P<episode>[\d]+)', re.I),
-			re.compile( r'^\[.*\][-_\s](?P<series>.*)[-_\s]+(?P<season>S[\d]+)[-_\s]+(?P<episode>[\d]+)', re.I ), 
-			re.compile( r'^(?P<series>.*) - Episode (?P<episode>[\d]+) - [\w]*', re.I), #My usual format
-			re.compile( r'^(?P<series>.*) - Season (?P<season>[\d]+) - Episode (?P<episode>[\d]*) - [\w]*', re.I), #Also mine
+## Common video naming formats
+_REGEX = (  re.compile( r'^\[.*\][\.-_\s](?P<series>.*)[\.-_\s]+(?P<episode>\d+)', re.I),
+			re.compile( r'^\[.*\][\.-_\s](?P<series>.*)[\.-_\s]+(?P<season>S\d+)[\.-_\s]+(?P<episode>\d+)', re.I ),
+			re.compile( r'(?P<series>.*)[\s\._-]*S(?P<season>\d+)[\s\._-]*E(?P<episode>\d+)', re.I),
+			re.compile( r'^(?P<series>.*)[\s\._-]*\[(?P<season>\d+)x(?P<episode>\d+)\]',re.I),
+			re.compile( r'^(?P<series>.*) - Episode (?P<episode>\d+) - \w*', re.I), #My usual format
+			re.compile( r'^(?P<series>.*) - Season (?P<season>\d+) - Episode (?P<episode>\d*) - \w*', re.I), #Also mine
 			re.compile( r'^.*', re.I),
 			)
 
@@ -68,29 +71,30 @@ class EpisodeFormatter(object):
 	def display(self, ep):
 		'''Displays the episode according to the users format'''
 		output = self.format
-
+		
 		for t in self.tokens:
 			t = t.lower()
-
+			
 			if t in self.episodeNumberTokens:
 				output = output.replace( t, str(ep.episode), 1 )
-
+				
 			elif t in self.seasonTokens:
 				output = output.replace( t, str(ep.season), 1 )
-
+				
 			elif t in self.episodeNameTokens:
 				output = output.replace( t, ep.title, 1 )
-
+				
 			elif t in self.seriesNameTokens:
 				output = output.replace( t, ep.series, 1 )
-
+				
 			elif t in self.episodeCounterTokens:
 				output = output.replace( t, str(ep.count), 1 )
-
+				
 		return output
 
 
 def getURLdescriptor(url):
+	'''Returns a valid url descriptor or None, also deals with exceptions'''
 	fd = None
 	req = Request(url)
 
@@ -110,6 +114,7 @@ def getURLdescriptor(url):
 
 ## Renaming utility functions
 def cleanFiles( path, files ):
+	'''Attempts to extract order information about the files passed'''
 	cleanFiles = []
 
 	# Filter out anything that doesnt have the correct extenstion and
@@ -142,6 +147,7 @@ def cleanFiles( path, files ):
 	
 	
 def renameFiles( path, show):
+	'''Rename the files located in 'path' to those in the list 'show' '''
 	renamedFiles = []
 	files = cleanFiles(path, os.listdir(path) )
 
@@ -209,6 +215,7 @@ def prepareTitle(title):
 
 
 def encode(text, encoding='utf-8'):
+	'''Returns a unicode representation of the string '''
 	if isinstance(text, basestring):
 		if not isinstance(text, unicode):
 			text = unicode(text, encoding, "ignore")
