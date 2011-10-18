@@ -8,6 +8,7 @@ import re
 from itertools import izip
 from urllib2 import Request, urlopen, URLError
 from contextlib import closing
+from math import log10
 
 _VIDEO_EXTS = {'.mkv', '.ogm', '.asf', '.asx', '.avi', '.flv', 
                '.mov', '.mp4', '.mpg', '.rm',  '.swf', '.vob',
@@ -33,7 +34,7 @@ class Show(object):
 		self.title = encode(seriesTitle)
 		self.properTitle = prepareTitle(self.title)
 		self.episodeList = []
-		self.formatter = EpisodeFormatter()
+		self.formatter = EpisodeFormatter(self)
 
 				
 class Episode(object):
@@ -48,17 +49,17 @@ class Episode(object):
 
 
 class EpisodeFormatter(object):	
-	def __init__(self, fmt = None):
+	def __init__(self, show, fmt = None):
 		'''Allows printing of custom formatted episode information'''
 		formatString = u"<series> - Episode <count> - <title>"
-		
+		self.show = show
 		self.format = encode(fmt) if fmt else formatString
 		self.tokens = self.format.split()
-		self.episodeNumberTokens = {"<episode>", "<ep>"}
-		self.seasonTokens = {"<season>", "<s>"}
-		self.episodeNameTokens = {"<title>", "<name>", "<epname>"}
-		self.seriesNameTokens = {"<show>", "<series>"}
-		self.episodeCounterTokens = {"<count>", "<number>"}
+		self.episodeNumberTokens = {"episode", "ep"}
+		self.seasonTokens = {"season", "s"}
+		self.episodeNameTokens = {"title>", "name", "epname"}
+		self.seriesNameTokens = {"show>", "series"}
+		self.episodeCounterTokens = {"count", "number"}
 
 	def setFormat(self, fmt):
 		'''Set the format string for the formatter'''
@@ -71,13 +72,22 @@ class EpisodeFormatter(object):
 		output = self.format
 		
 		for t in self.tokens:
-			t = t.lower()
+			if not t.startswith('<') and not t.endswith('>'): pass
 			
+			pad = 0
+			t = t[1:-1].lower().strip()
+			
+			if ':pad' in t: 			
+				t = t.replace(':pad','').strip()
+				# Number of digits in the length of the episode list
+				# this is so we dont pad extra zeros in the filename
+				pad = int(log10( len(self.show.episodeList) ) + 1)
+
 			if t in self.episodeNumberTokens:
-				output = output.replace( t, str(ep.episode), 1 )
+				output = output.replace( t, str(ep.episode).zfill(pad), 1 )
 				
 			elif t in self.seasonTokens:
-				output = output.replace( t, str(ep.season), 1 )
+				output = output.replace( t, str(ep.season).zfill(pad), 1 )
 				
 			elif t in self.episodeNameTokens:
 				output = output.replace( t, ep.title, 1 )
@@ -86,9 +96,9 @@ class EpisodeFormatter(object):
 				output = output.replace( t, ep.series, 1 )
 				
 			elif t in self.episodeCounterTokens:
-				output = output.replace( t, str(ep.count), 1 )
+				output = output.replace( t, str(ep.count).zfill(pad), 1 )
 				
-		return output.encode('utf-8', 'replace')
+		return encode(output)
 
 
 def getURLdescriptor(url):
