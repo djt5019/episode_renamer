@@ -12,19 +12,15 @@ class EpParser(object):
     def __init__(self, showTitle="", cache=None, verbose=False):
         ''' Proper title is used for the database/url while the display
         title is used for error messages/display purposes'''
-
         self.show = Utils.Show(showTitle)        
         self.cache = cache
         self.verbose = verbose
 
     def setShow(self, showTitle):
-        if showTitle == '':
-            return
-
-        del self.show
-        self.show = Utils.Show(showTitle)
-        self.show.properTitle = Utils.prepareTitle( showTitle.lower() )
-        self.show.title = showTitle
+        if showTitle:
+			self.show = Utils.Show(showTitle)
+			self.show.properTitle = Utils.prepareTitle( showTitle.lower() )
+			self.show.title = showTitle
         
 
     def parseData(self):
@@ -33,7 +29,7 @@ class EpParser(object):
         then try the internet. '''
 
         if self.show.title == '':
-            return
+            return None
 
         if self.cache is not None:
             self.show.episodeList = self._parseCacheData()

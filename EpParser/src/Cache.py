@@ -42,7 +42,7 @@ class Cache(object):
 				self.connection = sqlite3.connect(dbName, detect_types=sqlite3.PARSE_DECLTYPES)
 		except sqlite3.OperationalError as e:
 			print e
-			return
+			return None
 			
 		self.verbose = verbose			
 		self.cursor = self.connection.cursor()

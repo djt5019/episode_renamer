@@ -23,5 +23,5 @@ def locate_show(title, verbose=False):
 			break
 		if verbose:
 			print "FAILED to locate {0} at {1}\n".format(title, source.__name__)
-		
-	return episodes
+	
+	return filter(lambda x: x.episode > 0, episodes)

@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 
-import urllib #for escaping urls
 import zipfile
+
 from tempfile import TemporaryFile
-from contextlib import closing
 from os.path import join
+from urllib import quote_plus
 
 from EpParser.src.Utils import *
 
@@ -15,19 +15,21 @@ except ImportError:
 	Soup = None
 	pass
 
-# Load my TVDB api key
-try:
-	with open( join(RESOURCEPATH,'tvdb.apikey') ,'r') as api:
-		API_KEY = api.readline()
-except IOError:
-	raise IOError("A TVDB api key is required to poll their website")
-
+	
 def poll(title):
 	if Soup is None:
 		return []
+	
+	try:
+		with open( join(RESOURCEPATH,'tvdb.apikey') ,'r') as api:
+			API_KEY = api.readline()
+	except:
+		print "The TvDB Api key file could not be found, unable to poll TvDB"
+		return
+		
 	episodes = []
 
-	cleanTitle = urllib.quote_plus(title)
+	cleanTitle = quote_plus(title)
 
 	#1) First we need to find the series ID
 	seriesIdLoc = "http://www.thetvdb.com/api/GetSeries.php?seriesname={0}".format(cleanTitle)
@@ -36,8 +38,10 @@ def poll(title):
 	if seriesFileDesc is None:
 		return []
 
-	seriesIdXml = Soup( seriesFileDesc )
-	seriesIds   = seriesIdXml.findAll('series')
+	with seriesFileDesc as fd:
+		seriesIdXml = Soup( fd, convertEntities=Soup.HTML_ENTITIES )
+		
+	seriesIds = seriesIdXml.findAll('series')
 
 	if not seriesIds: return []
 
@@ -59,8 +63,8 @@ def poll(title):
 	tempZip = TemporaryFile(suffix='.zip')
 	tempZip.seek(0)
 	
-	with closing(infoFileDesc) as z:
-		# download the entire zipfile into the tempfile, f
+	with infoFileDesc as z:
+		# download the entire zipfile into the tempfile
 		while True:
 			packet = z.read()
 			if not packet:
@@ -69,11 +73,10 @@ def poll(title):
 
 	with zipfile.ZipFile(tempZip, 'r') as z:
 		with z.open('en.xml') as d:
-			soup = Soup( d )
+			soup = Soup( d, convertEntities=Soup.HTML_ENTITIES )
 
 
 	#3) Now we have the xml data in the soup variable, just populate the list
-	
 	for count, data in enumerate( soup.findAll('episode'), start=1 ):
 		name   = data.episodename.getText()
 		season = int(data.seasonnumber.getText())

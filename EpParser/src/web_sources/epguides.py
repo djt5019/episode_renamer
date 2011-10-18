@@ -1,5 +1,4 @@
 import re 
-from contextlib import closing
 
 from EpParser.src.Utils import  Episode, getURLdescriptor, prepareTitle
 
@@ -29,7 +28,7 @@ def poll(title):
 	
 	if fd is None: return []
 
-	with closing( fd ) as request:
+	with fd as request:
 		data = request.readlines()
 		
 	regex = re.compile(pattern, re.X | re.I)

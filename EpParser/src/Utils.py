@@ -7,22 +7,22 @@ import os
 import re
 from itertools import izip
 from urllib2 import Request, urlopen, URLError
+from contextlib import closing
 
-_VIDEO_EXTS = set( ['.mkv', '.ogm', '.asf', '.asx', '.avi', '.flv',
-					'.mov', '.mp4', '.mpg', '.rm',  '.swf', '.vob',
-					'.wmv', '.mpeg'])
-					
+_VIDEO_EXTS = {'.mkv', '.ogm', '.asf', '.asx', '.avi', '.flv', 
+               '.mov', '.mp4', '.mpg', '.rm',  '.swf', '.vob',
+			   '.wmv', '.mpeg'}
+			   
 PROJECTPATH  = os.path.dirname(EpParser.__file__)
 RESOURCEPATH = os.path.join( PROJECTPATH, 'resources')
 
 ## Common video naming formats
-_REGEX = (  re.compile( r'^\[.*\][\.-_\s](?P<series>.*)[\.-_\s]+(?P<episode>\d+)', re.I),
-			re.compile( r'^\[.*\][\.-_\s](?P<series>.*)[\.-_\s]+(?P<season>S\d+)[\.-_\s]+(?P<episode>\d+)', re.I ),
-			re.compile( r'(?P<series>.*)[\s\._-]*S(?P<season>\d+)[\s\._-]*E(?P<episode>\d+)', re.I),
-			re.compile( r'^(?P<series>.*)[\s\._-]*\[(?P<season>\d+)x(?P<episode>\d+)\]',re.I),
-			re.compile( r'^(?P<series>.*) - Episode (?P<episode>\d+) - \w*', re.I), #My usual format
-			re.compile( r'^(?P<series>.*) - Season (?P<season>\d+) - Episode (?P<episode>\d*) - \w*', re.I), #Also mine
-			re.compile( r'^.*', re.I),
+_REGEX = (  re.compile( r'^\[.*\][-\._\s]*(?P<series>\w*)[-\._\s]+(?P<episode>\d+)[-\._\s]*[\[\(]*', re.I),
+			re.compile( r'^\[.*\][-\._\s]*(?P<series>\w*)[-\._\s]+(?P<season>S\d+)[-\._\s]+(?P<episode>\d+)[-\._\s]*[\[\(]*', re.I ),
+			re.compile( r'(?P<series>\w*)[\s\._-]*S(?P<season>\d+)[\s\._-]*E(?P<episode>\d+)', re.I),
+			re.compile( r'^(?P<series>\w*)[\s\._-]*\[(?P<season>\d+)x(?P<episode>\d+)\]',re.I),
+			re.compile( r'^(?P<series>\w*) - Episode (?P<episode>\d+) - \w*', re.I), #My usual format
+			re.compile( r'^(?P<series>\w*) - Season (?P<season>\d+) - Episode (?P<episode>\d*) - \w*', re.I), #Also mine
 			)
 
 
@@ -47,26 +47,24 @@ class Episode(object):
 		self.count = episodeCount
 
 
-class EpisodeFormatter(object):
+class EpisodeFormatter(object):	
 	def __init__(self, fmt = None):
 		'''Allows printing of custom formatted episode information'''
-		if fmt is None:
-			self.format = u"Season <season> - Episode <episode> - <title>"
-		else:
-			self.format = encode(fmt)
-
+		formatString = u"<series> - Episode <count> - <title>"
+		
+		self.format = encode(fmt) if fmt else formatString
 		self.tokens = self.format.split()
-		self.episodeNumberTokens = set( ["<episode>", "<ep>"] )
-		self.seasonTokens = set( [ "<season>", "<s>"] )
-		self.episodeNameTokens = set( [ "<title>", "<name>", "<epname>"] )
-		self.seriesNameTokens = set( ["<show>", "<series>"] )
-		self.episodeCounterTokens = set( ["<count>", "<number>"] )
+		self.episodeNumberTokens = {"<episode>", "<ep>"}
+		self.seasonTokens = {"<season>", "<s>"}
+		self.episodeNameTokens = {"<title>", "<name>", "<epname>"}
+		self.seriesNameTokens = {"<show>", "<series>"}
+		self.episodeCounterTokens = {"<count>", "<number>"}
 
 	def setFormat(self, fmt):
 		'''Set the format string for the formatter'''
-		if fmt is None: return
-		self.format = encode( fmt )
-		self.tokens = self.format.split()
+		if fmt is not None:
+			self.format = encode( fmt )
+			self.tokens = self.format.split()
 		
 	def display(self, ep):
 		'''Displays the episode according to the users format'''
@@ -90,7 +88,7 @@ class EpisodeFormatter(object):
 			elif t in self.episodeCounterTokens:
 				output = output.replace( t, str(ep.count), 1 )
 				
-		return output
+		return output.encode('utf-8', 'replace')
 
 
 def getURLdescriptor(url):
@@ -103,13 +101,16 @@ def getURLdescriptor(url):
 	except URLError as e:
 		if hasattr(e, 'reason'):
 			print 'ERROR: {0} appears to be down at the moment'.format(url)
-		else:
 			pass
 		# 404 Not Found
-		#elif hasattr(e, 'code'):
+		#if hasattr(e, 'code'):
 		#    print 'ERROR: {0} Responded with code {1}'.format(url,e.code)
 	finally:
-		return fd
+		if fd:
+			# If we have a valid descriptor return an auto closing one
+			return closing(fd)
+		else:
+			return None
 
 
 ## Renaming utility functions
@@ -126,30 +127,50 @@ def cleanFiles( path, files ):
 		print "No video files were found in {}".format( path )
 		exit(1)
 	
-	# TODO: Fix this so that it takes into account seasons when sorting
+	curSeason = '1'
+	epOffset = 0
 	for f in files:
-		for regex in _REGEX:
-			g = regex.search( f )
-			if g:
-				try:
-					ep = int(g.group('episode'))
-					cleanFiles.append( (ep, os.path.join(path,f)) )
-					break # This regex matched so we continue on to the next file
-				except Exception as ex:
-					print ex
-					print g.groups()
-					exit(1)
+		g = _search(f)
+		
+		if not g:
+			print "Could not find file information for: {}".format(f)
+			continue
+		
+		ep = int(g.group('episode'))
+		print f
+		print ep
+
+		if 'season' in g.groupdict():
+			season = g.group('season')
+			if curSeason != season:
+				curSeason = season
+				epOffset = ep
+
+		ep = ep + epOffset
+		cleanFiles.append( (ep, os.path.join(path,f)) )
 		
 	cleanFiles = sorted(cleanFiles)
 	_, cleanFiles = zip( *cleanFiles )
 	
 	return cleanFiles
+
+def _search(filename):
+	for regex in _REGEX:
+		result = regex.search(filename)
+		
+		if result:
+			return result
+		
+	return None
 	
 	
 def renameFiles( path, show):
 	'''Rename the files located in 'path' to those in the list 'show' '''
 	renamedFiles = []
 	files = cleanFiles(path, os.listdir(path) )
+	
+	if files == []:
+		exit("No files were able to be renamed")
 
 	for f, n in izip(files, show.episodeList):
 		fileName = f
@@ -160,6 +181,9 @@ def renameFiles( path, show):
 		print (u"OLD: {0}".format( os.path.split(fileName)[1] ))
 		print (u"NEW: {0}".format(newName))
 		print ""
+		
+		if newName == fileName:
+			continue
 
 		fileName = os.path.join(path, fileName)
 		newName  = os.path.join(path, newName)
