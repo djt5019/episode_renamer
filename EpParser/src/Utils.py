@@ -18,8 +18,8 @@ PROJECTPATH  = os.path.dirname(EpParser.__file__)
 RESOURCEPATH = os.path.join( PROJECTPATH, 'resources')
 
 ## Common video naming formats
-_REGEX = (  re.compile( r'^\[.*\][-\._\s]*(?P<series>.*)[-\._\s]+(?P<episode>\d+)[-\._\s]*[\[\(]*', re.I),
-			re.compile( r'^\[.*\][-\._\s]*(?P<series>.*)[-\._\s]+S?(?P<season>\d+)[-\._\s]*(?P<episode>\d+)[-\._\s]*[\[\(]*', re.I ),
+_REGEX = (  re.compile( r'^\[.*\][-\._\s]*(?P<series>.*)[-\._\s]+S?(?P<season>\d+)[-\._\s]*(?P<episode>\d+)[-\._\s]*[\[\(]*', re.I ),
+			re.compile( r'^\[.*\][-\._\s]*(?P<series>.*)[-\._\s]+(?P<episode>\d+)[-\._\s]*[\[\(]*', re.I),
 			re.compile( r'(?P<series>\w*)[\s\._-]*S(?P<season>\d+)[\s\._-]*E(?P<episode>\d+)', re.I),
 			re.compile( r'^(?P<series>\w*)[\s\._-]*\[(?P<season>\d+)x(?P<episode>\d+)\]',re.I),
 			re.compile( r'^(?P<series>\w*) - Episode (?P<episode>\d+) - \w*', re.I), #My usual format
@@ -69,36 +69,37 @@ class EpisodeFormatter(object):
 		
 	def display(self, ep):
 		'''Displays the episode according to the users format'''
-		output = self.format
-		
+		args = []
 		for t in self.tokens:
-			if not t.startswith('<') and not t.endswith('>'): pass
+			if not t.startswith('<') and not t.endswith('>'): 
+				args.append( t )
+				continue
 			
 			pad = 0
 			token = t[1:-1].lower().strip()
 			
-			if ':pad' in t: 			
-				t = t.replace(':pad','').strip()
+			if ':pad' in token: 			
+				token = token.replace(':pad','').strip()
 				# Number of digits in the length of the episode list
 				# this is so we dont pad extra zeros in the filename
 				pad = int(log10( len(self.show.episodeList) ) + 1)
 
 			if token in self.episodeNumberTokens:
-				output = output.replace( t, str(ep.episode).zfill(pad), 1 )
+				args.append( str(ep.episode).zfill(pad) )
 				
 			elif token in self.seasonTokens:
-				output = output.replace( t, str(ep.season).zfill(pad), 1 )
+				args.append( str(ep.season).zfill(pad) )
 				
 			elif token in self.episodeNameTokens:
-				output = output.replace( t, ep.title, 1 )
+				args.append( ep.title )
 				
 			elif token in self.seriesNameTokens:
-				output = output.replace( t, ep.series, 1 )
+				args.append( ep.series )
 				
 			elif token in self.episodeCounterTokens:
-				output = output.replace( t, str(ep.count).zfill(pad), 1 )
-				
-		return encode(output)
+				args.append( str(ep.count).zfill(pad) )
+
+		return encode(' '.join(args))
 
 
 def getURLdescriptor(url):
@@ -150,6 +151,7 @@ def cleanFilenames( path, files ):
 
 		if 'season' in g.groupdict():
 			season = g.group('season')
+			print season, type(season)
 			if curSeason != season:
 				curSeason = season
 				epOffset = ep
