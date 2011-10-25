@@ -23,7 +23,7 @@ from EpParser.src.Cache import Cache
 def main():    
 	''' Our main function for our command line interface'''
 	cmd = argparse.ArgumentParser(description="TV Show Information Parser")
-
+	
 	cmd.add_argument('title', 
 		help="The title of the show")
 	
@@ -44,7 +44,7 @@ def main():
 		
 	cmd.add_argument('-g', '--gui-enabled', action="store_true",
 		help="Use the gui rather than the command line, preempts all other switches except the format switch")
-	
+		
 	args = cmd.parse_args()
 	verbose = args.verbose
 	
@@ -54,13 +54,13 @@ def main():
 	
 	rename = args.pathname is not None
 
-	if rename and not os.path.exists(pathname):
+	if rename and not os.path.exists(args.pathname):
 		exit("ERROR - Path provided does not exist")
 
 	cache = Cache( verbose=verbose )
 	episodeParser = Parser(args.title, cache, verbose=verbose)
-	episodeParser.show.formatter.setFormat( args.format )
-	show = episodeParser.parseData()
+	episodeParser.setFormat( args.format )
+	show = episodeParser.getShow()
 	
 	if show.episodeList == []:
 		exit(1)
@@ -71,7 +71,7 @@ def main():
 		show.episodeList = [ x for x in show.episodeList if x.season == args.season ]
 
 	if rename:
-		Utils.renameFiles(pathname, show)
+		Utils.renameFiles(args.pathname, show)
 		exit(0)
 
 	if args.display_header or verbose:

@@ -18,8 +18,8 @@ PROJECTPATH  = os.path.dirname(EpParser.__file__)
 RESOURCEPATH = os.path.join( PROJECTPATH, 'resources')
 
 ## Common video naming formats
-_REGEX = (  re.compile( r'^\[.*\][-\._\s]*(?P<series>\w*)[-\._\s]+(?P<episode>\d+)[-\._\s]*[\[\(]*', re.I),
-			re.compile( r'^\[.*\][-\._\s]*(?P<series>\w*)[-\._\s]+(?P<season>S\d+)[-\._\s]+(?P<episode>\d+)[-\._\s]*[\[\(]*', re.I ),
+_REGEX = (  re.compile( r'^\[.*\][-\._\s]*(?P<series>.*)[-\._\s]+(?P<episode>\d+)[-\._\s]*[\[\(]*', re.I),
+			re.compile( r'^\[.*\][-\._\s]*(?P<series>.*)[-\._\s]+S?(?P<season>\d+)[-\._\s]*(?P<episode>\d+)[-\._\s]*[\[\(]*', re.I ),
 			re.compile( r'(?P<series>\w*)[\s\._-]*S(?P<season>\d+)[\s\._-]*E(?P<episode>\d+)', re.I),
 			re.compile( r'^(?P<series>\w*)[\s\._-]*\[(?P<season>\d+)x(?P<episode>\d+)\]',re.I),
 			re.compile( r'^(?P<series>\w*) - Episode (?P<episode>\d+) - \w*', re.I), #My usual format
@@ -57,8 +57,8 @@ class EpisodeFormatter(object):
 		self.tokens = self.format.split()
 		self.episodeNumberTokens = {"episode", "ep"}
 		self.seasonTokens = {"season", "s"}
-		self.episodeNameTokens = {"title>", "name", "epname"}
-		self.seriesNameTokens = {"show>", "series"}
+		self.episodeNameTokens = {"title", "name", "epname"}
+		self.seriesNameTokens = {"show", "series"}
 		self.episodeCounterTokens = {"count", "number"}
 
 	def setFormat(self, fmt):
@@ -75,7 +75,7 @@ class EpisodeFormatter(object):
 			if not t.startswith('<') and not t.endswith('>'): pass
 			
 			pad = 0
-			t = t[1:-1].lower().strip()
+			token = t[1:-1].lower().strip()
 			
 			if ':pad' in t: 			
 				t = t.replace(':pad','').strip()
@@ -83,19 +83,19 @@ class EpisodeFormatter(object):
 				# this is so we dont pad extra zeros in the filename
 				pad = int(log10( len(self.show.episodeList) ) + 1)
 
-			if t in self.episodeNumberTokens:
+			if token in self.episodeNumberTokens:
 				output = output.replace( t, str(ep.episode).zfill(pad), 1 )
 				
-			elif t in self.seasonTokens:
+			elif token in self.seasonTokens:
 				output = output.replace( t, str(ep.season).zfill(pad), 1 )
 				
-			elif t in self.episodeNameTokens:
+			elif token in self.episodeNameTokens:
 				output = output.replace( t, ep.title, 1 )
 				
-			elif t in self.seriesNameTokens:
+			elif token in self.seriesNameTokens:
 				output = output.replace( t, ep.series, 1 )
 				
-			elif t in self.episodeCounterTokens:
+			elif token in self.episodeCounterTokens:
 				output = output.replace( t, str(ep.count).zfill(pad), 1 )
 				
 		return encode(output)
@@ -124,7 +124,7 @@ def getURLdescriptor(url):
 
 
 ## Renaming utility functions
-def cleanFiles( path, files ):
+def cleanFilenames( path, files ):
 	'''Attempts to extract order information about the files passed'''
 	cleanFiles = []
 
@@ -147,8 +147,6 @@ def cleanFiles( path, files ):
 			continue
 		
 		ep = int(g.group('episode'))
-		print f
-		print ep
 
 		if 'season' in g.groupdict():
 			season = g.group('season')
@@ -159,6 +157,10 @@ def cleanFiles( path, files ):
 		ep = ep + epOffset
 		cleanFiles.append( (ep, os.path.join(path,f)) )
 		
+	if not cleanFiles:
+		print "The files could not be matched"
+		return []
+		
 	cleanFiles = sorted(cleanFiles)
 	_, cleanFiles = zip( *cleanFiles )
 	
@@ -167,8 +169,7 @@ def cleanFiles( path, files ):
 def _search(filename):
 	for regex in _REGEX:
 		result = regex.search(filename)
-		
-		if result:
+		if result:			
 			return result
 		
 	return None
@@ -177,7 +178,7 @@ def _search(filename):
 def renameFiles( path, show):
 	'''Rename the files located in 'path' to those in the list 'show' '''
 	renamedFiles = []
-	files = cleanFiles(path, os.listdir(path) )
+	files = cleanFilenames(path, os.listdir(path) )
 	
 	if files == []:
 		exit("No files were able to be renamed")
