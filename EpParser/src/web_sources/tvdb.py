@@ -11,7 +11,7 @@ from EpParser.src.Utils import *
 try:
 	from BeautifulSoup import BeautifulStoneSoup as Soup
 except ImportError:
-	print u"Error: BeautifulSoup was not found, unable to parse theTVdb"
+	logger.critical( u"Error: BeautifulSoup was not found, unable to parse theTVdb")
 	Soup = None
 	pass
 
@@ -24,7 +24,7 @@ def poll(title):
 		with open( join(RESOURCEPATH,'tvdb.apikey') ,'r') as api:
 			API_KEY = api.readline()
 	except:
-		print "The TvDB Api key file could not be found, unable to poll TvDB"
+		logger.error( "The TvDB Api key file could not be found, unable to poll TvDB" )
 		return
 		
 	episodes = []
@@ -46,10 +46,10 @@ def poll(title):
 	if not seriesIds: return []
 
 	if len(seriesIds) > 1:
-		print "CONFLICT WITH IDS\n\n\n"
-		print seriesIds
-		#TODO: potential name conflict, deal with this later
-		pass
+		logger.warn( "Conflict with series title ID on TVdB" )
+		for seriesName in seriesIdXml.findAll('seriesname'):
+			logger.info( "Alternate series: {}".format(seriesName.getText()) )
+			
 
 	seriesID = seriesIds[0].seriesid.getString()
 	seriesIdXml.close()

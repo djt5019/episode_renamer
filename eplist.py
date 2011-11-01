@@ -47,6 +47,13 @@ def main():
 		
 	args = cmd.parse_args()
 	verbose = args.verbose
+	if verbose:
+		from logging import StreamHandler, NOTSET
+		for handle in Utils.logger.handlers:
+			if isinstance(handle, StreamHandler):
+				handle.setLevel(NOTSET)
+				break
+				
 	
 	if args.gui_enabled:
 		import EpParser.gui.gui as gui
@@ -57,8 +64,8 @@ def main():
 	if rename and not os.path.exists(args.pathname):
 		exit("ERROR - Path provided does not exist")
 
-	cache = Cache( verbose=verbose )
-	episodeParser = Parser(args.title, cache, verbose=verbose)
+	cache = Cache()
+	episodeParser = Parser(args.title, cache)
 	episodeParser.setFormat( args.format )
 	show = episodeParser.getShow()
 	
@@ -71,7 +78,12 @@ def main():
 		show.episodeList = [ x for x in show.episodeList if x.season == args.season ]
 
 	if rename:
-		x = Utils.renameFiles(args.pathname, show)
+		eps = [ show.formatter.display(x) for x in show.episodeList ]
+		x = Utils.renameFiles(args.pathname, eps)
+		for old,new in x:
+			print (u"OLD: {0}".format( os.path.split(old)[1] ))
+			print (u"NEW: {0}".format(new))
+			print ""
 		Utils.doRename(x)
 		exit(0)
 

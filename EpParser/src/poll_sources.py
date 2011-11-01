@@ -5,9 +5,9 @@
 import sys
 from os import listdir
 from os.path import join
-from Utils import PROJECTPATH
+from Utils import PROJECTPATH, logger
 
-def locate_show(title, verbose=False):
+def locate_show(title):
 	'''Polls the web sources looking for the show'''
 	episodes = []
 	modules = []
@@ -23,16 +23,16 @@ def locate_show(title, verbose=False):
 		modules.append(x)
 	
 	for source in modules:
-		if verbose:
-			print "\nPolling {0}".format(source.__name__)
+		logger.info( "Polling {0}".format(source.__name__) )
 			
 		episodes = source.poll(title)
 		
 		if episodes:
-			if verbose:
-				print "LOCATED {0}\n".format(title)
+			logger.info( "LOCATED {0}".format(title) )
 			break
-		if verbose:
-			print "FAILED to locate {0} at {1}\n".format(title, source.__name__)
+		logger.info( "Unable to locate {0} at {1}".format(title, source.__name__) )
 
+	if episodes == []:
+		logger.info("Unable to locate the show: " + title)
+		
 	return filter(lambda x: x.episode > 0, episodes)

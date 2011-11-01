@@ -9,12 +9,11 @@ class EpParser(object):
 	'''The main parser will poll the internet as well as a database
 	looking for the show by using the parseData() function'''
 	
-	def __init__(self, showTitle="", cache=None, verbose=False):
+	def __init__(self, showTitle="", cache=None):
 		''' Proper title is used for the database/url while the display
 		title is used for error messages/display purposes'''
 		self.show = Utils.Show(showTitle)        
 		self.cache = cache
-		self.verbose = verbose
 
 	def setShow(self, showTitle):
 		'''Sets a new show to search for, the old show will be removed '''
@@ -37,24 +36,21 @@ class EpParser(object):
 
 		# The show was found in the database
 		if self.show.episodeList != []:
-			if self.verbose: 
-				print "Show found in database"
+			Utils.logger.info( "Show found in database")
 			return self.show
 
 		# The show was not in the database so now we try the website
-		if self.verbose: 
-			print "Show not found in database, polling web"
+		Utils.logger.info( "Show not found in database, polling web")
 		self.show.episodeList = self._parseHTMLData()
 
 		if not self.show.episodeList:
-			print("ERROR: Show was not found, check spelling and try again")
+			Utils.logger.error("Show was not found, check spelling and try again")
 			return self.show
 			
 		# If we successfully find the show from the internet then
 		# we should add it to our database for later use
 		if self.cache is not None:
-			if self.verbose: 
-				print "Adding show to the database"
+			Utils.logger.info( "Adding show to the database" )
 			self.cache.addShow( self.show.properTitle, self.show.episodeList )
 
 		return self.show
@@ -74,7 +70,7 @@ class EpParser(object):
 		information such as name, episode number, and title.  After getting
 		the data from the regex we will occupy the episode list '''  
 		
-		return poll_sources.locate_show(self.show.title, self.verbose)
+		return poll_sources.locate_show(self.show.title)
 
 	def setFormat(self, fmt):
 		''' Set the custom formatting for the shows formatter '''

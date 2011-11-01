@@ -1,2 +1,0 @@
-//HorribleSubs
-r'\[.*\][-_\s](?P<series>.*)[_\s]?-[_\s]?(?P<episode>[\d]*)'

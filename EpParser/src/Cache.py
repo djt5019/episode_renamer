@@ -7,7 +7,7 @@ import datetime
 import sqlite3	
 import atexit
 
-from Utils import Episode, RESOURCEPATH
+from Utils import Episode, RESOURCEPATH, logger
 
 class Cache(object):
 	''' Our database logic class'''
@@ -29,7 +29,7 @@ class Cache(object):
 			FOREIGN KEY(sid) REFERENCES shows(sid)
 		);'''
 
-	def __init__(self, dbName=u"episodes.db", verbose=False):
+	def __init__(self, dbName=u"episodes.db"):
 		'''Establish a connection to the show database'''
 		if dbName != ':memory:':
 			dbName = os.path.join(RESOURCEPATH, dbName)
@@ -41,10 +41,9 @@ class Cache(object):
 			else:
 				self.connection = sqlite3.connect(dbName, detect_types=sqlite3.PARSE_DECLTYPES)
 		except sqlite3.OperationalError as e:
-			print e
+			logger.error("Error connecting to database: {}".format(e))
 			return None
-
-		self.verbose = verbose			
+		
 		self.cursor = self.connection.cursor()
 
 		#Make sure everything is utf-8
@@ -57,7 +56,7 @@ class Cache(object):
 		self.cursor.close()
 		self.connection.commit()
 		self.connection.close()
-		if self.verbose: print "Connections have been closed"
+		logger.info("Connections have been closed")
 
 
 	def getShowId(self, showTitle):
@@ -76,11 +75,11 @@ class Cache(object):
 		sid = int(result[0])
 		diffDays = (datetime.datetime.now() - result[1])
 
-		if self.verbose: print "{} days old".format(diffDays.days)
+		logger.info("{} days old".format(diffDays.days))
 
 		if diffDays.days >= 7:
 			#If the show is older than a week remove it then return not found
-			if self.verbose: print "WARNING: Show older than a week, removing..."
+			logger.warning("Show is older than a week, removing...")
 			self.removeShow(sid)
 			return -1
 		else:
@@ -126,5 +125,5 @@ class Cache(object):
 			self.cursor.execute("DELETE from SHOWS where sid=?", (sid,) )
 			self.cursor.execute("DELETE from EPISODES where sid=?", (sid,) )
 		except Exception as e:
-			print "Something went wrong\n{}".format(e)
+			logger.error("Something went wrong\n{}".format(e))
 			pass

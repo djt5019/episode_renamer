@@ -5,11 +5,15 @@
 import EpParser
 import os
 import re
+import logging
+import logging.config
+import atexit
 
 from itertools import izip, ifilter
 from urllib2 import Request, urlopen, URLError
 from contextlib import closing
 from math import log10
+from datetime import datetime
 
 VIDEO_EXTS = {'.mkv', '.ogm', '.asf', '.asx', '.avi', '.flv', 
                '.mov', '.mp4', '.mpg', '.rm',  '.swf', '.vob',
@@ -77,6 +81,7 @@ class EpisodeFormatter(object):
 	def display(self, ep):
 		'''Displays the episode according to the users format'''
 		args = []
+
 		for t in self.tokens:
 			if not t.startswith('<') and not t.endswith('>'): 
 				args.append( t )
@@ -121,7 +126,7 @@ def getURLdescriptor(url):
 		fd = urlopen(req)
 	except URLError as e:
 		if hasattr(e, 'reason'):
-			print 'ERROR: {0} appears to be down at the moment'.format(url)
+			logger.error( 'ERROR: {0} appears to be down at the moment'.format(url) )
 			pass
 		# 404 Not Found
 		#if hasattr(e, 'code'):
@@ -144,7 +149,7 @@ def cleanFilenames( path ):
 	files = ifilter(lambda x: os.path.splitext(x)[1].lower() in VIDEO_EXTS, files)
 
 	if files == []:
-		print "No video files were found in {}".format( path )
+		logger.error( "No video files were found in {}".format( path ) )
 		exit(1)
 	
 	cleanFiles = []
@@ -156,7 +161,7 @@ def cleanFilenames( path ):
 		g = _search(f)
 		
 		if not g:
-			print "Could not find file information for: {}".format(f)
+			logger.error( "Could not find file information for: {}".format(f) )
 			continue
 		
 		if 'special' in g.groupdict():
@@ -175,9 +180,10 @@ def cleanFilenames( path ):
 		cleanFiles.append( (ep, os.path.join(path,f)) )
 		
 	if not cleanFiles:
-		print "The files could not be matched"
+		logger.error( "The files could not be matched" )
 		return []
 		
+	logger.info("Successfully cleaned the file names")
 	cleanFiles = sorted(cleanFiles)
 	_, cleanFiles = izip( *cleanFiles )
 	
@@ -192,7 +198,7 @@ def _search(filename):
 	return None
 	
 	
-def renameFiles( path, show):
+def renameFiles( path, episodes):
 	'''Rename the files located in 'path' to those in the list 'show' '''
 	renamedFiles = []
 	files = cleanFilenames(path)
@@ -200,15 +206,11 @@ def renameFiles( path, show):
 	if files == []:
 		exit("No files were able to be renamed")
 
-	for f, n in izip(files, show.episodeList):
+	for f, n in izip(files, episodes):
 		fileName = encode(f)
 		_, ext   = os.path.splitext(f)
-		newName  = show.formatter.display(n) + ext
+		newName  = n + ext
 		newName  = replaceInvalidPathChars(newName)
-
-		print (u"OLD: {0}".format( os.path.split(fileName)[1] ))
-		print (u"NEW: {0}".format(newName))
-		print ""
 		
 		if newName == fileName:
 			continue
@@ -225,7 +227,7 @@ def doRename(files, resp=""):
 		resp = raw_input("\nDo you wish to rename these files [y|N]: ").lower()
 
 	if not resp.startswith('y'):
-		print "Changes were not commited to the files"
+		logger.info( "Changes were not commited to the files" )
 		exit(0)
 
 	errors = []
@@ -238,9 +240,9 @@ def doRename(files, resp=""):
 	
 	if errors:
 		for e in errors:
-			print "File {0} could not be renamed".format( os.path.split(e)[1] )
+			logger.error( "File {0} could not be renamed".format( os.path.split(e)[1] ) )
 	else:
-		print "Files were successfully renamed"
+		logger.info( "Files were successfully renamed")
 		
 	return errors
 
@@ -276,6 +278,16 @@ def encode(text, encoding='utf-8'):
 	'''Returns a unicode representation of the string '''
 	if isinstance(text, basestring):
 		if not isinstance(text, unicode):
-			text = unicode(text, encoding, 'replace')
+			text = unicode(text, encoding, 'ignore')
 	return text
 
+
+#Logging Utility
+def _closeLogs():
+	logger.debug("APPLICATION END: {}".format(datetime.now()))
+	logging.shutdown()
+	
+logging.config.fileConfig( os.path.join(RESOURCEPATH,'logger.conf') )
+atexit.register( _closeLogs )
+logger = logging.getLogger()
+logger.debug("APPLICATION START: {}".format(datetime.now()))
