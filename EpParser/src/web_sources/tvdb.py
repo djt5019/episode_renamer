@@ -85,7 +85,7 @@ def poll(title):
 		
 		if int(season) < 1: continue
 		
-		episodes.append( Episode(title, name, num, season, count ) )
+		episodes.append( Episode(name, num, season, count ) )
 		count += 1
 		
 	

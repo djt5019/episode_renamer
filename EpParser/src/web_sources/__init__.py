@@ -1,3 +1,4 @@
-__all__ = ['epguides', 'tvdb']
 import epguides
 import tvdb
+__all__ = ['epguides', 'tvdb']
+

@@ -33,14 +33,16 @@ def poll(title):
 		
 	regex = re.compile(pattern, re.X | re.I)
 
-	for count, line in enumerate(data, start=1):
+	count = 1
+	for line in data:
 		info = regex.match(line)
 		if info is not None:
 			name = info.group('name')
 			episode = info.group('episode')
 			season = int(info.group('season'))
-			name = re.sub('<.*?>', '', name).strip()               
+			name = re.sub('<.*?>', '', name).strip()
 
-			episodes.append( Episode(title, name, episode, season, count) )
+			episodes.append( Episode(name, episode, season, count) )
+			count += 1
 			
 	return episodes

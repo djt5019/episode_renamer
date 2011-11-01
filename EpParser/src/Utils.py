@@ -5,12 +5,13 @@
 import EpParser
 import os
 import re
-from itertools import izip
+
+from itertools import izip, ifilter
 from urllib2 import Request, urlopen, URLError
 from contextlib import closing
 from math import log10
 
-_VIDEO_EXTS = {'.mkv', '.ogm', '.asf', '.asx', '.avi', '.flv', 
+VIDEO_EXTS = {'.mkv', '.ogm', '.asf', '.asx', '.avi', '.flv', 
                '.mov', '.mp4', '.mpg', '.rm',  '.swf', '.vob',
 			   '.wmv', '.mpeg'}
 			   
@@ -18,12 +19,15 @@ PROJECTPATH  = os.path.dirname(EpParser.__file__)
 RESOURCEPATH = os.path.join( PROJECTPATH, 'resources')
 
 ## Common video naming formats
-_REGEX = (  re.compile( r'^\[.*\][-\._\s]*(?P<series>.*)[-\._\s]+S?(?P<season>\d+)[-\._\s]*(?P<episode>\d+)[-\._\s]*[\[\(]*', re.I ),
-			re.compile( r'^\[.*\][-\._\s]*(?P<series>.*)[-\._\s]+(?P<episode>\d+)[-\._\s]*[\[\(]*', re.I),
-			re.compile( r'(?P<series>\w*)[\s\._-]*S(?P<season>\d+)[\s\._-]*E(?P<episode>\d+)', re.I),
-			re.compile( r'^(?P<series>\w*)[\s\._-]*\[(?P<season>\d+)x(?P<episode>\d+)\]',re.I),
-			re.compile( r'^(?P<series>\w*) - Episode (?P<episode>\d+) - \w*', re.I), #My usual format
-			re.compile( r'^(?P<series>\w*) - Season (?P<season>\d+) - Episode (?P<episode>\d*) - \w*', re.I), #Also mine
+_REGEX = (  re.compile( r'^\[.*\]?[-\._\s]*(?P<series>.*)[-\._\s]+(?P<episode>\d+)[-\._\s]*[\[\(]*', re.I),
+			re.compile( r'^\[.*\]?[-\._\s]*(?P<series>.*)[-\._\s]+OVA[-\._\s]*(?P<special>\d+)[-\._\s]*[\[\(]*', re.I),
+			re.compile( r'^\[.*\]?[-\._\s]*(?P<series>.*)[-\._\s]+S[-\._\s]*(?P<season>\d+)[-\._\s]*(?P<episode>\d+)[-\._\s]*[\[\(]*', re.I ),
+			re.compile( r'(?P<series>.*)[\s\._-]*S(?P<season>\d+)[\s\._-]*E(?P<episode>\d+)', re.I),
+			re.compile( r'^(?P<series>.*)[\s\._-]*\[(?P<season>\d+)x(?P<episode>\d+)\]',re.I),
+			re.compile( r'^(?P<series>.*) - Episode (?P<episode>\d+) - \w*', re.I), #My usual format
+			re.compile( r'^(?P<series>.*) - Season (?P<season>\d+) - Episode (?P<episode>\d*) - \w*', re.I), #Also mine
+			re.compile( r'^(?P<series>.*) - OVA (?P<special>\d+) - \w*', re.I),
+			re.compile( r'(?P<series>.*)[-\._\s]+(?P<episode>\d+)', re.I),
 			)
 
 
@@ -31,18 +35,21 @@ class Show(object):
 	'''A convenience class to keep track of the list of episodes as well as
 	   to keep track of the custom formatter for those episodes'''
 	def __init__(self, seriesTitle):
-		self.title = encode(seriesTitle)
+		self.title = encode(seriesTitle.title())
 		self.properTitle = prepareTitle(self.title)
 		self.episodeList = []
+		self.specialsList = []
 		self.formatter = EpisodeFormatter(self)
+		
+	def setFormat(self, fmt):
+		self.formatter.setFormat(fmt)
 
 				
 class Episode(object):
 	''' A simple class to organize the episodes, an alternative would be
 		to use a namedtuple though this is easier '''
-	def __init__(self, series, title, epNumber, season, episodeCount):
+	def __init__(self, title, epNumber, season, episodeCount):
 		self.title = encode(title)
-		self.series = encode( series.title() )
 		self.season = season
 		self.episode = epNumber
 		self.count = episodeCount
@@ -53,8 +60,8 @@ class EpisodeFormatter(object):
 		'''Allows printing of custom formatted episode information'''
 		formatString = u"<series> - Episode <count> - <title>"
 		self.show = show
-		self.format = encode(fmt) if fmt else formatString
-		self.tokens = self.format.split()
+		self.formatString = encode(fmt) if fmt else formatString
+		self.tokens = self.formatString.split()
 		self.episodeNumberTokens = {"episode", "ep"}
 		self.seasonTokens = {"season", "s"}
 		self.episodeNameTokens = {"title", "name", "epname"}
@@ -64,8 +71,8 @@ class EpisodeFormatter(object):
 	def setFormat(self, fmt):
 		'''Set the format string for the formatter'''
 		if fmt is not None:
-			self.format = encode( fmt )
-			self.tokens = self.format.split()
+			self.formatString = encode( fmt )
+			self.tokens = self.formatString.split()
 		
 	def display(self, ep):
 		'''Displays the episode according to the users format'''
@@ -94,10 +101,13 @@ class EpisodeFormatter(object):
 				args.append( ep.title )
 				
 			elif token in self.seriesNameTokens:
-				args.append( ep.series )
+				args.append( self.show.title.title() )
 				
 			elif token in self.episodeCounterTokens:
 				args.append( str(ep.count).zfill(pad) )
+			
+			else: # If it reaches this case it's most likely an invalid tag
+				args.append(t)
 
 		return encode(' '.join(args))
 
@@ -125,21 +135,23 @@ def getURLdescriptor(url):
 
 
 ## Renaming utility functions
-def cleanFilenames( path, files ):
+def cleanFilenames( path ):
 	'''Attempts to extract order information about the files passed'''
-	cleanFiles = []
-
 	# Filter out anything that doesnt have the correct extenstion and
 	# filter out any directories
-	files = filter(lambda x: os.path.isfile(os.path.join(path,x)), files)
-	files = filter(lambda x: os.path.splitext(x)[1].lower() in _VIDEO_EXTS, files)
+	files = os.listdir(path)
+	files = ifilter(lambda x: os.path.isfile(os.path.join(path,x)), files)
+	files = ifilter(lambda x: os.path.splitext(x)[1].lower() in VIDEO_EXTS, files)
 
 	if files == []:
 		print "No video files were found in {}".format( path )
 		exit(1)
 	
+	cleanFiles = []
 	curSeason = '1'
 	epOffset = 0
+	# We are going to store the episode number and path in a tuple then sort on the 
+	# episodes number.  Special episodes will be appended to the end of the clean list
 	for f in files:
 		g = _search(f)
 		
@@ -147,11 +159,14 @@ def cleanFilenames( path, files ):
 			print "Could not find file information for: {}".format(f)
 			continue
 		
+		if 'special' in g.groupdict():
+			continue
+		
 		ep = int(g.group('episode'))
 
 		if 'season' in g.groupdict():
 			season = g.group('season')
-			print season, type(season)
+
 			if curSeason != season:
 				curSeason = season
 				epOffset = ep
@@ -164,7 +179,7 @@ def cleanFilenames( path, files ):
 		return []
 		
 	cleanFiles = sorted(cleanFiles)
-	_, cleanFiles = zip( *cleanFiles )
+	_, cleanFiles = izip( *cleanFiles )
 	
 	return cleanFiles
 
@@ -180,13 +195,13 @@ def _search(filename):
 def renameFiles( path, show):
 	'''Rename the files located in 'path' to those in the list 'show' '''
 	renamedFiles = []
-	files = cleanFilenames(path, os.listdir(path) )
+	files = cleanFilenames(path)
 	
 	if files == []:
 		exit("No files were able to be renamed")
 
 	for f, n in izip(files, show.episodeList):
-		fileName = f
+		fileName = encode(f)
 		_, ext   = os.path.splitext(f)
 		newName  = show.formatter.display(n) + ext
 		newName  = replaceInvalidPathChars(newName)
@@ -202,8 +217,12 @@ def renameFiles( path, show):
 		newName  = os.path.join(path, newName)
 
 		renamedFiles.append( (fileName, newName,) )
+		
+	return renamedFiles
 
-	resp = raw_input("\nDo you wish to rename these files [y|N]: ").lower()
+def doRename(files, resp=""):
+	if resp == '':
+		resp = raw_input("\nDo you wish to rename these files [y|N]: ").lower()
 
 	if not resp.startswith('y'):
 		print "Changes were not commited to the files"
@@ -211,7 +230,7 @@ def renameFiles( path, show):
 
 	errors = []
 	
-	for old, new in renamedFiles:
+	for old, new in files:
 		try:
 			os.rename(old, new)
 		except:
@@ -222,6 +241,8 @@ def renameFiles( path, show):
 			print "File {0} could not be renamed".format( os.path.split(e)[1] )
 	else:
 		print "Files were successfully renamed"
+		
+	return errors
 
 
 ## Text based functions
@@ -255,6 +276,6 @@ def encode(text, encoding='utf-8'):
 	'''Returns a unicode representation of the string '''
 	if isinstance(text, basestring):
 		if not isinstance(text, unicode):
-			text = unicode(text, encoding, "ignore")
+			text = unicode(text, encoding, 'replace')
 	return text
 

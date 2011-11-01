@@ -71,7 +71,8 @@ def main():
 		show.episodeList = [ x for x in show.episodeList if x.season == args.season ]
 
 	if rename:
-		Utils.renameFiles(args.pathname, show)
+		x = Utils.renameFiles(args.pathname, show)
+		Utils.doRename(x)
 		exit(0)
 
 	if args.display_header or verbose:

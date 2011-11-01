@@ -17,6 +17,7 @@ class EpParser(object):
 		self.verbose = verbose
 
 	def setShow(self, showTitle):
+		'''Sets a new show to search for, the old show will be removed '''
 		if showTitle:
 			self.show = Utils.Show(showTitle)
 			self.show.properTitle = Utils.prepareTitle( showTitle.lower() )
@@ -66,7 +67,7 @@ class EpParser(object):
 		if showId == -1: 
 			return []
 
-		return self.cache.getEpisodes(showId, self.show.title)
+		return self.cache.getEpisodes(showId)
 				
 	def _parseHTMLData(self):
 		''' Passes the sites contents through the regex to seperate episode

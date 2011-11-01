@@ -4,99 +4,193 @@
 # program: qt.gui
 
 import sys
-from PySide import QtGui
+import os
+from PySide import QtGui, QtCore
 
-import EpParser.src.Parser as Parser
+from EpParser.src.Parser import EpParser
+from EpParser.src.Cache import Cache
+import EpParser.src.Utils as Utils
+
+cache = Cache()
 
 class Window(QtGui.QMainWindow):
-        def __init__(self, parent=None):
-            super(Window, self).__init__(parent)
-            self.form = Form()
+	def __init__(self, parent=None):
+		super(Window, self).__init__(parent)
+		self.form = Form()
 
-            self.setCentralWidget( self.form )
+		self.setCentralWidget( self.form )
 
-            exitAction = QtGui.QAction('&Exit', self)
-            exitAction.setShortcut("Ctrl+Q")
-            exitAction.setStatusTip("Exit the application")
-            exitAction.triggered.connect(self.close)
-                
-            helpAction = QtGui.QAction('&Info', self)
-            helpAction.setShortcut('F1')
-            helpAction.setStatusTip("Show help menu")
-            helpAction.triggered.connect(self.printHelp)
-            
-            menubar = self.menuBar()
-            fileMenu = menubar.addMenu('&File')
-            helpMenu = menubar.addMenu('&Help')
-            
-            fileMenu.addAction(exitAction)
-            helpMenu.addAction(helpAction)
-            
-            self.setWindowTitle('Menubar')
-                
-        def printHelp(self):
-            dialog = QtGui.QMessageBox()            
-            dialog.setText("Sweet Dialog Bro")
-            dialog.setWindowTitle("Woah help dialog")
-            dialog.show()
-            dialog._exec()
-                
-                
-                
+		exitAction = QtGui.QAction('&Exit', self)
+		exitAction.setShortcut("Ctrl+Q")
+		exitAction.setStatusTip("Exit the application")
+		exitAction.triggered.connect(self.close)
+			
+		helpAction = QtGui.QAction('&Info', self)
+		helpAction.setShortcut('F1')
+		helpAction.setStatusTip("Show help menu")
+		helpAction.triggered.connect(self.printHelp)
+		
+		menubar = self.menuBar()
+		fileMenu = menubar.addMenu('&File')
+		helpMenu = menubar.addMenu('&Help')
+		
+		fileMenu.addAction(exitAction)
+		helpMenu.addAction(helpAction)
+		
+		self.setWindowTitle('Menubar')
+			
+	def printHelp(self):
+		GeneralMessage("Help Message", "Help Dialog")
+								
+				
 class Form(QtGui.QWidget):
-        def __init__(self, parent=None):
-            super(Form, self).__init__(parent)
-            self.setWindowTitle("Excellent Form Example")
-            
-            self.edit = QtGui.QLineEdit("Choose a TV Show: ")
-            self.btn  = QtGui.QPushButton("FIND IT")
-            self.list = QtGui.QListWidget()
-            self.lst2 = QtGui.QListWidget()
-            
-            self.btn.clicked.connect(self.displayShows)
-            self.edit.editingFinished.connect(self.changed)
-            
-            leftWidget = QtGui.QWidget()
-            layout = QtGui.QVBoxLayout()
-            layout.addWidget(self.edit)
-            layout.addWidget(self.btn)
-            layout.addWidget(self.list)
-            leftWidget.setLayout(layout)
-            
-            leftBox = QtGui.QHBoxLayout()
-            leftBox.addWidget(leftWidget)
-            leftBox.addWidget(self.lst2)
-            self.setLayout(leftBox)
+	def __init__(self, parent=None):
+		super(Form, self).__init__(parent)
+		
+		self.epLine = QtGui.QLineEdit("Choose a TV Show: ")
+		self.epList = QtGui.QListWidget()
+		self.fmtLine= QtGui.QLineEdit()
+		
+		self.findDirBtn = QtGui.QPushButton("Find Dir")			
+		self.dirList = QtGui.QListWidget()
+		self.renameBtn = QtGui.QPushButton("Rename") 
+		
+		# Connect our signals
+		self.findDirBtn.clicked.connect(self.displayDirDialog)
+		self.renameBtn.clicked.connect(self.displayRenameDialog)
+		self.fmtLine.editingFinished.connect(self.updateFormat)
+		self.epLine.editingFinished.connect(self.displayShows)
+		
+		#Set the left layout
+		leftWidget = QtGui.QWidget()
+		rightLayout = QtGui.QVBoxLayout()
+		rightLayout.addWidget(self.epLine)
+		rightLayout.addWidget(self.epList)
+		rightLayout.addWidget(self.fmtLine)
+		leftWidget.setLayout(rightLayout)
+		
+		#Set the right layout
+		rightWidget = QtGui.QWidget()
+		leftLayout = QtGui.QVBoxLayout()
+		leftLayout.addWidget(self.findDirBtn)
+		leftLayout.addWidget(self.dirList)
+		leftLayout.addWidget(self.renameBtn)
+		rightWidget.setLayout(leftLayout)
+		
+		displayBox = QtGui.QHBoxLayout()
+		displayBox.addWidget(leftWidget)
+		displayBox.addWidget(rightWidget)
+		
+		self.setLayout(displayBox)
+		self.parser = EpParser(cache=cache)
+		self.show = Utils.Show("")
+		self.fmtLine.setText( self.show.formatter.formatString )
+		self.renameDir = ""
+			
+	def updateFormat(self):
+		if self.fmtLine.text() != '':
+			self.show.formatter.setFormat( self.fmtLine.text() )
+			#Redisplay the episodes with the new format
+			self.epList.clear()
+			for ep in self.show.episodeList:
+				self.epList.addItem( self.show.formatter.display(ep) )
+		
+	def displayShows(self):
+		showTitle = self.epLine.text().split(':',1)[1].strip()
+		self.epList.clear()
+		
+		if showTitle != '':
+			self.parser.setShow( showTitle )
+			self.show = self.parser.getShow()
+			for ep in self.show.episodeList:
+				self.epList.addItem( self.show.formatter.display(ep) )						          
+			
+	def displayDirDialog(self):
+		self.dirList.clear()
+		self.renameDir = QtGui.QFileDialog.getExistingDirectory(self, 'Choose Directory', r'G:\TV\Misc')
+		
+		for f in Utils.cleanFilenames(self.renameDir):
+			self.dirList.addItem( os.path.split(f)[1])
+			
+	def displayRenameDialog(self):
+		if self.renameDir == "":
+			GeneralMessage("No Directory Selected", "Rename Files")
+			return
+			
+		if self.epList.count() == 0:
+			GeneralMessage("No Show Information Retrieved", "Rename Files")
+			return
+			
+		files = Utils.renameFiles(self.renameDir, self.show)
+		RenameDialog(files, self)  
+		
 
-            self.parser = Parser.EpParser()
-                
-        def displayShows(self):
-            showTitle = self.edit.text().split(':',1)[1].strip()
-            self.list.clear()
-            
-            if showTitle != '':
-                self.parser.setShow( showTitle )
-                show = self.parser.parseData()
-                for ep in show.episodeList:
-                    self.list.addItem( show.formatter.display(ep) )
-                            
-            self.edit.clear()
-            self.edit.setText('Choose a TV Show: ')
-            
-        def changed(self):
-                print "The text has been changed"                
-                
-                
-                
+class GeneralMessage(QtGui.QMessageBox):
+	def __init__(self, msg, windowTitle, parent=None):
+		super(GeneralMessage, self).__init__(parent)
+		self.setText(msg)
+		self.setWindowTitle(windowTitle)
+		self.show()
+		self.setGeometry(300, 300, 350, 300)
+		self.exec_()
+		
+		
+class RenameDialog(QtGui.QDialog):
+	def __init__(self, files, parent=None):
+		super(RenameDialog, self).__init__(parent)
+		self.setGeometry(300, 300, 350, 300)
+		self.setWindowTitle("Rename Files Utility")
+
+		self.files = files
+		
+		self.buttonBox = QtGui.QDialogButtonBox(QtCore.Qt.Vertical)
+		self.buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Cancel | QtGui.QDialogButtonBox.Ok)
+		self.buttonBox.accepted.connect(self.rename)
+		self.buttonBox.rejected.connect(self.close)
+		
+		self.fileList = QtGui.QListWidget()
+		
+		layout = QtGui.QVBoxLayout()
+		layout.addWidget(self.fileList)
+		layout.addWidget(self.buttonBox)
+		
+		self.setLayout(layout)		
+		
+		self.fileList.addItem("Files will be renamed in the following format")		
+		self.fileList.addItem("-"*30)
+		for old,new in self.files:
+			old = os.path.split(old)[1]
+			new = os.path.split(new)[1]
+			string = "OLD: {}\nNEW:  {}\n".format(old, new)
+			self.fileList.addItem(string)
+		
+		self.show()
+		
+	def rename(self):
+		errors = Utils.doRename(self.files, 'yes')
+		self.fileList.clear()
+		self.buttonBox.accepted.disconnect()
+		
+		if errors:
+			self.fileList.addItem("The following files could not be renamed\n")
+			for e in errors:
+				self.fileList.addItem(e)
+		else:
+			self.fileList.addItem("The files were renamed successfully")
+			
+		self.buttonBox.accepted.connect(self.close)
+		self.buttonBox.rejected.connect(self.close)
+			
+		
 def main():
-    app = QtGui.QApplication("My App")
-    form = Window()
-    form.show()
-    
-    ret =  app.exec_()
-    form.close()
-    
-    return ret
+	app = QtGui.QApplication("My App")
+	form = Window()
+	form.show()
+	
+	ret =  app.exec_()
+	form.close()
+	
+	return ret
 
 if __name__ == '__main__':
-    main()
+	main()
