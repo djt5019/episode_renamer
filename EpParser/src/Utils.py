@@ -68,6 +68,7 @@ class EpisodeFormatter(object):
 		self.episodeNameTokens = {"title", "name", "epname"}
 		self.seriesNameTokens = {"show", "series"}
 		self.episodeCounterTokens = {"count", "number"}
+		self.re = re.compile('<(?P<tag>.*?)>', re.I)
 
 	def setFormat(self, fmt):
 		'''Set the format string for the formatter'''
@@ -80,12 +81,15 @@ class EpisodeFormatter(object):
 		args = []
 
 		for t in self.tokens:
-			if not t.startswith('<') and not t.endswith('>'): 
+			tag = self.re.search(t)
+		
+			if not tag: 
 				args.append( t )
 				continue
 			
 			pad = False
-			token = t[1:-1].lower().strip()
+			token = tag.group('tag')
+			prevTag, postTag = t.split( '<'+token+'>' )
 			
 			if ':pad' in token: 			
 				token = token.replace(':pad','').strip()
@@ -94,23 +98,23 @@ class EpisodeFormatter(object):
 			if token in self.episodeNumberTokens:
 				if pad: #Obtain the number of digits in the highest numbered episode
 					pad = int(log10( max(x.episode for x in self.show.episodeList) ) + 1)
-				args.append( str(ep.episode).zfill(pad) )
+				args.append( prevTag + str(ep.episode).zfill(pad) + postTag )
 				
 			elif token in self.seasonTokens:
 				if pad:	#Number of digits in the hightest numbered season
 					pad = int(log10(self.show.episodeList[-1].season) + 1)
-				args.append( str(ep.season).zfill(pad) )
+				args.append( prevTag + str(ep.season).zfill(pad) + postTag )
 				
 			elif token in self.episodeCounterTokens:
 				if pad: #Total number of digits 
 					pad = int(log10( len(self.show.episodeList) ) + 1)
-				args.append( str(ep.count).zfill(pad) )
+				args.append( prevTag + str(ep.count).zfill(pad) + postTag)
 				
 			elif token in self.episodeNameTokens:
-				args.append( ep.title )
+				args.append( prevTag + ep.title + postTag )
 				
 			elif token in self.seriesNameTokens:
-				args.append( self.show.title.title() )			
+				args.append( prevTag + self.show.title.title() + postTag )			
 			
 			else: # If it reaches this case it's most likely an invalid tag
 				args.append(t)
@@ -198,7 +202,6 @@ def _search(filename):
 		
 	return None
 	
-	
 def renameFiles( path, episodes):
 	'''Rename the files located in 'path' to those in the list 'show' '''
 	renamedFiles = []
@@ -255,7 +258,7 @@ def removePunc(title):
 	exclude = set('!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~')
 	name = ''.join( ch for ch in name if ch not in exclude )
 	return name+ext
-
+	
 
 def replaceInvalidPathChars(path, replacement='-'):
 	'''Replace invalid path character with a different, acceptable, character'''

@@ -22,8 +22,8 @@ class Window(QtGui.QMainWindow):
 		self.setCentralWidget( self.form )
 
 		exitAction = QtGui.QAction('&Exit', self)
-		exitAction.setShortcut("Ctrl+Q")
-		exitAction.setStatusTip("Exit the application")
+		exitAction.setShortcut("&Ctrl+Q")
+		exitAction.setStatusTip("&Exit the application")
 		exitAction.triggered.connect(self.close)
 			
 		helpAction = QtGui.QAction('&Info', self)
@@ -50,16 +50,16 @@ class Form(QtGui.QWidget):
 		
 		self.epLine = QtGui.QLineEdit()
 		self.seasonBox = QtGui.QComboBox(self)
-		self.findShowBtn = QtGui.QPushButton("Find Show")
+		self.findShowBtn = QtGui.QPushButton("&Find Show")
 		self.epList = QtGui.QListWidget()
 		self.fmtLine= QtGui.QLineEdit()
 		
 		self.seasonBox.addItem("All")		
 		
 		self.currentDirLine = QtGui.QLineEdit()		
-		self.findDirBtn = QtGui.QPushButton("Find Dir")			
+		self.findDirBtn = QtGui.QPushButton("&Find Dir")			
 		self.dirList = QtGui.QListWidget()
-		self.renameBtn = QtGui.QPushButton("Rename") 
+		self.renameBtn = QtGui.QPushButton("&Rename") 
 		
 		# Connect our signals
 		self.findDirBtn.clicked.connect(self.displayDirDialog)
@@ -71,12 +71,16 @@ class Form(QtGui.QWidget):
 		
 		#Set the left layout
 		leftWidget = QtGui.QWidget()
-		topLayout = QtGui.QFormLayout()
-		topLayout.addRow("&Search for show",self.epLine)	
-		topLayout.addRow("&Season",self.seasonBox)	
-		topLayout.addRow("&Episode Format", self.fmtLine)
-		topLayout.addRow(self.epList)
-		topLayout.addRow(self.findShowBtn)
+		stackedWidget = QtGui.QWidget()
+		topLayout = QtGui.QVBoxLayout()
+		vertLayout = QtGui.QFormLayout()
+		vertLayout.addRow("&Search for show",self.epLine)	
+		vertLayout.addRow("&Season",self.seasonBox)	
+		vertLayout.addRow("&Episode Format", self.fmtLine)
+		stackedWidget.setLayout(vertLayout)
+		topLayout.addWidget(stackedWidget)
+		topLayout.addWidget(self.epList)
+		topLayout.addWidget(self.findShowBtn)
 		leftWidget.setLayout(topLayout)
 		
 		label = QtGui.QLabel("Current Directory")
@@ -124,8 +128,11 @@ class Form(QtGui.QWidget):
 		
 	def findShow(self):
 		showTitle = self.epLine.text().strip()
-		self.epList.clear()
 		
+		if self.show.title == showTitle:
+			Utils.logger.debug("Searching for the same show as before, ignoring")
+			return
+			
 		if showTitle != '':
 			parser.setShow( showTitle )
 			self.show = parser.getShow()
@@ -133,13 +140,19 @@ class Form(QtGui.QWidget):
 			self.episodes = self.show.episodeList
 			self.seasonBox.clear()
 			self.seasonBox.addItem("All")
-			for s in xrange(self.episodes[-1].season):
-				self.seasonBox.addItem( str(s+1) )
+			if self.episodes != []:
+				for s in xrange(self.episodes[-1].season):
+					self.seasonBox.addItem( str(s+1) )
 				
 			self.displayShow()					          
 			
 	def displayShow(self):
 		self.epList.clear()
+		if self.episodes == []:
+			self.epList.addItem("The show {} could not be found".format(self.show.title))
+			self.epList.addItem("check spelling and try again")
+			return
+			
 		for ep in self.episodes:
 				self.epList.addItem( self.formatter.display(ep) )	
 				
@@ -148,7 +161,7 @@ class Form(QtGui.QWidget):
 		if newDir == '':
 			return
 			
-		self.currentDirLabel.setText(os.path.relpath(newDir,os.path.expanduser('~')))
+		self.currentDirLabel.setText(os.path.abspath(newDir))
 		self.renameDir = newDir
 		self.dirList.clear()
 		
@@ -175,16 +188,17 @@ class GeneralMessage(QtGui.QMessageBox):
 		super(GeneralMessage, self).__init__(parent)
 		self.setText(msg)
 		self.setWindowTitle(windowTitle)
+		
+		self.setGeometry(300, 300,400,200)
 		self.show()
-		self.setGeometry(300, 300, 350, 300)
 		self.exec_()
 		
 		
 class RenameDialog(QtGui.QDialog):
 	def __init__(self, files, parent=None):
 		super(RenameDialog, self).__init__(parent)
-		self.setGeometry(300, 300, 350, 300)
-		self.setWindowTitle("Rename Files Utility")
+		self.setGeometry(100, 100, 750, 500)
+		self.setWindowTitle("&Rename Files Utility")
 
 		self.files = files
 		
@@ -202,7 +216,7 @@ class RenameDialog(QtGui.QDialog):
 		self.setLayout(layout)		
 		
 		self.fileList.addItem("Files will be renamed in the following format")		
-		self.fileList.addItem("-"*30)
+		self.fileList.addItem("-"*40)
 		
 		for old,new in self.files:
 			try:
@@ -222,7 +236,7 @@ class RenameDialog(QtGui.QDialog):
 		self.buttonBox.accepted.disconnect()
 		
 		if errors:
-			self.fileList.addItem("The following files could not be renamed\n")
+			self.fileList.addItem("&The following files could not be renamed\n")
 			for e in errors:
 				self.fileList.addItem(e)
 				Utils.logger.error('Unable to rename: {}'.format(e) )
@@ -235,7 +249,7 @@ class RenameDialog(QtGui.QDialog):
 			
 		
 def main():
-	app = QtGui.QApplication("My App")
+	app = QtGui.QApplication("&My App")
 	form = Window()
 	form.show()
 	
