@@ -12,6 +12,7 @@ from EpParser.src.Cache import Cache
 import EpParser.src.Utils as Utils
 
 cache = Cache()
+parser = EpParser(cache=cache)
 
 class Window(QtGui.QMainWindow):
 	def __init__(self, parent=None):
@@ -47,19 +48,22 @@ class Form(QtGui.QWidget):
 	def __init__(self, parent=None):
 		super(Form, self).__init__(parent)
 		
-		self.epLine = QtGui.QLineEdit("Choose a TV Show: ")
+		self.epLine = QtGui.QLineEdit()
 		self.seasonBox = QtGui.QComboBox(self)
+		self.findShowBtn = QtGui.QPushButton("Find Show")
 		self.epList = QtGui.QListWidget()
 		self.fmtLine= QtGui.QLineEdit()
 		
-		self.seasonBox.addItem("All")
+		self.seasonBox.addItem("All")		
 		
+		self.currentDirLine = QtGui.QLineEdit()		
 		self.findDirBtn = QtGui.QPushButton("Find Dir")			
 		self.dirList = QtGui.QListWidget()
 		self.renameBtn = QtGui.QPushButton("Rename") 
 		
 		# Connect our signals
 		self.findDirBtn.clicked.connect(self.displayDirDialog)
+		self.findShowBtn.clicked.connect(self.findShow)
 		self.renameBtn.clicked.connect(self.displayRenameDialog)
 		self.fmtLine.editingFinished.connect(self.updateFormat)
 		self.epLine.editingFinished.connect(self.findShow)
@@ -67,20 +71,22 @@ class Form(QtGui.QWidget):
 		
 		#Set the left layout
 		leftWidget = QtGui.QWidget()
-		topWidget = QtGui.QWidget()
-		topLayout = QtGui.QHBoxLayout()
-		topLayout.addWidget(self.epLine)
-		topLayout.addWidget(self.seasonBox)
-		topWidget.setLayout(topLayout)
-		leftLayout = QtGui.QVBoxLayout()
-		leftLayout.addWidget(topWidget)
-		leftLayout.addWidget(self.epList)
-		leftLayout.addWidget(self.fmtLine)
-		leftWidget.setLayout(leftLayout)
+		topLayout = QtGui.QFormLayout()
+		topLayout.addRow("&Search for show",self.epLine)	
+		topLayout.addRow("&Season",self.seasonBox)	
+		topLayout.addRow("&Episode Format", self.fmtLine)
+		topLayout.addRow(self.epList)
+		topLayout.addRow(self.findShowBtn)
+		leftWidget.setLayout(topLayout)
 		
+		label = QtGui.QLabel("Current Directory")
+		self.currentDirLabel = QtGui.QLabel("<No Directory Selected>")
+		label.setBuddy(self.currentDirLabel)
 		#Set the right layout
 		rightWidget = QtGui.QWidget()
 		rightLayout = QtGui.QVBoxLayout()
+		rightLayout.addWidget(label)
+		rightLayout.addWidget(self.currentDirLabel)
 		rightLayout.addWidget(self.findDirBtn)
 		rightLayout.addWidget(self.dirList)
 		rightLayout.addWidget(self.renameBtn)
@@ -92,7 +98,6 @@ class Form(QtGui.QWidget):
 		displayBox.addWidget(rightWidget)
 		
 		self.setLayout(displayBox)
-		self.parser = EpParser(cache=cache)
 		self.show = Utils.Show("")
 		self.fmtLine.setText( self.show.formatter.formatString )
 		self.renameDir = ""
@@ -118,12 +123,12 @@ class Form(QtGui.QWidget):
 			self.displayShow()
 		
 	def findShow(self):
-		showTitle = self.epLine.text().split(':',1)[1].strip()
+		showTitle = self.epLine.text().strip()
 		self.epList.clear()
 		
 		if showTitle != '':
-			self.parser.setShow( showTitle )
-			self.show = self.parser.getShow()
+			parser.setShow( showTitle )
+			self.show = parser.getShow()
 			self.formatter.show = self.show
 			self.episodes = self.show.episodeList
 			self.seasonBox.clear()
@@ -142,8 +147,11 @@ class Form(QtGui.QWidget):
 		newDir = QtGui.QFileDialog.getExistingDirectory(self, 'Choose Directory', r'G:\TV\Misc')
 		if newDir == '':
 			return
+			
+		self.currentDirLabel.setText(os.path.relpath(newDir,os.path.expanduser('~')))
 		self.renameDir = newDir
 		self.dirList.clear()
+		
 		for f in Utils.cleanFilenames(self.renameDir):
 			self.dirList.addItem( os.path.split(f)[1])
 			
@@ -152,6 +160,7 @@ class Form(QtGui.QWidget):
 			GeneralMessage("No Directory Selected", "Rename Files")
 			return
 			
+		
 		if self.epList.count() == 0:
 			GeneralMessage("No Show Information Retrieved", "Rename Files")
 			return

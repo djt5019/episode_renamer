@@ -45,9 +45,6 @@ class Show(object):
 		self.specialsList = []
 		self.formatter = EpisodeFormatter(self)
 		
-	def setFormat(self, fmt):
-		self.formatter.setFormat(fmt)
-
 				
 class Episode(object):
 	''' A simple class to organize the episodes, an alternative would be
@@ -87,29 +84,33 @@ class EpisodeFormatter(object):
 				args.append( t )
 				continue
 			
-			pad = 0
+			pad = False
 			token = t[1:-1].lower().strip()
 			
 			if ':pad' in token: 			
 				token = token.replace(':pad','').strip()
-				# Number of digits in the length of the episode list
-				# this is so we dont pad extra zeros in the filename
-				pad = int(log10( len(self.show.episodeList) ) + 1)
+				pad = True
 
 			if token in self.episodeNumberTokens:
+				if pad: #Obtain the number of digits in the highest numbered episode
+					pad = int(log10( max(x.episode for x in self.show.episodeList) ) + 1)
 				args.append( str(ep.episode).zfill(pad) )
 				
 			elif token in self.seasonTokens:
+				if pad:	#Number of digits in the hightest numbered season
+					pad = int(log10(self.show.episodeList[-1].season) + 1)
 				args.append( str(ep.season).zfill(pad) )
+				
+			elif token in self.episodeCounterTokens:
+				if pad: #Total number of digits 
+					pad = int(log10( len(self.show.episodeList) ) + 1)
+				args.append( str(ep.count).zfill(pad) )
 				
 			elif token in self.episodeNameTokens:
 				args.append( ep.title )
 				
 			elif token in self.seriesNameTokens:
-				args.append( self.show.title.title() )
-				
-			elif token in self.episodeCounterTokens:
-				args.append( str(ep.count).zfill(pad) )
+				args.append( self.show.title.title() )			
 			
 			else: # If it reaches this case it's most likely an invalid tag
 				args.append(t)

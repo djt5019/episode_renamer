@@ -87,21 +87,21 @@ def main():
 		Utils.doRename(x)
 		exit(0)
 
-	if args.display_header or verbose:
-		print "\nShow: {0}".format(args.title)
-		print "Number of episodes: {0}".format(len(show.episodeList))
-		print "Number of seasons: {0}".format( show.episodeList[-1].season )
-		print "-" * 30
+	# if args.display_header or verbose:
+		# print "\nShow: {0}".format(args.title)
+		# print "Number of episodes: {0}".format(len(show.episodeList))
+		# print "Number of seasons: {0}".format( show.episodeList[-1].season )
+		# print "-" * 30
 		
 	
-	currSeason = show.episodeList[0].season
-	for eps in show.episodeList:
-		if currSeason != eps.season and args.display_header:
-			print "\nSeason {0}".format(eps.season)
-			print "----------"
+	# currSeason = show.episodeList[0].season
+	# for eps in show.episodeList:
+		# if currSeason != eps.season and args.display_header:
+			# print "\nSeason {0}".format(eps.season)
+			# print "----------"
 	
-		print show.formatter.display( eps )
-		currSeason = eps.season
+		# print show.formatter.display( eps )
+		# currSeason = eps.season
 
 
 if __name__ == '__main__':
