@@ -4,19 +4,17 @@
 
 import sys
 from os import listdir
-from os.path import join
-from Utils import PROJECTPATH, logger
+from Utils import WEBSOURCESPATH, logger
 
 def locate_show(title):
 	'''Polls the web sources looking for the show'''
 	episodes = []
 	modules = []
-	
-	path = join(PROJECTPATH, 'src\\web_sources')
-	sys.path.append(path)
+
+	sys.path.append(WEBSOURCESPATH)
 	## This will import all the modules within the web_sources directory so that we
 	## can easily plug in new sources for finding episode information
-	mods = filter( lambda x: x.endswith('py') and not x.startswith('__'),  listdir(path))
+	mods = filter( lambda x: x.endswith('py') and not x.startswith('__'),  listdir(WEBSOURCESPATH))
 	
 	for m in mods:
 		x =  __import__(m[:-3]) 
@@ -32,7 +30,8 @@ def locate_show(title):
 			break
 		logger.info( "Unable to locate {0} at {1}".format(title, source.__name__) )
 
-	if episodes == []:
+	if not episodes:
 		logger.info("Unable to locate the show: " + title)
+		return []
 		
 	return filter(lambda x: x.episode > 0, episodes)

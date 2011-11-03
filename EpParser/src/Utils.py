@@ -21,6 +21,8 @@ VIDEO_EXTS = {'.mkv', '.ogm', '.asf', '.asx', '.avi', '.flv',
 			   
 PROJECTPATH  = os.path.dirname(EpParser.__file__)
 RESOURCEPATH = os.path.join( PROJECTPATH, 'resources')
+PROJECTSOURCEPATH = os.path.join(PROJECTPATH, 'src')
+WEBSOURCESPATH = os.path.join(PROJECTSOURCEPATH, 'web_sources')
 
 ## Common video naming formats
 _REGEX = (  re.compile( r'^\[.*\]?[-\._\s]*(?P<series>.*)[-\._\s]+(?P<episode>\d+)[-\._\s]*[\[\(]*', re.I),

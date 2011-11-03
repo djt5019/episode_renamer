@@ -11,21 +11,21 @@ from EpParser.src.Utils import *
 try:
 	from BeautifulSoup import BeautifulStoneSoup as Soup
 except ImportError:
-	logger.critical( u"Error: BeautifulSoup was not found, unable to parse theTVdb")
+	logger.critical(u"Error: BeautifulSoup was not found, unable to parse theTVdb")
 	Soup = None
 	pass
 
 	
-def poll(title):
-	if Soup is None:
-		return []
-	
+def poll(title):	
 	try:
 		with open( join(RESOURCEPATH,'tvdb.apikey') ,'r') as api:
 			API_KEY = api.readline()
 	except:
 		logger.error( "The TvDB Api key file could not be found, unable to poll TvDB" )
 		return
+	
+	if Soup is None:
+		return []
 		
 	episodes = []
 
