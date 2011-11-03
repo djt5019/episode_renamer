@@ -206,6 +206,7 @@ def _search(filename):
     
 def renameFiles( path, episodes):
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 	'''Rename the files located in 'path' to those in the list 'show' '''
 	path = os.path.abspath(path)
 	renamedFiles = []
@@ -277,6 +278,32 @@ def doRename(files, resp=""):
     return renamedFiles
 
 def doRename(files, resp=""):
+=======
+    '''Rename the files located in 'path' to those in the list 'show' '''
+    renamedFiles = []
+    files = cleanFilenames(path)
+    
+    if files == []:
+        exit("No files were able to be renamed")
+
+    for f, n in izip(files, episodes):
+        fileName = encode(f)
+        _, ext   = os.path.splitext(f)
+        newName  = n + ext
+        newName  = replaceInvalidPathChars(newName)
+        
+        if newName == fileName:
+            continue
+
+        fileName = os.path.join(path, fileName)
+        newName  = os.path.join(path, newName)
+
+        renamedFiles.append( (fileName, newName,) )
+        
+    return renamedFiles
+
+def doRename(files, resp=""):
+>>>>>>> Stashed changes
     if resp == '':
         resp = raw_input("\nDo you wish to rename these files [y|N]: ").lower()
 
@@ -299,6 +326,9 @@ def doRename(files, resp=""):
         logger.info( "Files were successfully renamed")
         
     return errors
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 
 

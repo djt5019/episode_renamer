@@ -1,5 +1,9 @@
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 #! /usr/bin/env python
+=======
+﻿#!/usr/bin/env python
+>>>>>>> Stashed changes
 =======
 ﻿#!/usr/bin/env python
 >>>>>>> Stashed changes
@@ -44,6 +48,7 @@ def main():
         help="Rename the files in the path provided")
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 	cmd.add_argument('-f', '--format', dest="format", metavar='s',
 		help="Rename the files in a directory with a custom format")
 		
@@ -65,6 +70,8 @@ def main():
 	
 	rename = args.pathname is not None
 =======
+=======
+>>>>>>> Stashed changes
     cmd.add_argument('-f', '--format', dest="format", metavar='s',
         help="Rename the files in a directory with a custom format")
         
@@ -86,6 +93,9 @@ def main():
         exit(gui.main())
     
     rename = args.pathname is not None
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 
     if rename and not os.path.exists(args.pathname):
@@ -104,6 +114,7 @@ def main():
     if 0 < args.season <= show.episodeList[-1].season:
         show.episodeList = [x for x in show.episodeList if x.season == args.season]
 
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
 	if rename:
 		eps = [ show.formatter.display(x) for x in show.episodeList ]
@@ -137,6 +148,8 @@ def main():
 		print show.formatter.display( eps )
 		currSeason = eps.season
 =======
+=======
+>>>>>>> Stashed changes
     if rename:
         eps = [ show.formatter.display(x) for x in show.episodeList ]
         eps = Utils.renameFiles(args.pathname, eps)
@@ -162,6 +175,9 @@ def main():
     
         print show.formatter.display( eps )
         curr_season = eps.season
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 
 
