@@ -1,12 +1,4 @@
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-#! /usr/bin/env python
-=======
-﻿#!/usr/bin/env python
->>>>>>> Stashed changes
-=======
-﻿#!/usr/bin/env python
->>>>>>> Stashed changes
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # author:  Dan Tracy
 # program: eplist.py
@@ -46,32 +38,28 @@ def main():
     
     cmd.add_argument('-r', '--rename', dest='pathname', metavar='p',
         help="Rename the files in the path provided")
+    
+    cmd.add_argument('-f', '--format', dest="format", metavar='s',
+        help="Rename the files in a directory with a custom format")
+        
+    cmd.add_argument('-g', '--gui-enabled', action="store_true",
+        help="Use the gui rather than the command line, preempts all other switches except the format switch")
+        
+    args = cmd.parse_args()
+    verbose = args.verbose
+    if verbose:
+        from logging import StreamHandler, NOTSET
+        for handle in Utils.logger.handlers:
+            if isinstance(handle, StreamHandler):
+                handle.setLevel(NOTSET)
+                break
+                
+    if args.gui_enabled:
+        import EpParser.gui.gui as gui
+        exit(gui.main())
+    
+    rename = args.pathname is not None
 
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-	cmd.add_argument('-f', '--format', dest="format", metavar='s',
-		help="Rename the files in a directory with a custom format")
-		
-	cmd.add_argument('-g', '--gui-enabled', action="store_true",
-		help="Use the gui rather than the command line, preempts all other switches except the format switch")
-		
-	args = cmd.parse_args()
-	verbose = args.verbose
-	if verbose:
-		from logging import StreamHandler, NOTSET
-		for handle in Utils.logger.handlers:
-			if isinstance(handle, StreamHandler):
-				handle.setLevel(NOTSET)
-				break
-				
-	if args.gui_enabled:
-		import EpParser.gui.gui as gui
-		exit(gui.main())
-	
-	rename = args.pathname is not None
-=======
-=======
->>>>>>> Stashed changes
     cmd.add_argument('-f', '--format', dest="format", metavar='s',
         help="Rename the files in a directory with a custom format")
         
@@ -93,11 +81,7 @@ def main():
         exit(gui.main())
     
     rename = args.pathname is not None
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-
+    
     if rename and not os.path.exists(args.pathname):
         exit("ERROR - Path provided does not exist")
 
@@ -114,42 +98,38 @@ def main():
     if 0 < args.season <= show.episodeList[-1].season:
         show.episodeList = [x for x in show.episodeList if x.season == args.season]
 
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-	if rename:
-		eps = [ show.formatter.display(x) for x in show.episodeList ]
-		x = Utils.renameFiles(args.pathname, eps)
-		for old,new in x:
-			print (u"OLD: {0}".format( os.path.split(old)[1]))
-			print (u"NEW: {0}".format( os.path.split(new)[1]))
-			print ""
-			
-		errors = Utils.doRename(x)
-		
-		if errors:
-			print("Some files could not be renamed...")
-			for e in errors:
-				print ("File {0} could not be renamed".format(os.path.split(e)[1]))
-		else:
-			print "Fi"
-		exit(0)
-	
-	if args.display_header or verbose:
-		 print ("\nShow: {0}".format(args.title))
-		 print ("Number of episodes: {0}".format(len(show.episodeList)))
-		 print ("Number of seasons: {0}".format( show.episodeList[-1].season ))
-		 print ("-" * 30)
-		 
-	currSeason = show.episodeList[0].season
-	for eps in show.episodeList:
-		if currSeason != eps.season and args.display_header:
-			print ("\nSeason {0}".format(eps.season))
-			print ("----------")
-		print show.formatter.display( eps )
-		currSeason = eps.season
-=======
-=======
->>>>>>> Stashed changes
+    if rename:
+        eps = [ show.formatter.display(x) for x in show.episodeList ]
+        x = Utils.renameFiles(args.pathname, eps)
+        for old,new in x:
+            print (u"OLD: {0}".format( os.path.split(old)[1]))
+            print (u"NEW: {0}".format( os.path.split(new)[1]))
+            print ""
+            
+        errors = Utils.doRename(x)
+        
+        if errors:
+            print("Some files could not be renamed...")
+            for e in errors:
+                print ("File {0} could not be renamed".format(os.path.split(e)[1]))
+        else:
+            print "Fi"
+        exit(0)
+    
+    if args.display_header or verbose:
+         print ("\nShow: {0}".format(args.title))
+         print ("Number of episodes: {0}".format(len(show.episodeList)))
+         print ("Number of seasons: {0}".format( show.episodeList[-1].season ))
+         print ("-" * 30)
+         
+    currSeason = show.episodeList[0].season
+    for eps in show.episodeList:
+        if currSeason != eps.season and args.display_header:
+            print ("\nSeason {0}".format(eps.season))
+            print ("----------")
+        print show.formatter.display( eps )
+        currSeason = eps.season
+
     if rename:
         eps = [ show.formatter.display(x) for x in show.episodeList ]
         eps = Utils.renameFiles(args.pathname, eps)
@@ -175,10 +155,6 @@ def main():
     
         print show.formatter.display( eps )
         curr_season = eps.season
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
 
 
 if __name__ == '__main__':

@@ -205,8 +205,6 @@ def _search(filename):
     return None
     
 def renameFiles( path, episodes):
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
 	'''Rename the files located in 'path' to those in the list 'show' '''
 	path = os.path.abspath(path)
 	renamedFiles = []
@@ -253,7 +251,7 @@ def doRename(files, resp=""):
 		logger.info( "Files were successfully renamed")
 		
 	return errors
-=======
+
     '''Rename the files located in 'path' to those in the list 'show' '''
     renamedFiles = []
     files = cleanFilenames(path)
@@ -278,7 +276,6 @@ def doRename(files, resp=""):
     return renamedFiles
 
 def doRename(files, resp=""):
-=======
     '''Rename the files located in 'path' to those in the list 'show' '''
     renamedFiles = []
     files = cleanFilenames(path)
@@ -303,9 +300,8 @@ def doRename(files, resp=""):
     return renamedFiles
 
 def doRename(files, resp=""):
->>>>>>> Stashed changes
-    if resp == '':
-        resp = raw_input("\nDo you wish to rename these files [y|N]: ").lower()
+	if resp == ''
+		resp = raw_input("\nDo you wish to rename these files [y|N]: ").lower()
 
     if not resp.startswith('y'):
         logger.info( "Changes were not commited to the files" )
@@ -326,10 +322,6 @@ def doRename(files, resp=""):
         logger.info( "Files were successfully renamed")
         
     return errors
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
 
 
 ## Text based functions
