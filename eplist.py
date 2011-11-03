@@ -80,23 +80,31 @@ def main():
 		eps = [ show.formatter.display(x) for x in show.episodeList ]
 		x = Utils.renameFiles(args.pathname, eps)
 		for old,new in x:
-			print (u"OLD: {0}".format( os.path.split(old)[1] ))
-			print (u"NEW: {0}".format(new))
+			print (u"OLD: {0}".format( os.path.split(old)[1]))
+			print (u"NEW: {0}".format( os.path.split(new)[1]))
 			print ""
-		Utils.doRename(x)
+			
+		errors = Utils.doRename(x)
+		
+		if errors:
+			print("Some files could not be renamed...")
+			for e in errors:
+				print ("File {0} could not be renamed".format(os.path.split(e)[1]))
+		else:
+			print "Fi"
 		exit(0)
 	
 	if args.display_header or verbose:
-		 print "\nShow: {0}".format(args.title)
-		 print "Number of episodes: {0}".format(len(show.episodeList))
-		 print "Number of seasons: {0}".format( show.episodeList[-1].season )
-		 print "-" * 30
+		 print ("\nShow: {0}".format(args.title))
+		 print ("Number of episodes: {0}".format(len(show.episodeList)))
+		 print ("Number of seasons: {0}".format( show.episodeList[-1].season ))
+		 print ("-" * 30)
 		 
 	currSeason = show.episodeList[0].season
 	for eps in show.episodeList:
 		if currSeason != eps.season and args.display_header:
-			print "\nSeason {0}".format(eps.season)
-			print "----------"
+			print ("\nSeason {0}".format(eps.season))
+			print ("----------")
 		print show.formatter.display( eps )
 		currSeason = eps.season
 

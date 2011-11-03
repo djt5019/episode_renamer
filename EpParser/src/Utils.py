@@ -209,7 +209,7 @@ def renameFiles( path, episodes):
 	path = os.path.abspath(path)
 	renamedFiles = []
 	files = cleanFilenames(path)
-	print files
+
 	if files == []:
 		exit("No files were able to be renamed")
 
@@ -243,13 +243,11 @@ def doRename(files, resp=""):
 		try:
 			os.rename(old, new)
 		except Exception as e:
-			print e
+			logger.warning("File {0} could not be renamed".format(os.path.split(old)[1]))
+			logger.warning(e)
 			errors.append(old)
 	
-	if errors:
-		for e in errors:
-			logger.error( "File {0} could not be renamed".format( os.path.split(e)[1] ) )
-	else:
+	if not errors:
 		logger.info( "Files were successfully renamed")
 		
 	return errors
