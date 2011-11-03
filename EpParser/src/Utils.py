@@ -206,9 +206,10 @@ def _search(filename):
 	
 def renameFiles( path, episodes):
 	'''Rename the files located in 'path' to those in the list 'show' '''
+	path = os.path.abspath(path)
 	renamedFiles = []
 	files = cleanFilenames(path)
-	
+	print files
 	if files == []:
 		exit("No files were able to be renamed")
 
@@ -241,7 +242,8 @@ def doRename(files, resp=""):
 	for old, new in files:
 		try:
 			os.rename(old, new)
-		except:
+		except Exception as e:
+			print e
 			errors.append(old)
 	
 	if errors:
