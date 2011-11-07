@@ -13,6 +13,7 @@ import EpParser.src.Utils as Utils
 
 cache = Cache()
 parser = EpParser(cache=cache)
+logger = Utils.getLogger()
 
 class Window(QtGui.QMainWindow):
     def __init__(self, parent=None):
@@ -134,7 +135,7 @@ class Form(QtGui.QWidget):
             return        
         
         if self.show.title == showTitle:
-            Utils.logger.debug("Searching for the same show as before, ignoring")
+            logger.debug("Searching for the same show as before, ignoring")
             return
         
         parser.setShow( showTitle )
@@ -220,7 +221,7 @@ class RenameDialog(QtGui.QDialog):
                 new = Utils.encode(os.path.split(new)[1])
                 string = Utils.encode("OLD: {}\nNEW:  {}\n".format(old, new))
             except:
-                Utils.logger.critical( "Unable to rename " + new )
+                logger.critical( "Unable to rename " + new )
                 
             self.fileList.addItem(string)
         
@@ -235,10 +236,10 @@ class RenameDialog(QtGui.QDialog):
             self.fileList.addItem("&The following files could not be renamed\n")
             for e in errors:
                 self.fileList.addItem(e)
-                Utils.logger.error('Unable to rename: {}'.format(e) )
+                logger.error('Unable to rename: {}'.format(e) )
         else:
             self.fileList.addItem("The files were renamed successfully")
-            Utils.logger.info("Filenames renamed succesfully")
+            logger.info("Filenames renamed succesfully")
             
         self.buttonBox.accepted.connect(self.close)
         self.buttonBox.rejected.connect(self.close)
