@@ -26,16 +26,16 @@ WEBSOURCESPATH = os.path.join(PROJECTSOURCEPATH, 'web_sources')
 
 ## Common video naming formats
 _REGEX = (  re.compile( r'^\[.*\]?[-\._\s]*(?P<series>.*)[-\._\s]+(?P<episode>\d+)[-\._\s]*[\[\(]*', re.I),
-			re.compile( r'^\[.*\]?[-\._\s]*(?P<series>.*)[-\._\s]+OVA[-\._\s]*(?P<special>\d+)[-\._\s]*[\[\(]*', re.I),
-			re.compile( r'^\[.*\]?[-\._\s]*(?P<series>.*)[-\._\s]+S[-\._\s]*(?P<season>\d+)[-\._\s]*(?P<episode>\d+)[-\._\s]*[\[\(]*', re.I ),
-			re.compile( r'\[?.*?\]?[-\._\s]*(?P<series>.*)[-\._\s]+(?P<episode>\d+)[-\._\s]*', re.I),
-			re.compile( r'(?P<series>.*)[\s\._-]*S(?P<season>\d+)[\s\._-]*E(?P<episode>\d+)', re.I),
-			re.compile( r'^(?P<series>.*)[\s\._-]*\[(?P<season>\d+)x(?P<episode>\d+)\]',re.I),
-			re.compile( r'^(?P<series>.*) - Episode (?P<episode>\d+) - \w*', re.I), #My usual format
-			re.compile( r'^(?P<series>.*) - Season (?P<season>\d+) - Episode (?P<episode>\d*) - \w*', re.I), #Also mine
-			re.compile( r'^(?P<series>.*) - OVA (?P<special>\d+) - \w*', re.I),
-			re.compile( r'(?P<series>.*)[-\._\s]+(?P<episode>\d+)', re.I),
-			)
+            re.compile( r'^\[.*\]?[-\._\s]*(?P<series>.*)[-\._\s]+OVA[-\._\s]*(?P<special>\d+)[-\._\s]*[\[\(]*', re.I),
+            re.compile( r'^\[.*\]?[-\._\s]*(?P<series>.*)[-\._\s]+S[-\._\s]*(?P<season>\d+)[-\._\s]*(?P<episode>\d+)[-\._\s]*[\[\(]*', re.I ),
+            re.compile( r'\[?.*?\]?[-\._\s]*(?P<series>.*)[-\._\s]+(?P<episode>\d+)[-\._\s]*', re.I),
+            re.compile( r'(?P<series>.*)[\s\._-]*S(?P<season>\d+)[\s\._-]*E(?P<episode>\d+)', re.I),
+            re.compile( r'^(?P<series>.*)[\s\._-]*\[(?P<season>\d+)x(?P<episode>\d+)\]',re.I),
+            re.compile( r'^(?P<series>.*) - Episode (?P<episode>\d+) - \w*', re.I), #My usual format
+            re.compile( r'^(?P<series>.*) - Season (?P<season>\d+) - Episode (?P<episode>\d*) - \w*', re.I), #Also mine
+            re.compile( r'^(?P<series>.*) - OVA (?P<special>\d+) - \w*', re.I),
+            re.compile( r'(?P<series>.*)[-\._\s]+(?P<episode>\d+)', re.I),
+            )
 
 
 class Show(object):
@@ -59,7 +59,7 @@ class Episode(object):
         self.count = episodeCount
 
 
-class EpisodeFormatter(object):	
+class EpisodeFormatter(object): 
     def __init__(self, show, fmt = None):
         '''Allows printing of custom formatted episode information'''
         formatString = u"<series> - Episode <count> - <title>"
@@ -94,7 +94,7 @@ class EpisodeFormatter(object):
             token = tag.group('tag')
             prevTag, postTag = t.split( '<'+token+'>' )
             
-            if ':pad' in token: 			
+            if ':pad' in token:             
                 token = token.replace(':pad','').strip()
                 pad = True
 
@@ -104,7 +104,7 @@ class EpisodeFormatter(object):
                 args.append( prevTag + str(ep.episode).zfill(pad) + postTag )
                 
             elif token in self.seasonTokens:
-                if pad:	#Number of digits in the hightest numbered season
+                if pad: #Number of digits in the hightest numbered season
                     pad = int(log10(self.show.episodeList[-1].season) + 1)
                 args.append( prevTag + str(ep.season).zfill(pad) + postTag )
                 
@@ -117,7 +117,7 @@ class EpisodeFormatter(object):
                 args.append( prevTag + ep.title + postTag )
                 
             elif token in self.seriesNameTokens:
-                args.append( prevTag + self.show.title.title() + postTag )			
+                args.append( prevTag + self.show.title.title() + postTag )          
             
             else: # If it reaches this case it's most likely an invalid tag
                 args.append(t)
@@ -200,58 +200,58 @@ def cleanFilenames( path ):
 def _search(filename):
     for regex in _REGEX:
         result = regex.search(filename)
-        if result:			
+        if result:          
             return result
         
     return None
     
 def renameFiles( path, episodes):
-	'''Rename the files located in 'path' to those in the list 'show' '''
-	path = os.path.abspath(path)
-	renamedFiles = []
-	files = cleanFilenames(path)
+    '''Rename the files located in 'path' to those in the list 'show' '''
+    path = os.path.abspath(path)
+    renamedFiles = []
+    files = cleanFilenames(path)
 
-	if files == []:
-		exit("No files were able to be renamed")
+    if files == []:
+        exit("No files were able to be renamed")
 
-	for f, n in izip(files, episodes):
-		fileName = encode(f)
-		_, ext   = os.path.splitext(f)
-		newName  = n + ext
-		newName  = replaceInvalidPathChars(newName)
-		
-		if newName == fileName:
-			continue
+    for f, n in izip(files, episodes):
+        fileName = encode(f)
+        _, ext   = os.path.splitext(f)
+        newName  = n + ext
+        newName  = replaceInvalidPathChars(newName)
+        
+        if newName == fileName:
+            continue
 
-		fileName = os.path.join(path, fileName)
-		newName  = os.path.join(path, newName)
+        fileName = os.path.join(path, fileName)
+        newName  = os.path.join(path, newName)
 
-		renamedFiles.append( (fileName, newName,) )
-		
-	return renamedFiles
+        renamedFiles.append( (fileName, newName,) )
+        
+    return renamedFiles
 
 def doRename(files, resp=""):
-	if resp == '':
-		resp = raw_input("\nDo you wish to rename these files [y|N]: ").lower()
+    if resp == '':
+        resp = raw_input("\nDo you wish to rename these files [y|N]: ").lower()
 
-	if not resp.startswith('y'):
-		logger.info( "Changes were not commited to the files" )
-		exit(0)
+    if not resp.startswith('y'):
+        logger.info( "Changes were not commited to the files" )
+        exit(0)
 
-	errors = []
-	
-	for old, new in files:
-		try:
-			os.rename(old, new)
-		except Exception as e:
-			logger.warning("File {0} could not be renamed".format(os.path.split(old)[1]))
-			logger.warning(e)
-			errors.append(old)
-	
-	if not errors:
-		logger.info( "Files were successfully renamed")
-		
-	return errors
+    errors = []
+    
+    for old, new in files:
+        try:
+            os.rename(old, new)
+        except Exception as e:
+            logger.warning("File {0} could not be renamed".format(os.path.split(old)[1]))
+            logger.warning(e)
+            errors.append(old)
+    
+    if not errors:
+        logger.info( "Files were successfully renamed")
+        
+    return errors
 
     '''Rename the files located in 'path' to those in the list 'show' '''
     renamedFiles = []
@@ -301,8 +301,8 @@ def doRename(files, resp=""):
     return renamedFiles
 
 def doRename(files, resp=""):
-	if resp == ''
-		resp = raw_input("\nDo you wish to rename these files [y|N]: ").lower()
+    if resp == '':
+        resp = raw_input("\nDo you wish to rename these files [y|N]: ").lower()
 
     if not resp.startswith('y'):
         logger.info( "Changes were not commited to the files" )

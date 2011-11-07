@@ -4,7 +4,7 @@
 
 import os
 import datetime
-import sqlite3	
+import sqlite3  
 import atexit
 
 from Utils import Episode, RESOURCEPATH, logger
@@ -25,7 +25,7 @@ class Cache(object):
             sid INTEGER NOT NULL,
             eptitle TEXT NOT NULL,
             season INTEGER NOT NULL,
-            showNumber INTEGER NOT NULL,			
+            showNumber INTEGER NOT NULL,            
             FOREIGN KEY(sid) REFERENCES shows(sid)
         );'''
 
@@ -61,13 +61,13 @@ class Cache(object):
 
     def getShowId(self, showTitle):
         '''Returns the shows ID if found, -1 otherwise. If the show is more than
-        a week old update the show'''		
+        a week old update the show'''       
         title = (showTitle, )
         now = datetime.datetime.now()
 
         self.cursor.execute("SELECT sid, time FROM shows WHERE title=? LIMIT 1", title)
 
-        result = self.cursor.fetchone()	
+        result = self.cursor.fetchone() 
 
         if result is None:
             return -1
@@ -95,12 +95,13 @@ class Cache(object):
 
         result = self.cursor.fetchall()
         eps = []
-
+        
         if result is not None:
             for count, episode in enumerate(result, start=1):
                 eps.append( Episode(episode[0], episode[1], episode[2], count) )
 
         return eps
+        
 
 
     def addShow(self, showTitle, episodes):
