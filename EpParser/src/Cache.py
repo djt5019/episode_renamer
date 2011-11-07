@@ -7,7 +7,8 @@ import datetime
 import sqlite3  
 import atexit
 
-from Utils import Episode, RESOURCEPATH, logger
+from Utils import Episode, RESOURCEPATH, getLogger
+logger = getLogger()
 
 class Cache(object):
     ''' Our database logic class'''

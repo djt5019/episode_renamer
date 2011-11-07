@@ -4,6 +4,7 @@
 
 import poll_sources
 import Utils
+logger = Utils.getLogger()
 
 class EpParser(object):
     '''The main parser will poll the internet as well as a database
@@ -36,21 +37,21 @@ class EpParser(object):
 
         # The show was found in the database
         if self.show.episodeList != []:
-            Utils.logger.info( "Show found in database")
+            logger.info( "Show found in database")
             return self.show
 
         # The show was not in the database so now we try the website
-        Utils.logger.info( "Show not found in database, polling web")
+        logger.info( "Show not found in database, polling web")
         self.show.episodeList = self._parseHTMLData()
 
         if not self.show.episodeList:
-            Utils.logger.error("Show was not found, check spelling and try again")
+            logger.error("Show was not found, check spelling and try again")
             return self.show
             
         # If we successfully find the show from the internet then
         # we should add it to our database for later use
         if self.cache is not None:
-            Utils.logger.info( "Adding show to the database" )
+            logger.info( "Adding show to the database" )
             self.cache.addShow( self.show.properTitle, self.show.episodeList )
 
         return self.show

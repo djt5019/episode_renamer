@@ -1,0 +1,29 @@
+version: 1
+formatters:
+  console:
+    format: '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+  file:
+    format: '%(levelname)s | %(module)s.%(funcName)s - "%(message)s"'
+handlers:
+  console:
+    class: logging.StreamHandler
+    level: ERROR
+    formatter: console
+    stream: ext://sys.stdout
+  file:
+    class: logging.handlers.RotatingFileHandler
+    level: DEBUG
+    formatter: file
+    stream: ext://Utils.LOGPATH
+loggers:
+  console:
+    level: ERROR
+    handlers: [console]
+    propagate: no
+  file:
+    level: DEBUG
+    handlers: [file]
+root:
+  handlers: [console, file]
+
+		

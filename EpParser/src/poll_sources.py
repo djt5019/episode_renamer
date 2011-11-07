@@ -4,7 +4,9 @@
 
 import sys
 from os import listdir
-from Utils import WEBSOURCESPATH, logger
+from Utils import WEBSOURCESPATH, getLogger
+
+logger = getLogger()
 
 def locate_show(title):
     '''Polls the web sources looking for the show'''
@@ -17,8 +19,11 @@ def locate_show(title):
     mods = filter( lambda x: x.endswith('py') and not x.startswith('__'),  listdir(WEBSOURCESPATH))
     
     for m in mods:
+        logger.info("Importing web resource {}".format(m[:-3]))
         x =  __import__(m[:-3]) 
         modules.append(x)
+    
+    logger.info("Searching for {}".format(title))
     
     for source in modules:
         logger.info( "Polling {0}".format(source.__name__) )

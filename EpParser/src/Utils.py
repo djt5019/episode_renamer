@@ -2,7 +2,6 @@
 # author:  Dan Tracy
 # program: Utils.py
 
-import EpParser
 import os
 import re
 import logging
@@ -19,10 +18,11 @@ VIDEO_EXTS = {'.mkv', '.ogm', '.asf', '.asx', '.avi', '.flv',
                '.mov', '.mp4', '.mpg', '.rm',  '.swf', '.vob',
                '.wmv', '.mpeg'}
                
-PROJECTPATH  = os.path.dirname(EpParser.__file__)
+PROJECTPATH  = os.path.abspath(os.path.join(os.path.dirname(os.path.join(__file__)), '..'))
 RESOURCEPATH = os.path.join( PROJECTPATH, 'resources')
 PROJECTSOURCEPATH = os.path.join(PROJECTPATH, 'src')
 WEBSOURCESPATH = os.path.join(PROJECTSOURCEPATH, 'web_sources')
+
 
 ## Common video naming formats
 _REGEX = (  re.compile( r'^\[.*\]?[-\._\s]*(?P<series>.*)[-\._\s]+(?P<episode>\d+)[-\._\s]*[\[\(]*', re.I),
@@ -134,7 +134,7 @@ def getURLdescriptor(url):
         fd = urlopen(req)
     except URLError as e:
         if hasattr(e, 'reason'):
-            logger.error( 'ERROR: {0} appears to be down at the moment'.format(url) )
+            getLogger().error( 'ERROR: {0} appears to be down at the moment'.format(url) )
             pass
         # 404 Not Found
         #if hasattr(e, 'code'):
@@ -157,7 +157,7 @@ def cleanFilenames( path ):
     files = ifilter(lambda x: os.path.splitext(x)[1].lower() in VIDEO_EXTS, files)
 
     if files == []:
-        logger.error( "No video files were found in {}".format( path ) )
+        getLogger().error( "No video files were found in {}".format( path ) )
         exit(1)
     
     cleanFiles = []
@@ -188,10 +188,10 @@ def cleanFilenames( path ):
         cleanFiles.append( (ep, os.path.join(path,f)) )
         
     if not cleanFiles:
-        logger.error( "The files could not be matched" )
+        getLogger().error( "The files could not be matched" )
         return []
         
-    logger.info("Successfully cleaned the file names")
+    getLogger().info("Successfully cleaned the file names")
     cleanFiles = sorted(cleanFiles)
     _, cleanFiles = izip( *cleanFiles )
     
@@ -235,7 +235,7 @@ def doRename(files, resp=""):
         resp = raw_input("\nDo you wish to rename these files [y|N]: ").lower()
 
     if not resp.startswith('y'):
-        logger.info( "Changes were not commited to the files" )
+        getLogger().info( "Changes were not commited to the files" )
         exit(0)
 
     errors = []
@@ -244,12 +244,12 @@ def doRename(files, resp=""):
         try:
             os.rename(old, new)
         except Exception as e:
-            logger.warning("File {0} could not be renamed".format(os.path.split(old)[1]))
-            logger.warning(e)
+            getLogger().warning("File {0} could not be renamed".format(os.path.split(old)[1]))
+            getLogger().warning(e)
             errors.append(old)
     
     if not errors:
-        logger.info( "Files were successfully renamed")
+        getLogger().info( "Files were successfully renamed")
         
     return errors
 
@@ -305,7 +305,7 @@ def doRename(files, resp=""):
         resp = raw_input("\nDo you wish to rename these files [y|N]: ").lower()
 
     if not resp.startswith('y'):
-        logger.info( "Changes were not commited to the files" )
+        getLogger().info( "Changes were not commited to the files" )
         exit(0)
 
     errors = []
@@ -318,9 +318,9 @@ def doRename(files, resp=""):
     
     if errors:
         for e in errors:
-            logger.error( "File {0} could not be renamed".format( os.path.split(e)[1] ) )
+            getLogger().error( "File {0} could not be renamed".format( os.path.split(e)[1] ) )
     else:
-        logger.info( "Files were successfully renamed")
+        getLogger().info( "Files were successfully renamed")
         
     return errors
 
@@ -360,12 +360,28 @@ def encode(text, encoding='utf-8'):
     return text
 
 
-#Logging Utility
-def _closeLogs():
-    logger.debug("APPLICATION END: {}".format(datetime.now()))
-    logging.shutdown()
+#Logging Utility    
+_logger = None
+def getLogger():
+    global _logger
     
-logging.config.fileConfig( os.path.join(RESOURCEPATH,'logger.conf') )
-atexit.register( _closeLogs )
-logger = logging.getLogger()
-logger.debug("APPLICATION START: {}".format(datetime.now()))
+    if _logger is None:
+        logging.config.fileConfig( os.path.abspath(os.path.join(RESOURCEPATH,'logger.conf')))
+        _logger = logging.getLogger()
+        
+        from logging.handlers import RotatingFileHandler
+        logPath = os.path.join(RESOURCEPATH, 'output.log')
+        fileHandler = RotatingFileHandler(logPath, maxBytes=2048, backupCount=3)
+        fileHandler.setFormatter( logging.Formatter('%(levelname)s | %(module)s.%(funcName)s - "%(message)s"') )
+        fileHandler.setLevel( logging.DEBUG)
+        
+        _logger.addHandler(fileHandler)
+                     
+        _logger.debug("APPLICATION START: {}".format(datetime.now()))
+        atexit.register( _closeLogs )
+     
+    return _logger
+    
+def _closeLogs():
+    _logger.debug("APPLICATION END: {}".format(datetime.now()))
+    logging.shutdown()
