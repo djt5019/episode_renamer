@@ -62,8 +62,10 @@ def main():
 
     cache = Cache()
     episodeParser = Parser(args.title, cache)
-    episodeParser.setFormat( args.format )
+    
     show = episodeParser.getShow()
+    show.formatter.loadFormat()
+    show.setFormat(args.format)
     
     if show.episodeList == []:
         exit(1)
@@ -102,7 +104,7 @@ def main():
         print "Number of seasons: {0}".format(show.episodeList[-1].season)
         print "-" * 30
         
-    
+    print ""
     curr_season = show.episodeList[0].season
     for eps in show.episodeList:
         if curr_season != eps.season and args.display_header:

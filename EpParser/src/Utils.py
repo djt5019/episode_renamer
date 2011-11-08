@@ -58,6 +58,9 @@ class Show(object):
         self.maxEpisodeNumber = max( x.episode for x in eps )
         self.numEpisodes = len(eps)
         
+    def setFormat(self, fmt):
+        self.formatter.setFormat(fmt)
+        
                 
 class Episode(object):
     ''' A simple class to organize the episodes, an alternative would be
@@ -77,7 +80,7 @@ class EpisodeFormatter(object):
         self.formatString = encode(fmt) if fmt else formatString
         self.tokens = self.formatString.split()
         self.episodeNumberTokens = {"episode", "ep"}
-        self.seasonTokens = {"season", "s"}
+        self.seasonTokens = {"season"}
         self.episodeNameTokens = {"title", "name", "epname"}
         self.seriesNameTokens = {"show", "series"}
         self.episodeCounterTokens = {"count", "number"}
@@ -88,7 +91,42 @@ class EpisodeFormatter(object):
         if fmt is not None:
             self.formatString = encode( fmt )
             self.tokens = self.formatString.split()
+            
+    def loadFormat(self):
+        import ConfigParser 
+
+        path = os.path.join(RESOURCEPATH, 'tags.cfg')
+
+        if not os.path.exists(path):
+            return
+
+        cfg = ConfigParser.ConfigParser()
+        cfg.read(path)
         
+        allTokens = set()
+        
+        for s in cfg.sections():
+            tokens = cfg.get(s, 'tags')
+            if ',' in tokens: tokens = tokens.split(',')
+            tokens = set(map(lambda x: x.strip(), tokens))
+            
+            for f in tokens.intersection(allTokens):
+                getLogger().error("In section {} Token {} redefined".format(s,f))
+                tokens.remove(f)
+                    
+            allTokens = allTokens.union(tokens)
+            
+            if s == 'episode_name':
+                self.episodeNameTokens = tokens
+            elif s == "episode_number":
+                self.episodeNumberTokens = tokens
+            elif s == "episode_count":
+                self.episodeCounterTokens = tokens
+            elif s == "series_name":
+                self.seriesNameTokens = tokens
+            elif s == "season":
+                self.seasonTokens = tokens
+                
     def display(self, ep):
         '''Displays the episode according to the users format'''
         args = []
@@ -113,6 +151,7 @@ class EpisodeFormatter(object):
         
     def _parse(self, ep, tag):
         caps = lower = pad = False
+        tag = tag.lower()
         
         # Tag modifiers such as number padding and caps
         if ':pad' in tag:             
@@ -157,9 +196,7 @@ class EpisodeFormatter(object):
         
         else: # If it reaches this case it's most likely an invalid tag
             return tag
-
-
-
+            
 
 def getURLdescriptor(url):
     '''Returns a valid url descriptor or None, also deals with exceptions'''

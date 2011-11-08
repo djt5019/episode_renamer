@@ -72,7 +72,3 @@ class EpParser(object):
         the data from the regex we will occupy the episode list '''  
         
         return poll_sources.locate_show(self.show.title)
-
-    def setFormat(self, fmt):
-        ''' Set the custom formatting for the shows formatter '''
-        self.show.formatter.setFormat( fmt )
