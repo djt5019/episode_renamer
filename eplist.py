@@ -63,9 +63,10 @@ def main():
     cache = Cache()
     episodeParser = Parser(args.title, cache)
     
-    show = episodeParser.getShow()
-    show.formatter.loadFormat()
-    show.setFormat(args.format)
+    show = episodeParser.getShow()    
+    formatter = Utils.EpisodeFormatter(show, args.format)
+    formatter.loadFormatTokens()
+    show.formatter = formatter
     
     if show.episodeList == []:
         exit(1)

@@ -67,7 +67,7 @@ class Episode(object):
         to use a namedtuple though this is easier '''
     def __init__(self, title, epNumber, season, episodeCount):
         self.title = encode(title)
-        self.season = season
+        self.season = int(season)
         self.episode = int(epNumber)
         self.count = int(episodeCount)
 
@@ -92,14 +92,15 @@ class EpisodeFormatter(object):
             self.formatString = encode( fmt )
             self.tokens = self.formatString.split()
             
-    def loadFormat(self):
+    def loadFormatTokens(self):
         import ConfigParser 
 
         path = os.path.join(RESOURCEPATH, 'tags.cfg')
 
         if not os.path.exists(path):
+            getLogger().warning("Tag config file was not found")
             return
-
+        
         cfg = ConfigParser.ConfigParser()
         cfg.read(path)
         
@@ -107,8 +108,11 @@ class EpisodeFormatter(object):
         
         for s in cfg.sections():
             tokens = cfg.get(s, 'tags')
-            if ',' in tokens: tokens = tokens.split(',')
-            tokens = set(map(lambda x: x.strip(), tokens))
+            
+            if ',' in tokens: 
+                tokens = tokens.split(',')
+            
+            tokens = { t.strip() for t in tokens }
             
             for f in tokens.intersection(allTokens):
                 getLogger().error("In section {} Token {} redefined".format(s,f))
@@ -124,7 +128,7 @@ class EpisodeFormatter(object):
                 self.episodeCounterTokens = tokens
             elif s == "series_name":
                 self.seriesNameTokens = tokens
-            elif s == "season":
+            elif s == "season_number":
                 self.seasonTokens = tokens
                 
     def display(self, ep):
@@ -195,7 +199,7 @@ class EpisodeFormatter(object):
             return self.show.title.title()          
         
         else: # If it reaches this case it's most likely an invalid tag
-            return tag
+            return "<" + tag + ">"
             
 
 def getURLdescriptor(url):
