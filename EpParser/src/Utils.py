@@ -327,77 +327,7 @@ def renameFiles( path, episodes):
         renamedFiles.append( (fileName, newName,) )
         
     return renamedFiles
-
-def doRename(files, resp=""):
-    if resp == '':
-        resp = raw_input("\nDo you wish to rename these files [y|N]: ").lower()
-
-    if not resp.startswith('y'):
-        getLogger().info( "Changes were not commited to the files" )
-        exit(0)
-
-    errors = []
     
-    for old, new in files:
-        try:
-            os.rename(old, new)
-        except Exception as e:
-            getLogger().warning("File {0} could not be renamed".format(os.path.split(old)[1]))
-            getLogger().warning(e)
-            errors.append(old)
-    
-    if not errors:
-        getLogger().info( "Files were successfully renamed")
-        
-    return errors
-
-    '''Rename the files located in 'path' to those in the list 'show' '''
-    renamedFiles = []
-    files = cleanFilenames(path)
-    
-    if files == []:
-        exit("No files were able to be renamed")
-
-    for f, n in izip(files, episodes):
-        fileName = encode(f)
-        _, ext   = os.path.splitext(f)
-        newName  = n + ext
-        newName  = replaceInvalidPathChars(newName)
-        
-        if newName == fileName:
-            continue
-
-        fileName = os.path.join(path, fileName)
-        newName  = os.path.join(path, newName)
-
-        renamedFiles.append( (fileName, newName,) )
-        
-    return renamedFiles
-
-def doRename(files, resp=""):
-    '''Rename the files located in 'path' to those in the list 'show' '''
-    renamedFiles = []
-    files = cleanFilenames(path)
-    
-    if files == []:
-        exit("No files were able to be renamed")
-
-    for f, n in izip(files, episodes):
-        fileName = encode(f)
-        _, ext   = os.path.splitext(f)
-        newName  = n + ext
-        newName  = replaceInvalidPathChars(newName)
-        
-        if newName == fileName:
-            continue
-
-        fileName = os.path.join(path, fileName)
-        newName  = os.path.join(path, newName)
-
-        renamedFiles.append( (fileName, newName,) )
-        
-    return renamedFiles
-
 def doRename(files, resp=""):
     if resp == '':
         resp = raw_input("\nDo you wish to rename these files [y|N]: ").lower()
