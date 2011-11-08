@@ -391,9 +391,10 @@ def prepareTitle(title):
     
         
 def intToText(num):
-    '''The purpose of this function is to resolve numbers to text so we don't
-        have additional entries in the database for the same show.  For example
-        The 12 kingdoms and twelve kingdoms will yeild the same result in the DB'''
+    '''Converts a number up to 999 to it's English representation'''
+    # The purpose of this function is to resolve numbers to text so we don't
+    # have additional entries in the database for the same show.  For example
+    # The 12 kingdoms and twelve kingdoms will yeild the same result in the DB
 
     if num < 20:
         return _numDict[str(num)]
