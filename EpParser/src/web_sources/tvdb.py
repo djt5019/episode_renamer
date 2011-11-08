@@ -7,6 +7,7 @@ from os.path import join
 from urllib import quote_plus
 
 from EpParser.src.Utils import *
+logger = getLogger()
 
 try:
 	from BeautifulSoup import BeautifulStoneSoup as Soup

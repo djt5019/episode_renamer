@@ -33,7 +33,7 @@ class EpParser(object):
             return None
 
         if self.cache is not None:
-            self.show.episodeList = self._parseCacheData()
+            self.show.addEpisodes( self._parseCacheData() )
 
         # The show was found in the database
         if self.show.episodeList != []:
@@ -42,9 +42,9 @@ class EpParser(object):
 
         # The show was not in the database so now we try the website
         logger.info( "Show not found in database, polling web")
-        self.show.episodeList = self._parseHTMLData()
+        self.show.addEpisodes(self._parseHTMLData())
 
-        if not self.show.episodeList:
+        if self.show.episodeList == []:
             logger.error("Show was not found, check spelling and try again")
             return self.show
             

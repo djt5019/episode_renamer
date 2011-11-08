@@ -117,15 +117,13 @@ class Form(QtGui.QWidget):
         season = int(text)
         self.episodes = filter(lambda x: x.season==season, self.episodes)
         
-        self.displayShow()
-        
+        self.displayShow()        
             
     def updateFormat(self):
         if self.fmtLine.text() != '':
             self.formatter.setFormat( self.fmtLine.text() )
             #Redisplay the episodes with the new format			
             self.displayShow()
-        
         
     def findShow(self):
         showTitle = self.epLine.text().strip()
@@ -145,7 +143,7 @@ class Form(QtGui.QWidget):
         self.seasonBox.clear()
         self.seasonBox.addItem("All")
         if self.episodes != []:
-            for s in xrange(self.episodes[-1].season):
+            for s in xrange(self.show.numSeasons):
                 self.seasonBox.addItem( str(s+1) )
                 
         self.displayShow()					          
@@ -181,7 +179,7 @@ class Form(QtGui.QWidget):
             InfoMessage(self, "Rename Files", "No Show Information Retrieved")
             return
             
-        eps = [ self.formatter.display(x) for x in self.episodes ]
+        eps = (self.formatter.display(x) for x in self.episodes)
         files = Utils.renameFiles(self.renameDir, eps)
         RenameDialog(files, self)  
         

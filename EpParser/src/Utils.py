@@ -28,10 +28,9 @@ WEBSOURCESPATH = os.path.join(PROJECTSOURCEPATH, 'web_sources')
 _REGEX = (  re.compile( r'^\[.*\]?[-\._\s]*(?P<series>.*)[-\._\s]+(?P<episode>\d+)[-\._\s]*[\[\(]*', re.I),
             re.compile( r'^\[.*\]?[-\._\s]*(?P<series>.*)[-\._\s]+OVA[-\._\s]*(?P<special>\d+)[-\._\s]*[\[\(]*', re.I),
             re.compile( r'^\[.*\]?[-\._\s]*(?P<series>.*)[-\._\s]+S[-\._\s]*(?P<season>\d+)[-\._\s]*(?P<episode>\d+)[-\._\s]*[\[\(]*', re.I ),
-            re.compile( r'\[?.*?\]?[-\._\s]*(?P<series>.*)[-\._\s]+(?P<episode>\d+)[-\._\s]*', re.I),
             re.compile( r'(?P<series>.*)[\s\._-]*S(?P<season>\d+)[\s\._-]*E(?P<episode>\d+)', re.I),
             re.compile( r'^(?P<series>.*)[\s\._-]*\[(?P<season>\d+)x(?P<episode>\d+)\]',re.I),
-            re.compile( r'^(?P<series>.*) - Episode (?P<episode>\d+) - \w*', re.I), #My usual format
+            re.compile( r'^(?P<series>.*) - Episode (?P<episode>\d*) - \w*', re.I), #My usual format
             re.compile( r'^(?P<series>.*) - Season (?P<season>\d+) - Episode (?P<episode>\d*) - \w*', re.I), #Also mine
             re.compile( r'^(?P<series>.*) - OVA (?P<special>\d+) - \w*', re.I),
             re.compile( r'(?P<series>.*)[-\._\s]+(?P<episode>\d+)', re.I),
@@ -47,6 +46,17 @@ class Show(object):
         self.episodeList = []
         self.specialsList = []
         self.formatter = EpisodeFormatter(self)
+        self.numSeasons = 0
+        self.maxEpisodeNumber = 0
+        
+    def addEpisodes(self, eps=[]):
+        if eps == []:
+            return
+            
+        self.episodeList = eps
+        self.numSeasons = eps[-1].season
+        self.maxEpisodeNumber = max( x.episode for x in eps )
+        self.numEpisodes = len(eps)
         
                 
 class Episode(object):
@@ -55,8 +65,8 @@ class Episode(object):
     def __init__(self, title, epNumber, season, episodeCount):
         self.title = encode(title)
         self.season = season
-        self.episode = epNumber
-        self.count = episodeCount
+        self.episode = int(epNumber)
+        self.count = int(episodeCount)
 
 
 class EpisodeFormatter(object): 
@@ -71,7 +81,7 @@ class EpisodeFormatter(object):
         self.episodeNameTokens = {"title", "name", "epname"}
         self.seriesNameTokens = {"show", "series"}
         self.episodeCounterTokens = {"count", "number"}
-        self.re = re.compile('<(?P<tag>.*?)>', re.I)
+        self.re = re.compile('(?P<tag><.*?>)', re.I)
 
     def setFormat(self, fmt):
         '''Set the format string for the formatter'''
@@ -83,46 +93,72 @@ class EpisodeFormatter(object):
         '''Displays the episode according to the users format'''
         args = []
 
-        for t in self.tokens:
-            tag = self.re.search(t)
-        
-            if not tag: 
+        for token in self.tokens:
+            tags = self.re.split(token)
+    
+            if not tags: 
                 args.append( t )
                 continue
+                
+            a = []
+            for tag in tags:
+                if self.re.match(tag): #If it's a tag try to resolve it
+                    a.append( self._parse(ep, tag[1:-1]) )
+                else:
+                    a.append(tag)
             
-            pad = False
-            token = tag.group('tag')
-            prevTag, postTag = t.split( '<'+token+'>' )
+            args.append( ''.join(a) )
             
-            if ':pad' in token:             
-                token = token.replace(':pad','').strip()
-                pad = True
-
-            if token in self.episodeNumberTokens:
-                if pad: #Obtain the number of digits in the highest numbered episode
-                    pad = int(log10( max(x.episode for x in self.show.episodeList) ) + 1)
-                args.append( prevTag + str(ep.episode).zfill(pad) + postTag )
-                
-            elif token in self.seasonTokens:
-                if pad: #Number of digits in the hightest numbered season
-                    pad = int(log10(self.show.episodeList[-1].season) + 1)
-                args.append( prevTag + str(ep.season).zfill(pad) + postTag )
-                
-            elif token in self.episodeCounterTokens:
-                if pad: #Total number of digits 
-                    pad = int(log10( len(self.show.episodeList) ) + 1)
-                args.append( prevTag + str(ep.count).zfill(pad) + postTag)
-                
-            elif token in self.episodeNameTokens:
-                args.append( prevTag + ep.title + postTag )
-                
-            elif token in self.seriesNameTokens:
-                args.append( prevTag + self.show.title.title() + postTag )          
-            
-            else: # If it reaches this case it's most likely an invalid tag
-                args.append(t)
-
         return encode(' '.join(args))
+        
+    def _parse(self, ep, tag):
+        caps = lower = pad = False
+        
+        # Tag modifiers such as number padding and caps
+        if ':pad' in tag:             
+            tag = tag.replace(':pad','').strip()
+            pad = True            
+        if ':caps' in tag:
+            tag = tag.replace(':caps','').strip()
+            caps = True            
+        if ':upper' in tag:
+            tag = tag.replace(':upper','').strip()
+            caps = True            
+        if ':lower' in tag:
+            tag = tag.replace(':lower','').strip()
+            lower = True            
+        if ':' in tag:
+            tag = tag.split(':',2)[0]
+       
+        if tag in self.episodeNumberTokens:
+            if pad: #Obtain the number of digits in the highest numbered episode
+                pad = int( log10(self.show.maxEpisodeNumber) + 1)            
+            return str(ep.episode).zfill(pad)
+            
+        elif tag in self.seasonTokens:
+            if pad: #Number of digits in the hightest numbered season
+                pad = int(log10(self.show.numSeasons) + 1)
+            return str(ep.season).zfill(pad)
+            
+        elif tag in self.episodeCounterTokens:
+            if pad: #Total number of digits 
+                pad = int(log10(self.show.numEpisodes) + 1)
+            return str(ep.count).zfill(pad)
+            
+        elif tag in self.episodeNameTokens:
+            if lower: return ep.title.lower()
+            if caps: return ep.title.upper()
+            return ep.title
+            
+        elif tag in self.seriesNameTokens:
+            if lower: return self.show.title.lower()
+            if caps: return self.show.title.upper()
+            return self.show.title.title()          
+        
+        else: # If it reaches this case it's most likely an invalid tag
+            return tag
+
+
 
 
 def getURLdescriptor(url):
@@ -200,7 +236,7 @@ def cleanFilenames( path ):
 def _search(filename):
     for regex in _REGEX:
         result = regex.search(filename)
-        if result:          
+        if result:     
             return result
         
     return None
@@ -371,7 +407,7 @@ def getLogger():
         
         from logging.handlers import RotatingFileHandler
         logPath = os.path.join(RESOURCEPATH, 'output.log')
-        fileHandler = RotatingFileHandler(logPath, maxBytes=2048, backupCount=3)
+        fileHandler = RotatingFileHandler(logPath, maxBytes=2**20, backupCount=3)
         fileHandler.setFormatter( logging.Formatter('%(levelname)s | %(module)s.%(funcName)s - "%(message)s"') )
         fileHandler.setLevel( logging.DEBUG)
         
