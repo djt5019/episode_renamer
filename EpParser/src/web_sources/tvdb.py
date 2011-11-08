@@ -40,7 +40,7 @@ def poll(title):
 		return []
 
 	with seriesFileDesc as fd:
-		seriesIdXml = Soup( fd, convertEntities=Soup.HTML_ENTITIES )
+		seriesIdXml = Soup( fd.read(), convertEntities=Soup.HTML_ENTITIES )
 		
 	seriesIds = seriesIdXml.findAll('series')
 

@@ -7,12 +7,14 @@ import re
 import logging
 import logging.config
 import atexit
+import gzip
 
 from itertools import izip, ifilter
 from urllib2 import Request, urlopen, URLError
 from contextlib import closing
 from math import log10
 from datetime import datetime
+from cStringIO import StringIO
 
 VIDEO_EXTS = {'.mkv', '.ogm', '.asf', '.asx', '.avi', '.flv', 
                '.mov', '.mp4', '.mpg', '.rm',  '.swf', '.vob',
@@ -35,6 +37,12 @@ _REGEX = (  re.compile( r'^\[.*\]?[-\._\s]*(?P<series>.*)[-\._\s]+(?P<episode>\d
             re.compile( r'^(?P<series>.*) - OVA (?P<special>\d+) - \w*', re.I),
             re.compile( r'(?P<series>.*)[-\._\s]+(?P<episode>\d+)', re.I),
             )
+            
+_numDict = { '0' : '','1' : 'one', '2' : 'two', '3' : 'three', '4' : 'four', '5' : 'five', '6' : 'six',
+        '7' : 'seven', '8' : 'eight', '9' : 'nine', '10' : 'ten', '11' : 'eleven', '12' : 'twelve',
+        '13' : 'thirteen', '14' : 'fourteen', '15' : 'fifteen', '16' : 'sixteen', '17' : 'seventeen',
+        '18' : 'eighteen', '19' : 'nineteen', '20' : 'twenty', '30' : 'thirty', '40' : 'forty',
+        '50' : 'fifty', '60' : 'sixty', '70' : 'seventy', '80' : 'eighty', '90' : 'ninety'}
 
 
 class Show(object):
@@ -212,17 +220,23 @@ class EpisodeFormatter(object):
 def getURLdescriptor(url):
     '''Returns a valid url descriptor or None, also deals with exceptions'''
     fd = None
-    req = Request(url)
-
+    request = Request(url)
+    request.add_header('Accept-encoding', 'gzip')
+   
     try:
-        fd = urlopen(req)
-    except URLError as e:
+        fd = urlopen(request)
+
+        if fd.info().get('Content-Encoding') == 'gzip':
+            buffer = StringIO( fd.read() )
+            fd = gzip.GzipFile(fileobj=buffer)   
+            
+    except URLError as e:        
         if hasattr(e, 'reason'):
             getLogger().error( 'ERROR: {0} appears to be down at the moment'.format(url) )
             pass
-        # 404 Not Found
-        #if hasattr(e, 'code'):
-        #    print 'ERROR: {0} Responded with code {1}'.format(url,e.code)
+    except Exception as e:
+        print e
+        exit()
     finally:
         if fd:
             # If we have a valid descriptor return an auto closing one
@@ -428,13 +442,49 @@ def replaceInvalidPathChars(path, replacement='-'):
 def prepareTitle(title):
     '''Remove any punctuation and whitespace from the title'''
     title = removePunc(title).split()
-    if title == []: 
-        return ""
-        
-    if title[0] == 'the':
-        title.remove('the')
-    return ''.join(title)
 
+    if title == []:
+        return ""
+
+    if title[0].lower() == 'the':
+        title.remove( title[0] )
+
+    out = []
+    for n in title:
+        try:
+            value = intToText(int(n))
+            out.append(value)
+        except:
+            out.append(n)
+
+    return ''.join(out)
+    
+        
+def intToText(num):
+    '''The purpose of this function is to resolve numbers to text so we don't
+        have additional entries in the database for the same show.  For example
+        The 12 kingdoms and twelve kingdoms will yeild the same result in the DB'''
+
+    if num < 20:
+        return _numDict[str(num)]
+        
+    args = []
+    num = str(num)
+    
+    while num:
+        digit = int(num[0])
+        length = len(num)
+        
+        if length == 3:
+            args.append( _numDict[num[0]] )
+            args.append("hundred")
+        else:
+            value = str( digit * (10**(length-1)) )
+            args.append( _numDict[value] )
+            
+        num = num[1:]
+        
+    return '_'.join(args)
 
 def encode(text, encoding='utf-8'):
     '''Returns a unicode representation of the string '''

@@ -6,21 +6,13 @@
 import unittest
 import sqlite3
  
-import EpParser.src.Cache
+import EpParser.src.Cache as Cache
 
 
 class TestCache( unittest.TestCase ):
-   def setUp(self):
-      unittest.TestCase.setUp(self)
-      self.cache = EpParser.src.Cache(dbName = ":memory:")
-       
-   def tearDown(self):      
-      unittest.TestCase.tearDown(self)
-      self.cache.close()
-
-   def testAddShow(self):
-      show = ""
-      self.cache.addShow()
+   def __init__(self):
+      self.cache = Cache.Cache(':memory:')
+      
    
         
 if __name__ == '__main__':

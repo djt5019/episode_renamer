@@ -3,11 +3,11 @@
 # program: test_Parser.py
 
 import unittest
-import src.Parser as Parser
+import EpParser.src.Parser as Parser
 
 class testParser( unittest.TestCase ):
     def setUp(self):
-        self.parser = Parser.EpParser('test', None, True)
+        self.parser = Parser.EpParser('test', None)
         
     def tearDown(self):
         del self.parser
