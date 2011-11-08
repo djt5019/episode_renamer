@@ -63,6 +63,7 @@ class Form(QtGui.QWidget):
         self.renameBtn = QtGui.QPushButton("&Rename") 
         
         # Connect our signals
+        self.epLine.returnPressed.connect(self.findShow)
         self.findDirBtn.clicked.connect(self.displayDirDialog)
         self.findShowBtn.clicked.connect(self.findShow)
         self.renameBtn.clicked.connect(self.displayRenameDialog)
@@ -83,10 +84,11 @@ class Form(QtGui.QWidget):
         topLayout.addWidget(self.findShowBtn)
         leftWidget.setLayout(topLayout)
         
+        
+        #Set the right layout
         label = QtGui.QLabel("Current Directory")
         self.currentDirLabel = QtGui.QLabel("<No Directory Selected>")
         label.setBuddy(self.currentDirLabel)
-        #Set the right layout
         rightWidget = QtGui.QWidget()
         rightLayout = QtGui.QVBoxLayout()
         rightLayout.addWidget(label)
@@ -107,6 +109,7 @@ class Form(QtGui.QWidget):
         self.renameDir = ""
         self.episodes = []
         self.formatter = Utils.EpisodeFormatter(self.show)
+        self.formatter.loadFormatTokens()
         
     def filterSeasons(self, text):
         self.episodes = self.show.episodeList
@@ -122,7 +125,8 @@ class Form(QtGui.QWidget):
     def updateFormat(self):
         if self.fmtLine.text() != '':
             self.formatter.setFormat( self.fmtLine.text() )
-            #Redisplay the episodes with the new format			
+        
+        if self.show.title != "":
             self.displayShow()
         
     def findShow(self):
@@ -131,10 +135,6 @@ class Form(QtGui.QWidget):
         if showTitle == "":
             InfoMessage(self, "Find Show", "No show specified")
             return        
-        
-        if self.show.title == showTitle:
-            logger.debug("Searching for the same show as before, ignoring")
-            return
         
         parser.setShow( showTitle )
         self.show = parser.getShow()
@@ -155,7 +155,7 @@ class Form(QtGui.QWidget):
             return
             
         for ep in self.episodes:
-                self.epList.addItem( self.formatter.display(ep) )	
+            self.epList.addItem( self.formatter.display(ep) )	
                 
     def displayDirDialog(self):
         newDir = QtGui.QFileDialog.getExistingDirectory(self, 'Choose Directory', r'G:\TV\Misc')

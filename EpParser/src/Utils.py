@@ -92,10 +92,13 @@ class EpisodeFormatter(object):
             self.formatString = encode( fmt )
             self.tokens = self.formatString.split()
             
-    def loadFormatTokens(self):
+    def loadFormatTokens(self, configFileName=""):
         import ConfigParser 
-
-        path = os.path.join(RESOURCEPATH, 'tags.cfg')
+   
+        if configFileName == "":
+            path = os.path.join(RESOURCEPATH, 'tags.cfg')
+        else:
+            path = os.path.join(RESOURCEPATH, configFileName)
 
         if not os.path.exists(path):
             getLogger().warning("Tag config file was not found")
@@ -109,13 +112,17 @@ class EpisodeFormatter(object):
         for s in cfg.sections():
             tokens = cfg.get(s, 'tags')
             
+            if tokens == "":                
+                getLogger().error("No tags for section [{}], using defaults".format(s))
+                continue
+                
             if ',' in tokens: 
-                tokens = tokens.split(',')
-            
-            tokens = { t.strip() for t in tokens }
-            
-            for f in tokens.intersection(allTokens):
-                getLogger().error("In section {} Token {} redefined".format(s,f))
+                tokens = { t.strip() for t in tokens.split(',') }
+            else:
+                tokens = set( (tokens,) )
+                
+            for f in tokens.intersection(allTokens): #Look for duplicates
+                getLogger().error("In section [{}]: token '{}' redefined".format(s,f))
                 tokens.remove(f)
                     
             allTokens = allTokens.union(tokens)
@@ -130,7 +137,7 @@ class EpisodeFormatter(object):
                 self.seriesNameTokens = tokens
             elif s == "season_number":
                 self.seasonTokens = tokens
-                
+                                
     def display(self, ep):
         '''Displays the episode according to the users format'''
         args = []
