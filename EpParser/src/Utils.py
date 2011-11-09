@@ -152,12 +152,14 @@ def renameFiles( path, show):
     for ep in show.episodeList:
         file = files.get(ep.episode, None)
         
-        if not file or file.season != ep.season:
+        if file is None or file.season != ep.season:
             file = files.get(ep.count, None)
-            
+        
         if not file:
-            getLogger().error("Could not find an episode for {}".format(ep.title))
+            getLogger().info("Could not find an episode for {}".format(ep.title))
             continue
+        else:
+            getLogger().info("Found episode {}".format(ep.title))
                        
         fileName = encode( file.name )
         newName  = replaceInvalidPathChars(show.formatter.display(ep) + file.ext)

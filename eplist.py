@@ -51,7 +51,7 @@ def main():
     args = cmd.parse_args()
     if args.verbose:
         from logging import NOTSET
-        for handle in Logger.getLogger().handlers:
+        for handle in getLogger().handlers:
             handle.setLevel(NOTSET)
     
     if args.gui_enabled:
