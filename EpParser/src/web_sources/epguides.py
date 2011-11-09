@@ -1,6 +1,7 @@
 import re 
 
-from EpParser.src.Utils import  Episode, getURLdescriptor, prepareTitle
+from EpParser.src.Utils import getURLdescriptor, prepareTitle
+from EpParser.src.Episode import Episode
 
 pattern = r"""
 			^		                # Start of the string

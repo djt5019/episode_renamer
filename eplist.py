@@ -17,8 +17,11 @@ import argparse
 import os
 
 import EpParser.src.Utils as Utils
+import EpParser.src.Episode as Episode
+
 from EpParser.src.Parser import EpParser as Parser
 from EpParser.src.Cache import Cache
+from EpParser.src.Logger import getLogger
 
 def main():
     ''' Our main function for our command line interface'''
@@ -48,7 +51,7 @@ def main():
     args = cmd.parse_args()
     if args.verbose:
         from logging import NOTSET
-        for handle in Utils.getLogger().handlers:
+        for handle in Logger.getLogger().handlers:
             handle.setLevel(NOTSET)
     
     if args.gui_enabled:
@@ -64,7 +67,7 @@ def main():
     episodeParser = Parser(args.title, cache)
     
     show = episodeParser.getShow()    
-    formatter = Utils.EpisodeFormatter(show, args.format)
+    formatter = Episode.EpisodeFormatter(show, args.format)
     formatter.loadFormatTokens()
     show.formatter = formatter
     
@@ -90,12 +93,16 @@ def main():
         show.episodeList = [x for x in show.episodeList if x.season in seasonRange]
         
     if rename:
-        eps = [ show.formatter.display(x) for x in show.episodeList ]
-        eps = Utils.renameFiles(args.pathname, eps)
+        eps = Utils.renameFiles(args.pathname, show)
+        if not eps:
+            print "No files to be renamed"
+            exit(0)
+            
         for old, new in eps: 
             print (u"OLD: {0}".format( os.path.split(old)[1]))
             print (u"NEW: {0}".format( os.path.split(new)[1]))
             print ""
+            
         Utils.doRename(eps)
         exit(0)
 

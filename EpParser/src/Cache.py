@@ -7,8 +7,9 @@ import datetime
 import sqlite3  
 import atexit
 
-from Utils import Episode, RESOURCEPATH, getLogger
-logger = getLogger()
+from Episode import Episode
+from Utils import RESOURCEPATH
+from Logger import getLogger
 
 class Cache(object):
     ''' Our database logic class'''
@@ -42,7 +43,7 @@ class Cache(object):
             else:
                 self.connection = sqlite3.connect(dbName, detect_types=sqlite3.PARSE_DECLTYPES)
         except sqlite3.OperationalError as e:
-            logger.error("Error connecting to database: {}".format(e))
+            getLogger().error("Error connecting to database: {}".format(e))
             return None
         
         self.cursor = self.connection.cursor()
@@ -57,7 +58,7 @@ class Cache(object):
         self.cursor.close()
         self.connection.commit()
         self.connection.close()
-        logger.info("Connections have been closed")
+        getLogger().info("Connections have been closed")
 
 
     def getShowId(self, showTitle):
@@ -76,11 +77,11 @@ class Cache(object):
         sid = int(result[0])
         diffDays = (datetime.datetime.now() - result[1])
 
-        logger.info("{} days old".format(diffDays.days))
+        getLogger().info("{} days old".format(diffDays.days))
 
         if diffDays.days >= 7:
             #If the show is older than a week remove it then return not found
-            logger.warning("Show is older than a week, removing...")
+            getLogger().warning("Show is older than a week, removing...")
             self.removeShow(sid)
             return -1
         else:

@@ -3,10 +3,11 @@
 # program: poll_sources.py
 
 import sys
-from os import listdir
-from Utils import WEBSOURCESPATH, getLogger
 
-logger = getLogger()
+from os import listdir
+
+from Utils import WEBSOURCESPATH
+from Episode import getLogger
 
 def locate_show(title):
     '''Polls the web sources looking for the show'''
@@ -19,24 +20,24 @@ def locate_show(title):
     mods = filter( lambda x: x.endswith('py') and not x.startswith('__'),  listdir(WEBSOURCESPATH))
     
     for m in mods:
-        logger.info("Importing web resource {}".format(m[:-3]))
+        getLogger().info("Importing web resource {}".format(m[:-3]))
         x =  __import__(m[:-3]) 
         modules.append(x)
     
-    logger.info("Searching for {}".format(title))
+    getLogger().info("Searching for {}".format(title))
     
     for source in modules:
-        logger.info( "Polling {0}".format(source.__name__) )
+        getLogger().info( "Polling {0}".format(source.__name__) )
             
         episodes = source.poll(title)
         
         if episodes:
-            logger.info( "LOCATED {0}".format(title) )
+            getLogger().info( "LOCATED {0}".format(title) )
             break
-        logger.info( "Unable to locate {0} at {1}".format(title, source.__name__) )
+        getLogger().info( "Unable to locate {0} at {1}".format(title, source.__name__) )
 
     if not episodes:
-        logger.info("Unable to locate the show: " + title)
+        getLogger().info("Unable to locate the show: " + title)
         return []
         
     return filter(lambda x: x.episode > 0, episodes)

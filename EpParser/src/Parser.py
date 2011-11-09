@@ -4,7 +4,9 @@
 
 import poll_sources
 import Utils
-logger = Utils.getLogger()
+
+from Episode import Show
+from Logger import getLogger
 
 class EpParser(object):
     '''The main parser will poll the internet as well as a database
@@ -13,13 +15,13 @@ class EpParser(object):
     def __init__(self, showTitle="", cache=None):
         ''' Proper title is used for the database/url while the display
         title is used for error messages/display purposes'''
-        self.show = Utils.Show(showTitle)        
+        self.show = Show(showTitle)        
         self.cache = cache
 
     def setShow(self, showTitle):
         '''Sets a new show to search for, the old show will be removed '''
         if showTitle:
-            self.show = Utils.Show(showTitle)
+            self.show = Show(showTitle)
             self.show.properTitle = Utils.prepareTitle( showTitle.lower() )
             self.show.title = showTitle
         
@@ -37,21 +39,21 @@ class EpParser(object):
 
         # The show was found in the database
         if self.show.episodeList != []:
-            logger.info( "Show found in database")
+            getLogger().info( "Show found in database")
             return self.show
 
         # The show was not in the database so now we try the website
-        logger.info( "Show not found in database, polling web")
+        getLogger().info( "Show not found in database, polling web")
         self.show.addEpisodes(self._parseHTMLData())
 
         if self.show.episodeList == []:
-            logger.error("Show was not found, check spelling and try again")
+            getLogger().error("Show was not found, check spelling and try again")
             return self.show
             
         # If we successfully find the show from the internet then
         # we should add it to our database for later use
         if self.cache is not None:
-            logger.info( "Adding show to the database" )
+            getLogger().info( "Adding show to the database" )
             self.cache.addShow( self.show.properTitle, self.show.episodeList )
 
         return self.show
