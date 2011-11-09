@@ -5,16 +5,16 @@ import urllib2
 import difflib
 
 import EpParser.src.Utils as Utils
-import Episode
+import EpParser.src.Episode as Episode
+import EpParser.src.Logger as Logger
 
 from BeautifulSoup import BeautifulStoneSoup as Soup
 from string import punctuation as punct
-from Logger import getLogger
 
 def _parse_local(title):
     '''Try to find the anime ID (aid) in the dump file provided by AniDB '''    
     if not os.path.exists(os.path.join(Utils.RESOURCEPATH, 'animetitles.dat')):
-        getLogger().warning("AniDB database file not found")
+        Logger.getLogger().warning("AniDB database file not found")
         return -1
         
     regex = re.compile(r'(?P<aid>\d+)\|(?P<type>\d)\|(?P<lang>.+)\|(?P<title>.*)', re.I)
@@ -33,7 +33,7 @@ def _parse_local(title):
             sequence.set_seq2(foundTitle.lower())
             
             if sequence.ratio() > .80:
-                getLogger().info("Best guess for {} is: {}".format(title, foundTitle))
+                Logger.getLogger().info("Best guess for {} is: {}".format(title, foundTitle))
                 return res.group('aid')            
                 
     return -1
@@ -53,7 +53,7 @@ def _connect_HTTP(aid, language='en'):
         soup = Soup(resp.read())
     
     if soup.find('error'):
-        getLogger().error("Temporally banned from AniDB, most likely due to flooding")
+        Logger.getLogger().error("Temporally banned from AniDB, most likely due to flooding")
         return []
         
     episodes = soup.findAll('episode')
@@ -84,7 +84,7 @@ def _able_to_poll():
     now = time.time()
     
     if now - _seconds_since_last_poll > 2:
-        getLogger().info("Able to poll AniDB")
+        Logger.getLogger().info("Able to poll AniDB")
         _seconds_since_last_poll = now
         return True
         
@@ -98,7 +98,7 @@ def poll(title):
     if aid < 0: 
         return []       
         
-    getLogger().info("Found AID: {}".format(aid))
+    Logger.getLogger().info("Found AID: {}".format(aid))
     
     if _able_to_poll():
         episodes = _connect_HTTP(aid)

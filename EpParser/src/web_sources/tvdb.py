@@ -6,8 +6,8 @@ from tempfile import TemporaryFile
 from os.path import join
 from urllib import quote_plus
 
-from Logger import getLogger
-from Episode import Episode
+from EpParser.src.Logger import getLogger
+from EpParser.src.Episode import Episode
 
 try:
     from BeautifulSoup import BeautifulStoneSoup as Soup
