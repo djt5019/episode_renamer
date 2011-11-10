@@ -147,16 +147,18 @@ def rename_files( path, show):
     #Match the list of EpisodeFiles to the list of shows in the 'show' variable
 
     if not files:
-        exit("No files were able to be renamed")
-               
+        get_logger().info("No files were able to be renamed")
+        return []          
+   
     for ep in show.episodeList:
         if ep.season > 0:           
             file = files.get(ep.episodeNumber, None)
 
-            if file and file.season != ep.season:
-                file = None
+            if file:
+                if file.season != ep.season:
+                    continue
                 
-        if not file:
+        if ep.season == -1:
             file = files.get(ep.episodeCount, None)
             
         if not file:
