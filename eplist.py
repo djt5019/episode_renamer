@@ -103,7 +103,9 @@ def main():
             print (u"NEW: {0}".format( os.path.split(new)[1]))
             print ""
             
-        Utils.rename(eps)
+        if Utils.rename(eps) == []:
+            print "All files were successfully renamed"
+            
         exit(0)
 
     if args.display_header or args.verbose:

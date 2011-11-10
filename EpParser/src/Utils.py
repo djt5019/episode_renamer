@@ -64,7 +64,7 @@ def get_URL_descriptor(url):
             get_logger().error( 'ERROR: {0} appears to be down at the moment'.format(url) )
             pass
     except Exception as e:
-        print e
+        get_logger().error("A GZip error has occured {}".format(e))
         exit()
     finally:
         if fd:
@@ -77,9 +77,10 @@ def get_URL_descriptor(url):
 ## Renaming utility functions
 def clean_filenames( path ):
     """Attempts to extract order information about the files passed"""
+    from Episode import EpisodeFile
+    
     # Filter out anything that doesnt have the correct extension and
     # filter out any directories
-    from Episode import EpisodeFile
     files = os.listdir(path)
     files = ifilter(lambda x: os.path.isfile(os.path.join(path,x)), files)
     files = ifilter(lambda x: os.path.splitext(x)[1].lower() in VIDEO_EXTENSIONS, files)
@@ -125,7 +126,7 @@ def clean_filenames( path ):
         return []
         
     get_logger().info("Successfully cleaned the file names")
-    
+        
     return cleanFiles
 
 def _search(filename):
@@ -141,6 +142,7 @@ def rename_files( path, show):
     """Rename the files located in 'path' to those in the list 'show' """
     path = os.path.abspath(path)
     renamedFiles = []
+    
     files = clean_filenames(path)
     #Match the list of EpisodeFiles to the list of shows in the 'show' variable
 
@@ -148,17 +150,21 @@ def rename_files( path, show):
         exit("No files were able to be renamed")
                
     for ep in show.episodeList:
-        file = files.get(ep.episodeNumber, None)
-        
-        if file is None or file.season != ep.season:
-            file = files.get(ep.episodeCount, None)
-        
+        if ep.season > 0:           
+            file = files.get(ep.episodeNumber, None)
+
+            if file and file.season != ep.season:
+                file = None
+                
         if not file:
-            get_logger().info("Could not find an episode for {}".format(ep.title))
+            file = files.get(ep.episodeCount, None)
+            
+        if not file:
+            #get_logger().info("Could not find an episode for {}".format(ep.title))
             continue
         else:
             get_logger().info("Found episode {}".format(ep.title))
-                       
+       
         fileName = encode( file.name )
         newName  = replaceInvalidPathChars(show.formatter.display(ep) + file.ext)
         
@@ -167,13 +173,13 @@ def rename_files( path, show):
             continue
             
         newName  = os.path.join(path, newName)
-
+        
         renamedFiles.append( (file.path, newName,) )
         
     return renamedFiles
     
 def rename(files, resp=""):
-    """Performs the actual renaming of the files"""
+    """Performs the actual renaming of the files, returns a list of file that weren't able to be renamed"""
     if resp == '':
         resp = raw_input("\nDo you wish to rename these files [y|N]: ").lower()
 
@@ -186,12 +192,12 @@ def rename(files, resp=""):
     for old, new in files:
         try:
             os.rename(old, new)
-        except Exception:
-            errors.append(old)
+        except Exception as e:
+            errors.append( (old,e) )
     
     if errors:
         for e in errors:
-            get_logger().error( "File {0} could not be renamed".format( os.path.split(e)[1] ) )
+            get_logger().error( "File {} could not be renamed: {}".format( os.path.split(e[0])[1], e[1] ) )
     else:
         get_logger().info( "Files were successfully renamed")
         
@@ -202,14 +208,14 @@ def rename(files, resp=""):
 def remove_punctuation(title):
     """Remove any punctuation and whitespace from the title"""
     name, ext = os.path.splitext(title)
-    exclude = {'!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~'}
+    exclude = set('!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~')
     name = ''.join( ch for ch in name if ch not in exclude )
     return name+ext
     
 
 def replaceInvalidPathChars(path, replacement='-'):
     """Replace invalid path character with a different, acceptable, character"""
-    exclude = {'\\/"?<>|*:'}
+    exclude = set('\\/"?<>|*:')
     path = ''.join( ch if ch not in exclude else replacement for ch in path )
     return path
 

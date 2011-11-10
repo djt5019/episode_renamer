@@ -24,7 +24,7 @@ class Show(object):
     def add_episodes(self, eps=None):
         """ Add episodes to the shows episode list """
         if not eps:
-            eps = []
+            return
             
         self.episodeList = eps
         self.numSeasons = eps[-1].season
@@ -51,7 +51,7 @@ class EpisodeFile(object):
         self.index = index
         self.season = season
         self.ext = os.path.splitext(self.path)[1]
-        self.name = os.path.split(self.path)[1]
+        self.name = encode(os.path.split(self.path)[1])
 
 
 class EpisodeFormatter(object): 
@@ -68,7 +68,7 @@ class EpisodeFormatter(object):
         self.episodeCounterTokens = {"count", "number"}
         self.re = re.compile('(?P<tag><.*?>)', re.I)
 
-    def setFormat(self, fmt):
+    def set_format(self, fmt):
         """Set the format string for the formatter"""
         if fmt is not None:
             self.formatString = encode( fmt )

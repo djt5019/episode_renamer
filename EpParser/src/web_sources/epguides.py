@@ -3,6 +3,8 @@ import re
 from EpParser.src.Utils import get_URL_descriptor, prepareTitle
 from EpParser.src.Episode import Episode
 
+priority = 1
+
 pattern = r"""
 			^		                # Start of the string
 			(?:[\s]*?[\d]*\.?)	    # Number on list

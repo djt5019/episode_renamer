@@ -16,7 +16,8 @@ except ImportError:
     Soup = None
     pass
 
-    
+priority = 2
+
 def poll(title):	
     try:
         with open( join(Utils.RESOURCEPATH,'tvdb.apikey') ,'r') as api:

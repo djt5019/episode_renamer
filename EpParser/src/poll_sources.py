@@ -23,6 +23,10 @@ def locate_show(title):
         get_logger().info("Importing web resource {}".format(m[:-3]))
         x =  __import__(m[:-3]) 
         modules.append(x)
+        
+    #If the modules have a poll priority we will respect it by sorting the list by priority
+    if all( hasattr(x, 'priority') for x in modules ):
+        modules = sorted(modules, key=lambda x: x.priority, reverse=True)
     
     get_logger().info("Searching for {}".format(title))
     

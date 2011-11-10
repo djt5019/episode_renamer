@@ -11,6 +11,8 @@ import EpParser.src.Logger as Logger
 from BeautifulSoup import BeautifulStoneSoup as Soup
 from string import punctuation as punct
 
+priority = 3
+
 def _parse_local(title):
     '''Try to find the anime ID (aid) in the dump file provided by AniDB '''    
     if not os.path.exists(os.path.join(Utils.RESOURCEPATH, 'animetitles.dat')):

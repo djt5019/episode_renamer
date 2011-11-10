@@ -46,7 +46,7 @@ class Cache(object):
             get_logger().error("Error connecting to database: {}".format(e))
             self.connection = None
 
-        if self.cursor:
+        if self.connection:
             self.cursor = self.connection.cursor()
 
             #Make sure everything is utf-8

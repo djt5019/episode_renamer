@@ -8,12 +8,14 @@ import os
 from PySide import QtGui, QtCore
 
 from EpParser.src.Parser import EpParser
+from EpParser.src.Episode import Episode, Show, EpisodeFormatter
 from EpParser.src.Cache import Cache
+from EpParser.src.Logger import get_logger
 import EpParser.src.Utils as Utils
 
 cache = Cache()
 parser = EpParser(cache=cache)
-logger = Utils.get_logger()
+logger = get_logger()
 
 class Window(QtGui.QMainWindow):
     def __init__(self, parent=None):
@@ -104,11 +106,11 @@ class Form(QtGui.QWidget):
         displayBox.addWidget(rightWidget)
         
         self.setLayout(displayBox)
-        self.show = Utils.Show("")
+        self.show = Show("")
         self.fmtLine.setText( self.show.formatter.formatString )
         self.renameDir = ""
         self.episodes = []
-        self.formatter = Utils.EpisodeFormatter(self.show)
+        self.formatter = EpisodeFormatter(self.show)
         self.formatter.loadFormatTokens()
         
     def filterSeasons(self, text):
@@ -139,6 +141,7 @@ class Form(QtGui.QWidget):
         parser.setShow( showTitle )
         self.show = parser.getShow()
         self.formatter.show = self.show
+        self.show.formatter = self.formatter
         self.episodes = self.show.episodeList
         self.seasonBox.clear()
         self.seasonBox.addItem("All")
@@ -149,13 +152,13 @@ class Form(QtGui.QWidget):
         self.displayShow()					          
             
     def displayShow(self):
-        self.epList.clear()
         if self.episodes == []:
             InfoMessage(self, "Find Show", "Unable to find show, check spelling and try again")
             return
-            
+        
+        self.epList.clear()
         for ep in self.episodes:
-            self.epList.addItem( self.formatter.display(ep) )	
+            self.epList.addItem( self.show.formatter.display(ep) )	
                 
     def displayDirDialog(self):
         newDir = QtGui.QFileDialog.getExistingDirectory(self, 'Choose Directory', r'G:\TV\Misc')
@@ -166,8 +169,8 @@ class Form(QtGui.QWidget):
         self.renameDir = newDir
         self.dirList.clear()
         
-        for f in Utils.clean_filenames(self.renameDir):
-            self.dirList.addItem( os.path.split(f)[1])
+        for f in Utils.clean_filenames(self.renameDir).itervalues():
+            self.dirList.addItem( f.name )
             
     def displayRenameDialog(self):
         if self.renameDir == "":
@@ -178,9 +181,8 @@ class Form(QtGui.QWidget):
         if self.epList.count() == 0:
             InfoMessage(self, "Rename Files", "No Show Information Retrieved")
             return
-            
-        eps = (self.formatter.display(x) for x in self.episodes)
-        files = Utils.rename_files(self.renameDir, eps)
+
+        files = Utils.rename_files(self.renameDir, self.show)
         RenameDialog(files, self)  
         
 
@@ -212,7 +214,12 @@ class RenameDialog(QtGui.QDialog):
         
         self.fileList.addItem("Files will be renamed in the following format")		
         self.fileList.addItem("-"*40)
-        
+
+        if not self.files:
+            self.fileList.addItem("No files need to be renamed")
+            self.show()
+            return
+            
         for old,new in self.files:
             try:
                 old = Utils.encode(os.path.split(old)[1])
