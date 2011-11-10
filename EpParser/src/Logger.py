@@ -7,7 +7,7 @@ from os.path import join, abspath
 from datetime import datetime
 
 _logger = None
-def getLogger():
+def get_logger():
     global _logger
     
     if _logger is None:

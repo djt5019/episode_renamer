@@ -2,23 +2,22 @@
 # author:  Dan Tracy
 # program: Utils.py
 
-__all__ = ["PROJECTPATH", "RESOURCEPATH", "PROJECTSOURCEPATH", "WEBSOURCESPATH", 
-            "renameFiles", "doRename", "getURLdescriptor", "cleanFilenames", "removePunc",
+__all__ = ["PROJECTPATH", "RESOURCEPATH", "PROJECTSOURCEPATH", "WEBSOURCESPATH",
+           "rename_files", "rename", "get_URL_descriptor", "clean_filenames", "remove_punctuation",
             "replaceInvalidPathChars", "encode", "intToText"]
  
 import os
 import re
 import gzip
 
-from itertools import izip, ifilter
+from itertools import ifilter
 from urllib2 import Request, urlopen, URLError
 from contextlib import closing
-from math import log10
 from cStringIO import StringIO
 
-from Logger import getLogger
+from Logger import get_logger
 
-VIDEO_EXTS = {'.mkv', '.ogm', '.asf', '.asx', '.avi', '.flv', 
+VIDEO_EXTENSIONS = {'.mkv', '.ogm', '.asf', '.asx', '.avi', '.flv',
                '.mov', '.mp4', '.mpg', '.rm',  '.swf', '.vob',
                '.wmv', '.mpeg'}
                
@@ -47,8 +46,8 @@ _numDict = { '0' : '','1' : 'one', '2' : 'two', '3' : 'three', '4' : 'four', '5'
         '50' : 'fifty', '60' : 'sixty', '70' : 'seventy', '80' : 'eighty', '90' : 'ninety'}
             
 
-def getURLdescriptor(url):
-    '''Returns a valid url descriptor or None, also deals with exceptions'''
+def get_URL_descriptor(url):
+    """Returns a valid url descriptor or None, also deals with exceptions"""
     fd = None
     request = Request(url)
     request.add_header('Accept-encoding', 'gzip')
@@ -62,7 +61,7 @@ def getURLdescriptor(url):
             
     except URLError as e:        
         if hasattr(e, 'reason'):
-            getLogger().error( 'ERROR: {0} appears to be down at the moment'.format(url) )
+            get_logger().error( 'ERROR: {0} appears to be down at the moment'.format(url) )
             pass
     except Exception as e:
         print e
@@ -76,17 +75,17 @@ def getURLdescriptor(url):
 
 
 ## Renaming utility functions
-def cleanFilenames( path ):
-    '''Attempts to extract order information about the files passed'''
-    # Filter out anything that doesnt have the correct extenstion and
+def clean_filenames( path ):
+    """Attempts to extract order information about the files passed"""
+    # Filter out anything that doesnt have the correct extension and
     # filter out any directories
     from Episode import EpisodeFile
     files = os.listdir(path)
     files = ifilter(lambda x: os.path.isfile(os.path.join(path,x)), files)
-    files = ifilter(lambda x: os.path.splitext(x)[1].lower() in VIDEO_EXTS, files)
+    files = ifilter(lambda x: os.path.splitext(x)[1].lower() in VIDEO_EXTENSIONS, files)
     
-    if files == []:
-        getLogger().error( "No video files were found in {}".format( path ) )
+    if not files:
+        get_logger().error( "No video files were found in {}".format( path ) )
         exit(1)
     
     cleanFiles = {}
@@ -96,11 +95,10 @@ def cleanFilenames( path ):
     # episodes number.  Special episodes will be appended to the end of the clean list
     for f in files:
         g = _search(f)
-        index = -1
         season = -1
         
         if not g:
-            getLogger().error( "Could not find file information for: {}".format(f) )
+            get_logger().error( "Could not find file information for: {}".format(f) )
             continue
         
         if 'special' in g.groupdict():
@@ -118,15 +116,15 @@ def cleanFilenames( path ):
                 curSeason = season
                 epOffset = index
 
-        index = index + epOffset
+        index += epOffset
         
         cleanFiles[index] = EpisodeFile(os.path.join(path,f), index, season)
         
     if not cleanFiles:
-        getLogger().error( "The files could not be matched" )
+        get_logger().error( "The files could not be matched" )
         return []
         
-    getLogger().info("Successfully cleaned the file names")
+    get_logger().info("Successfully cleaned the file names")
     
     return cleanFiles
 
@@ -134,38 +132,38 @@ def _search(filename):
     for count, regex in enumerate(_REGEX):
         result = regex.search(filename)
         if result:     
-            getLogger().info("Regex #{} matched {}".format(count, filename))
+            get_logger().info("Regex #{} matched {}".format(count, filename))
             return result       
         
     return None
     
-def renameFiles( path, show):
-    '''Rename the files located in 'path' to those in the list 'show' '''
+def rename_files( path, show):
+    """Rename the files located in 'path' to those in the list 'show' """
     path = os.path.abspath(path)
     renamedFiles = []
-    files = cleanFilenames(path)
+    files = clean_filenames(path)
     #Match the list of EpisodeFiles to the list of shows in the 'show' variable
 
-    if files == []:
+    if not files:
         exit("No files were able to be renamed")
                
     for ep in show.episodeList:
-        file = files.get(ep.episode, None)
+        file = files.get(ep.episodeNumber, None)
         
         if file is None or file.season != ep.season:
-            file = files.get(ep.count, None)
+            file = files.get(ep.episodeCount, None)
         
         if not file:
-            getLogger().info("Could not find an episode for {}".format(ep.title))
+            get_logger().info("Could not find an episode for {}".format(ep.title))
             continue
         else:
-            getLogger().info("Found episode {}".format(ep.title))
+            get_logger().info("Found episode {}".format(ep.title))
                        
         fileName = encode( file.name )
         newName  = replaceInvalidPathChars(show.formatter.display(ep) + file.ext)
         
         if newName == fileName:
-            getLogger().info("File {} and Epiosde {} have same name".format(file.name, ep.title))
+            get_logger().info("File {} and Epiosde {} have same name".format(file.name, ep.title))
             continue
             
         newName  = os.path.join(path, newName)
@@ -174,12 +172,13 @@ def renameFiles( path, show):
         
     return renamedFiles
     
-def doRename(files, resp=""):
+def rename(files, resp=""):
+    """Performs the actual renaming of the files"""
     if resp == '':
         resp = raw_input("\nDo you wish to rename these files [y|N]: ").lower()
 
     if not resp.startswith('y'):
-        getLogger().info( "Changes were not commited to the files" )
+        get_logger().info( "Changes were not committed to the files" )
         exit(0)
 
     errors = []
@@ -187,39 +186,39 @@ def doRename(files, resp=""):
     for old, new in files:
         try:
             os.rename(old, new)
-        except:
+        except Exception:
             errors.append(old)
     
     if errors:
         for e in errors:
-            getLogger().error( "File {0} could not be renamed".format( os.path.split(e)[1] ) )
+            get_logger().error( "File {0} could not be renamed".format( os.path.split(e)[1] ) )
     else:
-        getLogger().info( "Files were successfully renamed")
+        get_logger().info( "Files were successfully renamed")
         
     return errors
 
 
 ## Text based functions
-def removePunc(title):
-    '''Remove any punctuation and whitespace from the title'''
+def remove_punctuation(title):
+    """Remove any punctuation and whitespace from the title"""
     name, ext = os.path.splitext(title)
-    exclude = set('!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~')
+    exclude = {'!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~'}
     name = ''.join( ch for ch in name if ch not in exclude )
     return name+ext
     
 
 def replaceInvalidPathChars(path, replacement='-'):
-    '''Replace invalid path character with a different, acceptable, character'''
-    exclude = set('\\/"?<>|*:')
+    """Replace invalid path character with a different, acceptable, character"""
+    exclude = {'\\/"?<>|*:'}
     path = ''.join( ch if ch not in exclude else replacement for ch in path )
     return path
 
 
 def prepareTitle(title):
-    '''Remove any punctuation and whitespace from the title'''
-    title = removePunc(title).split()
+    """Remove any punctuation and whitespace from the title"""
+    title = remove_punctuation(title).split()
 
-    if title == []:
+    if not title:
         return ""
 
     if title[0].lower() == 'the':
@@ -230,17 +229,17 @@ def prepareTitle(title):
         try:
             value = intToText(int(n))
             out.append(value)
-        except:
+        except Exception:
             out.append(n)
 
     return ''.join(out)
     
         
 def intToText(num):
-    '''Converts a number up to 999 to it's English representation'''
+    """Converts a number up to 999 to it's English representation"""
     # The purpose of this function is to resolve numbers to text so we don't
     # have additional entries in the database for the same show.  For example
-    # The 12 kingdoms and twelve kingdoms will yeild the same result in the DB
+    # The 12 kingdoms and twelve kingdoms will yield the same result in the DB
 
     if num < 20:
         return _numDict[str(num)]
@@ -264,7 +263,7 @@ def intToText(num):
     return '_'.join(args)
 
 def encode(text, encoding='utf-8'):
-    '''Returns a unicode representation of the string '''
+    """Returns a unicode representation of the string """
     if isinstance(text, basestring):
         if not isinstance(text, unicode):
             text = unicode(text, encoding, 'ignore')

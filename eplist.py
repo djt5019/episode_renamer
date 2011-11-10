@@ -3,15 +3,15 @@
 # author:  Dan Tracy
 # program: eplist.py
 
-'''
+"""
 This command line program will take a T.V. show as input and
 will return information about each episode, such as the title
 season and number.  I use this program to help clean up my
 TV show collection.  After the show has been found online it
-will be entered into a local databse, provided sqlite3 is available,
+will be entered into a local database, provided sqlite3 is available,
 for faster lookup in the future.  You are able to filter the shows
 by season along with other options on the command line interface.
-'''
+"""
 
 import argparse
 import os
@@ -21,10 +21,10 @@ import EpParser.src.Episode as Episode
 
 from EpParser.src.Parser import EpParser as Parser
 from EpParser.src.Cache import Cache
-from EpParser.src.Logger import getLogger
+from EpParser.src.Logger import get_logger
 
 def main():
-    ''' Our main function for our command line interface'''
+    """ Our main function for our command line interface"""
     cmd = argparse.ArgumentParser(description="TV Show Information Parser")
     
     cmd.add_argument('title',
@@ -51,7 +51,7 @@ def main():
     args = cmd.parse_args()
     if args.verbose:
         from logging import NOTSET
-        for handle in getLogger().handlers:
+        for handle in get_logger().handlers:
             handle.setLevel(NOTSET)
     
     if args.gui_enabled:
@@ -71,7 +71,7 @@ def main():
     formatter.loadFormatTokens()
     show.formatter = formatter
     
-    if show.episodeList == []:
+    if not show.episodeList:
         exit(1)
     
     # If the user specified a specific season we will filter our results
@@ -93,7 +93,7 @@ def main():
         show.episodeList = [x for x in show.episodeList if x.season in seasonRange]
         
     if rename:
-        eps = Utils.renameFiles(args.pathname, show)
+        eps = Utils.rename_files(args.pathname, show)
         if not eps:
             print "No files to be renamed"
             exit(0)
@@ -103,7 +103,7 @@ def main():
             print (u"NEW: {0}".format( os.path.split(new)[1]))
             print ""
             
-        Utils.doRename(eps)
+        Utils.rename(eps)
         exit(0)
 
     if args.display_header or args.verbose:

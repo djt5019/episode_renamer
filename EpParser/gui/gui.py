@@ -13,7 +13,7 @@ import EpParser.src.Utils as Utils
 
 cache = Cache()
 parser = EpParser(cache=cache)
-logger = Utils.getLogger()
+logger = Utils.get_logger()
 
 class Window(QtGui.QMainWindow):
     def __init__(self, parent=None):
@@ -124,7 +124,7 @@ class Form(QtGui.QWidget):
             
     def updateFormat(self):
         if self.fmtLine.text() != '':
-            self.formatter.setFormat( self.fmtLine.text() )
+            self.formatter.set_format( self.fmtLine.text() )
         
         if self.show.title != "":
             self.displayShow()
@@ -166,7 +166,7 @@ class Form(QtGui.QWidget):
         self.renameDir = newDir
         self.dirList.clear()
         
-        for f in Utils.cleanFilenames(self.renameDir):
+        for f in Utils.clean_filenames(self.renameDir):
             self.dirList.addItem( os.path.split(f)[1])
             
     def displayRenameDialog(self):
@@ -180,7 +180,7 @@ class Form(QtGui.QWidget):
             return
             
         eps = (self.formatter.display(x) for x in self.episodes)
-        files = Utils.renameFiles(self.renameDir, eps)
+        files = Utils.rename_files(self.renameDir, eps)
         RenameDialog(files, self)  
         
 
@@ -226,7 +226,7 @@ class RenameDialog(QtGui.QDialog):
         self.show()
         
     def rename(self):
-        errors = Utils.doRename(self.files, 'yes')
+        errors = Utils.rename(self.files, 'yes')
         self.fileList.clear()
         self.buttonBox.accepted.disconnect()
         

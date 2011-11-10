@@ -1,6 +1,6 @@
 import re 
 
-from EpParser.src.Utils import getURLdescriptor, prepareTitle
+from EpParser.src.Utils import get_URL_descriptor, prepareTitle
 from EpParser.src.Episode import Episode
 
 pattern = r"""
@@ -25,7 +25,7 @@ def poll(title):
 	cleanTitle = prepareTitle(title)
 	episodes = []
 	url = "http://www.epguides.com/{0}".format(cleanTitle)
-	fd  = getURLdescriptor(url)
+	fd  = get_URL_descriptor(url)
 	
 	if fd is None: return []
 

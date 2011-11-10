@@ -7,10 +7,10 @@ import sys
 from os import listdir
 
 from Utils import WEBSOURCESPATH
-from Episode import getLogger
+from Episode import get_logger
 
 def locate_show(title):
-    '''Polls the web sources looking for the show'''
+    """Polls the web sources looking for the show"""
     episodes = []
     modules = []
 
@@ -20,24 +20,24 @@ def locate_show(title):
     mods = filter( lambda x: x.endswith('py') and not x.startswith('__'),  listdir(WEBSOURCESPATH))
     
     for m in mods:
-        getLogger().info("Importing web resource {}".format(m[:-3]))
+        get_logger().info("Importing web resource {}".format(m[:-3]))
         x =  __import__(m[:-3]) 
         modules.append(x)
     
-    getLogger().info("Searching for {}".format(title))
+    get_logger().info("Searching for {}".format(title))
     
     for source in modules:
-        getLogger().info( "Polling {0}".format(source.__name__) )
+        get_logger().info( "Polling {0}".format(source.__name__) )
             
         episodes = source.poll(title)
         
         if episodes:
-            getLogger().info( "LOCATED {0}".format(title) )
+            get_logger().info( "LOCATED {0}".format(title) )
             break
-        getLogger().info( "Unable to locate {0} at {1}".format(title, source.__name__) )
+        get_logger().info( "Unable to locate {0} at {1}".format(title, source.__name__) )
 
     if not episodes:
-        getLogger().info("Unable to locate the show: " + title)
+        get_logger().info("Unable to locate the show: " + title)
         return []
         
-    return filter(lambda x: x.episode > 0, episodes)
+    return filter(lambda x: x.episodeNumber > 0, episodes)
