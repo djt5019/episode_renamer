@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # author:  Dan Tracy
-# program: eplist.py
+# program: gui.py
 
 import EpParser.gui.gui as gui
 
