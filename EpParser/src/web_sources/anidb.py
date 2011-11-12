@@ -10,6 +10,7 @@ import EpParser.src.Logger as Logger
 
 from BeautifulSoup import BeautifulStoneSoup as Soup
 from string import punctuation as punct
+from bisect import insort
 
 priority = 3
 
@@ -63,8 +64,9 @@ def _connect_HTTP(aid, language='en'):
     if episodes == []:
         return []
     
-    count = 1
+
     epList = []
+    
     for e in episodes:
         if e.epno.attrs[0][1] != '1':
             continue
@@ -72,26 +74,24 @@ def _connect_HTTP(aid, language='en'):
         epNum = int(e.epno.getText())
         title = e.find('title', {'xml:lang':'en'})
         title = title.getText()
-        epList.append(Episode.Episode(Utils.encode(title), epNum, 1, count))
-        count += 1
+        epList.append(Episode.Episode(Utils.encode(title), epNum, -1, epNum))
         
     return epList
     
     
-_seconds_since_last_poll = 0
 def _able_to_poll():
     '''Check to see if a sufficent amount of time has passed since the last 
     poll attempt.  This will prevent flooding'''
-    global _seconds_since_last_poll
     now = time.time()
     
-    if now - _seconds_since_last_poll > 2:
+    if now - _able_to_poll.last_poll > 2:
         Logger.get_logger().info("Able to poll AniDB")
-        _seconds_since_last_poll = now
+        last_poll = now
         return True
         
     return False
-    
+
+_able_to_poll.last_poll = 0
     
 def poll(title):
     aid = _parse_local(title)
@@ -105,7 +105,7 @@ def poll(title):
     if _able_to_poll():
         episodes = _connect_HTTP(aid)
         if episodes:
-            return episodes   
+            return episodes
             
     return []
         

@@ -75,9 +75,7 @@ class EpisodeFormatter(object):
             self.tokens = self.formatString.split()
             
     def loadFormatTokens(self, configFileName=""):   
-        """
-
-        """
+        """Load tokens from the format config file in RESOURCEPATH"""
         if configFileName == "":
             path = os.path.join(RESOURCEPATH, 'tags.cfg')
         else:

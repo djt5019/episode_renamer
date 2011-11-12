@@ -28,9 +28,9 @@ WEBSOURCESPATH = os.path.join(PROJECTSOURCEPATH, 'web_sources')
 
 
 ## Common video naming formats
-_REGEX = (  re.compile( r'^\[.*\]?[-\._\s]*(?P<series>.*)[-\._\s]+(?P<episode>\d+)[-\._\s]*[\[\(]*', re.I),
-            re.compile( r'^\[.*\]?[-\._\s]*(?P<series>.*)[-\._\s]+OVA[-\._\s]*(?P<special>\d+)[-\._\s]*[\[\(]*', re.I),
-            re.compile( r'^\[.*\]?[-\._\s]*(?P<series>.*)[-\._\s]+S[-\._\s]*(?P<season>\d+)[-\._\s]*(?P<episode>\d+)[-\._\s]*[\[\(]*', re.I ),
+_REGEX = (  re.compile( r'^\[.*\]?[-\._\s]*(?P<series>.*)[-\._\s]+(?P<episode>\d+)[-\._\s]', re.I),
+            re.compile( r'^\[.*\]?[-\._\s]*(?P<series>.*)[-\._\s]+OVA[-\._\s]*(?P<special>\d+)[-\._\s]', re.I),
+            re.compile( r'^\[.*\]?[-\._\s]*(?P<series>.*)[-\._\s]+S[-\._\s]*(?P<season>\d+)[-\._\s]*(?P<episode>\d+)[-\._\s]*', re.I ),
             re.compile( r'(?P<series>.*)[\s\._-]*S(?P<season>\d+)[\s\._-]*E(?P<episode>\d+)', re.I),
             re.compile( r'^(?P<series>.*)[\s\._-]*\[(?P<season>\d+)x(?P<episode>\d+)\]',re.I),            
             re.compile( r'^(?P<series>.*) - Season (?P<season>\d+) - Episode (?P<episode>\d*) - \w*', re.I), #Also mine
@@ -158,11 +158,11 @@ def rename_files( path, show):
                 if file.season != ep.season:
                     continue
                 
-        if ep.season == -1:
+        elif ep.season == -1:
             file = files.get(ep.episodeCount, None)
             
         if not file:
-            #get_logger().info("Could not find an episode for {}".format(ep.title))
+            get_logger().info("Could not find an episode for {}".format(ep.title))
             continue
         else:
             get_logger().info("Found episode {}".format(ep.title))

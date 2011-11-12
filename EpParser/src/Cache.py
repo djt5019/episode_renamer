@@ -10,6 +10,7 @@ import atexit
 from Episode import Episode
 from Utils import RESOURCEPATH
 from Logger import get_logger
+from difflib import SequenceMatcher
 
 class Cache(object):
     """ Our database logic class"""
@@ -63,14 +64,26 @@ class Cache(object):
     def get_showId(self, showTitle):
         """Returns the shows ID if found, -1 otherwise. If the show is more than
         a week old update the show"""
+        
         title = (showTitle, )
-
         self.cursor.execute("SELECT sid, time FROM shows WHERE title=? LIMIT 1", title)
 
         result = self.cursor.fetchone() 
 
-        if result is None:
-            return -1
+        if not result:
+            self.cursor.execute("SELECT sid, time, title FROM shows")
+            result = self.cursor.fetchall()
+            matcher = SequenceMatcher(a=showTitle.lower())
+            
+            for t in result:
+                matcher.set_seq2(t[2].lower())
+                
+                if matcher.ratio() > .60:
+                    result = t
+                    break
+            else:
+                # We didn't find a suitable matcher
+                return -1         
 
         sid = int(result[0])
         diffDays = (datetime.datetime.now() - result[1])

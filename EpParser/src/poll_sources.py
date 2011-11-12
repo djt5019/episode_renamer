@@ -44,4 +44,4 @@ def locate_show(title):
         get_logger().info("Unable to locate the show: " + title)
         return []
         
-    return filter(lambda x: x.episodeNumber > 0, episodes)
+    return filter(lambda x: x.episodeNumber > 0, episodes).sort(key = lambda x: x.episodeCount)
