@@ -10,7 +10,6 @@ import EpParser.src.Logger as Logger
 
 from BeautifulSoup import BeautifulStoneSoup as Soup
 from string import punctuation as punct
-from bisect import insort
 
 priority = 3
 
@@ -24,7 +23,9 @@ def _parse_local(title):
     
     sequence = difflib.SequenceMatcher(lambda x: x in punct, title.lower(), "")
     
-    with open(os.path.join(Utils.RESOURCEPATH, 'animetitles.dat'), 'r') as f:
+    guesses = []
+    
+    with open(os.path.join(Utils.RESOURCEPATH, 'animetitles.dat'), 'r') as f:        
         for line in f:            
             res = regex.search(line)
             
@@ -34,12 +35,18 @@ def _parse_local(title):
             foundTitle = Utils.encode(res.group('title'))
             
             sequence.set_seq2(foundTitle.lower())
+            ratio = sequence.ratio()
             
-            if sequence.ratio() > .80:
-                Logger.get_logger().info("Best guess for {} is: {}".format(title, foundTitle))
-                return res.group('aid')            
+            if ratio > .80:
+                Logger.get_logger().info("Suitable guess for {} is: {}".format(title, foundTitle))
+                guesses.append( (ratio, res.group('aid'), title) )
                 
-    return -1
+    aid = -1
+    if guesses:
+        _, aid, name = max(guesses)
+        Logger.get_logger().info("Best choice is {} with id {}".format(name, aid))
+    
+    return aid
     
 def _connect_UDP(aid):
    pass    
@@ -64,7 +71,6 @@ def _connect_HTTP(aid, language='en'):
     if episodes == []:
         return []
     
-
     epList = []
     
     for e in episodes:

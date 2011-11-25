@@ -17,9 +17,8 @@ from cStringIO import StringIO
 
 from Logger import get_logger
 
-VIDEO_EXTENSIONS = {'.mkv', '.ogm', '.asf', '.asx', '.avi', '.flv',
-               '.mov', '.mp4', '.mpg', '.rm',  '.swf', '.vob',
-               '.wmv', '.mpeg'}
+VIDEO_EXTENSIONS = {'.mkv', '.ogm', '.asf', '.asx', '.avi', '.flv', '.mov', 
+                    '.mp4', '.mpg', '.rm',  '.swf', '.vob', '.wmv', '.mpeg'}
                
 PROJECTPATH  = os.path.abspath(os.path.join(os.path.dirname(os.path.join(__file__)), '..'))
 RESOURCEPATH = os.path.join( PROJECTPATH, 'resources')
@@ -123,7 +122,7 @@ def clean_filenames( path ):
         
     if not cleanFiles:
         get_logger().error( "The files could not be matched" )
-        return []
+        return cleanFiles
         
     get_logger().info("Successfully cleaned the file names")
         
@@ -162,10 +161,17 @@ def rename_files( path, show):
             file = files.get(ep.episodeCount, None)
             
         if not file:
-            get_logger().info("Could not find an episode for {}".format(ep.title))
+            try:
+                get_logger().info("Could not find an episode for {}".format(ep.title))
+            except UnicodeEncodeError:
+                pass
             continue
+             
         else:
-            get_logger().info("Found episode {}".format(ep.title))
+            try:
+                get_logger().info("Found episode {}".format(ep.title))
+            except UnicodeEncodeError:
+                pass
        
         fileName = encode( file.name )
         newName  = replaceInvalidPathChars(show.formatter.display(ep) + file.ext)

@@ -213,7 +213,7 @@ class RenameDialog(QtGui.QDialog):
         self.setLayout(layout)		
         
         self.fileList.addItem("Files will be renamed in the following format")		
-        self.fileList.addItem("-"*40)
+        self.fileList.addItem("-"*55)
 
         if not self.files:
             self.fileList.addItem("No files need to be renamed")

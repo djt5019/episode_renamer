@@ -5,9 +5,10 @@
 import sys
 
 from os import listdir
+from itertools import ifilter
 
 from Utils import WEBSOURCESPATH
-from Episode import get_logger
+from Logger import get_logger
 
 def locate_show(title):
     """Polls the web sources looking for the show"""
@@ -32,7 +33,7 @@ def locate_show(title):
     
     for source in modules:
         get_logger().info( "Polling {0}".format(source.__name__) )
-            
+        
         episodes = source.poll(title)
         
         if episodes:
@@ -44,4 +45,4 @@ def locate_show(title):
         get_logger().info("Unable to locate the show: " + title)
         return []
         
-    return filter(lambda x: x.episodeNumber > 0, episodes).sort(key = lambda x: x.episodeCount)
+    return sorted(ifilter(lambda x: x.episodeNumber > 0, episodes), key=lambda x:x.episodeCount)

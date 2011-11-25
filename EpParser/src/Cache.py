@@ -79,6 +79,7 @@ class Cache(object):
                 matcher.set_seq2(t[2].lower())
                 
                 if matcher.ratio() > .60:
+                    get_logger().info("Best guess is {}".format(t[2]))
                     result = t
                     break
             else:
