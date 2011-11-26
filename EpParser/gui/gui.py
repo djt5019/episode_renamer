@@ -111,7 +111,7 @@ class Form(QtGui.QWidget):
         self.renameDir = ""
         self.episodes = []
         self.formatter = EpisodeFormatter(self.show)
-        self.formatter.loadFormatTokens()
+        self.formatter.load_format_config()
         
     def filterSeasons(self, text):
         self.episodes = self.show.episodeList

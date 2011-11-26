@@ -4,17 +4,17 @@
 import ConfigParser
 import re
 import os
+import Utils
+import Logger
 
 from math import log10
-from Utils import (prepareTitle, encode, RESOURCEPATH)
-from Logger import get_logger
 
 class Show(object):
     """A convenience class to keep track of the list of episodes as well as
        to keep track of the custom formatter for those episodes"""
     def __init__(self, seriesTitle):
-        self.title = encode(seriesTitle.title())
-        self.properTitle = prepareTitle(self.title)
+        self.title = Utils.encode(seriesTitle.title())
+        self.properTitle = Utils.prepare_title(self.title)
         self.episodeList = []
         self.specialsList = []
         self.formatter = EpisodeFormatter(self)
@@ -39,7 +39,7 @@ class Episode(object):
     """ A simple class to organize the episodes, an alternative would be
         to use a namedtuple though this is easier """
     def __init__(self, title, epNumber, season, episodeCount):
-        self.title = encode(title)
+        self.title = Utils.encode(title)
         self.season = int(season)
         self.episodeNumber = int(epNumber)
         self.episodeCount = int(episodeCount)
@@ -51,7 +51,7 @@ class EpisodeFile(object):
         self.index = index
         self.season = season
         self.ext = os.path.splitext(self.path)[1]
-        self.name = encode(os.path.split(self.path)[1])
+        self.name = Utils.encode(os.path.split(self.path)[1])
 
 
 class EpisodeFormatter(object): 
@@ -59,7 +59,7 @@ class EpisodeFormatter(object):
         """Allows printing of custom formatted episode information"""
         formatString = u"<series> - Episode <count> - <title>"
         self.show = show
-        self.formatString = encode(fmt) if fmt else formatString
+        self.formatString = Utils.encode(fmt) if fmt else formatString
         self.tokens = self.formatString.split()
         self.episodeNumberTokens = {"episode", "ep"}
         self.seasonTokens = {"season"}
@@ -71,18 +71,18 @@ class EpisodeFormatter(object):
     def set_format(self, fmt):
         """Set the format string for the formatter"""
         if fmt is not None:
-            self.formatString = encode( fmt )
+            self.formatString = Utils.encode( fmt )
             self.tokens = self.formatString.split()
             
-    def loadFormatTokens(self, configFileName=""):   
+    def load_format_config(self, configFileName=""):
         """Load tokens from the format config file in RESOURCEPATH"""
         if configFileName == "":
-            path = os.path.join(RESOURCEPATH, 'tags.cfg')
+            path = os.path.join(Utils.RESOURCEPATH, 'tags.cfg')
         else:
-            path = os.path.join(RESOURCEPATH, configFileName)
+            path = os.path.join(Utils.RESOURCEPATH, configFileName)
 
         if not os.path.exists(path):
-            get_logger().warning("Tag config file was not found")
+            Logger.get_logger().warning("Tag config file was not found")
             return
         
         cfg = ConfigParser.ConfigParser()
@@ -94,7 +94,7 @@ class EpisodeFormatter(object):
             tokens = cfg.get(s, 'tags')
             
             if tokens == "":                
-                get_logger().error("No tags for section [{}], using defaults".format(s))
+                Logger.get_logger().error("No tags for section [{}], using defaults".format(s))
                 continue
                 
             if ',' in tokens: 
@@ -103,7 +103,7 @@ class EpisodeFormatter(object):
                 tokens = { tokens }
                 
             for f in tokens.intersection(allTokens): #Look for duplicates
-                get_logger().error("In section [{}]: token '{}' redefined".format(s,f))
+                Logger.get_logger().error("In section [{}]: token '{}' redefined".format(s,f))
                 tokens.remove(f)
                     
             allTokens = allTokens.union(tokens)
@@ -139,7 +139,7 @@ class EpisodeFormatter(object):
             
             args.append( ''.join(a) )
             
-        return encode(' '.join(args))
+        return Utils.encode(' '.join(args))
         
     def _parse(self, ep, tag):
         caps = lower = pad = False

@@ -68,7 +68,7 @@ def main():
     
     show = episodeParser.getShow()    
     formatter = Episode.EpisodeFormatter(show, args.format)
-    formatter.loadFormatTokens()
+    formatter.load_format_config()
     show.formatter = formatter
     
     if not show.episodeList:

@@ -22,7 +22,7 @@ class EpParser(object):
         """Sets a new show to search for, the old show will be removed """
         if showTitle:
             self.show = Show(showTitle)
-            self.show.properTitle = Utils.prepareTitle( showTitle.lower() )
+            self.show.properTitle = Utils.prepare_title( showTitle.lower() )
             self.show.title = showTitle
         
 
