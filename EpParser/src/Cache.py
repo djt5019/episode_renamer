@@ -14,33 +14,19 @@ from difflib import SequenceMatcher
 
 class Cache(object):
     """ Our database logic class"""
-    _create_database = u'''
-        PRAGMA foreign_keys = ON;
-        
-        CREATE TABLE shows (
-            sid INTEGER PRIMARY KEY,
-            title TEXT NOT NULL,
-            time TIMESTAMP 
-        );
-        
-        CREATE TABLE episodes (
-            eid INTEGER PRIMARY KEY,
-            sid INTEGER NOT NULL,
-            eptitle TEXT NOT NULL,
-            season INTEGER NOT NULL,
-            showNumber INTEGER NOT NULL,            
-            FOREIGN KEY(sid) REFERENCES shows(sid)
-        );'''
-
+    
     def __init__(self, dbName=u"episodes.db"):
         """Establish a connection to the show database"""
         if dbName != ':memory:':
             dbName = os.path.join(RESOURCEPATH, dbName)
-
         try:
             if not os.path.exists(dbName) and dbName != ':memory:':
                 self.connection = sqlite3.connect(dbName, detect_types=sqlite3.PARSE_DECLTYPES)
-                self.connection.executescript( Cache._create_database )
+                
+                with open(os.path.join(RESOURCEPATH, 'createDB.sql'), 'r') as f:
+                    sql = f.readlines()
+                
+                self.connection.executescript(sql)
             else:
                 self.connection = sqlite3.connect(dbName, detect_types=sqlite3.PARSE_DECLTYPES)
         except sqlite3.OperationalError as e:
@@ -78,7 +64,7 @@ class Cache(object):
             for t in result:
                 matcher.set_seq2(t[2].lower())
                 
-                if matcher.ratio() > .60:
+                if matcher.ratio() > .80:
                     get_logger().info("Best guess is {}".format(t[2]))
                     result = t
                     break
