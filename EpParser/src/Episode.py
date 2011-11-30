@@ -6,6 +6,7 @@ import re
 import os
 import Utils
 import Logger
+import zlib
 
 from math import log10
 
@@ -52,6 +53,14 @@ class EpisodeFile(object):
         self.season = season
         self.ext = os.path.splitext(self.path)[1]
         self.name = Utils.encode(os.path.split(self.path)[1])
+        
+    def calc_crc32(self):
+        with open(self.path, 'rb') as f:
+            checksum = 0
+            for line in f:
+                checksum = zlib.crc32(line, checksum)
+                
+        return hex( checksum & 0xFFFFFFFF )
 
 
 class EpisodeFormatter(object): 
@@ -188,3 +197,4 @@ class EpisodeFormatter(object):
         
         else: # If it reaches this case it's most likely an invalid tag
             return "<" + tag + ">"
+            
