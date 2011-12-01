@@ -10,7 +10,6 @@ import atexit
 from Episode import Episode
 from Utils import RESOURCEPATH
 from Logger import get_logger
-from difflib import SequenceMatcher
 
 class Cache(object):
     """ Our database logic class"""
@@ -22,10 +21,9 @@ class Cache(object):
         try:
             if not os.path.exists(dbName) and dbName != ':memory:':
                 self.connection = sqlite3.connect(dbName, detect_types=sqlite3.PARSE_DECLTYPES)
-                
+              
                 with open(os.path.join(RESOURCEPATH, 'createDB.sql'), 'r') as f:
-                    sql = f.readlines()
-                
+                    sql = f.read()
                 self.connection.executescript(sql)
             else:
                 self.connection = sqlite3.connect(dbName, detect_types=sqlite3.PARSE_DECLTYPES)
@@ -57,19 +55,6 @@ class Cache(object):
         result = self.cursor.fetchone() 
 
         if not result:
-            self.cursor.execute("SELECT sid, time, title FROM shows")
-            result = self.cursor.fetchall()
-            matcher = SequenceMatcher(a=showTitle.lower())
-            
-            for t in result:
-                matcher.set_seq2(t[2].lower())
-                
-                if matcher.ratio() > .80:
-                    get_logger().info("Best guess is {}".format(t[2]))
-                    result = t
-                    break
-            else:
-                # We didn't find a suitable matcher
                 return -1         
 
         sid = int(result[0])

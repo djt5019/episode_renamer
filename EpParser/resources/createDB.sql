@@ -1,6 +1,6 @@
 PRAGMA foreign_keys = ON;
 
-CEATE TABLE shows (
+CREATE TABLE shows (
     sid INTEGER PRIMARY KEY,
     title TEXT NOT NULL,
     time TIMESTAMP 
