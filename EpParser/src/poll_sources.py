@@ -19,23 +19,23 @@ def locate_show(title):
     ## This will import all the modules within the web_sources directory so that we
     ## can easily plug in new sources for finding episode information
     mods = filter( lambda x: x.endswith('py') and not x.startswith('__'),  listdir(WEBSOURCESPATH))
-    
+
     for m in mods:
         get_logger().info("Importing web resource {}".format(m[:-3]))
-        x =  __import__(m[:-3]) 
+        x =  __import__(m[:-3])
         modules.append(x)
-        
+
     #If the modules have a poll priority we will respect it by sorting the list by priority
     if all( hasattr(x, 'priority') for x in modules ):
         modules = sorted(modules, key=lambda x: x.priority, reverse=True)
-    
+
     get_logger().info("Searching for {}".format(title))
-    
+
     for source in modules:
         get_logger().info( "Polling {0}".format(source.__name__) )
-        
+
         episodes = source.poll(title)
-        
+
         if episodes:
             get_logger().info( "LOCATED {0}".format(title) )
             break
@@ -44,5 +44,5 @@ def locate_show(title):
     if not episodes:
         get_logger().info("Unable to locate the show: " + title)
         return []
-        
+
     return sorted(ifilter(lambda x: x.episodeNumber > 0, episodes), key=lambda x:x.episodeCount)
