@@ -28,16 +28,18 @@ PROJECTSOURCEPATH = os.path.join(PROJECTPATH, 'src')
 WEBSOURCESPATH = os.path.join(PROJECTSOURCEPATH, 'web_sources')
 
 
-## Common video naming formats
-_REGEX = (  re.compile( r'^\[.*\]?[-\._\s]*(?P<series>.*)[-\._\s]+(?P<episode>\d+)[-\._\s]', re.I),
-            re.compile( r'^\[.*\]?[-\._\s]*(?P<series>.*)[-\._\s]+OVA[-\._\s]*(?P<special>\d+)[-\._\s]', re.I),
-            re.compile( r'^\[.*\]?[-\._\s]*(?P<series>.*)[-\._\s]+S[-\._\s]*(?P<season>\d+)[-\._\s]*(?P<episode>\d+)[-\._\s]*', re.I ),
-            re.compile( r'(?P<series>.*)[\s\._-]*S(?P<season>\d+)[\s\._-]*E(?P<episode>\d+)', re.I),
-            re.compile( r'^(?P<series>.*)[\s\._-]*\[(?P<season>\d+)x(?P<episode>\d+)\]',re.I),
-            re.compile( r'^(?P<series>.*) - Season (?P<season>\d+) - Episode (?P<episode>\d*) - \w*', re.I),  # Also mine
-            re.compile( r'^(?P<series>.*) - Episode (?P<episode>\d*) - \w*', re.I),  # My usual format
-            re.compile( r'^(?P<series>.*) - OVA (?P<special>\d+) - \w*', re.I),
-            re.compile( r'(?P<series>.*)[-\._\s]+(?P<episode>\d+)', re.I),
+## Common video naming formats, will be compiled if they are needed during episode renaming
+## in the _compile_regexs function, otherwise they will not be compiled for simple episode 
+## information retrieval purposes
+_REGEX = (  r'^\[.*\]?[-\._\s]*(?P<series>.*)[-\._\s]+(?P<episode>\d+)[-\._\s]',
+            r'^\[.*\]?[-\._\s]*(?P<series>.*)[-\._\s]+OVA[-\._\s]*(?P<special>\d+)[-\._\s]',
+            r'^\[.*\]?[-\._\s]*(?P<series>.*)[-\._\s]+S[-\._\s]*(?P<season>\d+)[-\._\s]*(?P<episode>\d+)[-\._\s]*',
+            r'(?P<series>.*)[\s\._-]*S(?P<season>\d+)[\s\._-]*E(?P<episode>\d+)',
+            r'^(?P<series>.*)[\s\._-]*\[(?P<season>\d+)x(?P<episode>\d+)\]',
+            r'^(?P<series>.*) - Season (?P<season>\d+) - Episode (?P<episode>\d*) - \w*',  # Also mine
+            r'^(?P<series>.*) - Episode (?P<episode>\d*) - \w*',  # My usual format
+            r'^(?P<series>.*) - OVA (?P<special>\d+) - \w*',
+            r'(?P<series>.*)[-\._\s]+(?P<episode>\d+)',
             )
 
 _numDict = { '0' : '','1' : 'one', '2' : 'two', '3' : 'three', '4' : 'four', '5' : 'five', '6' : 'six',
@@ -86,8 +88,9 @@ def clean_filenames( path ):
 
     if not files:
         Logger.get_logger().error( "No video files were found in {}".format( path ) )
-        exit(1)
-
+        exit(1)    
+    
+    _compile_regexs()
     cleanFiles = {}
     curSeason = -1
     epOffset = 0
@@ -128,6 +131,16 @@ def clean_filenames( path ):
 
     return cleanFiles
 
+def _compile_regexs():
+    # This function will only compile the regexs once and store the results
+    # in a list within the function.  Monkey-patching is strange.
+    if not _compile_regexs.regexList:
+        for r in _REGEX:
+            _compile_regexs.regexList.append(re.compile(r, re.I))
+    return _compile_regexs.regexList
+
+_compile_regexs.regexList = []
+    
 def _search(filename):
     for count, regex in enumerate(_REGEX):
         result = regex.search(filename)
