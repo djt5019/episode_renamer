@@ -33,9 +33,10 @@ WEBSOURCESPATH = os.path.join(PROJECTSOURCEPATH, 'web_sources')
 ## information retrieval purposes
 _REGEX = (  r'^\[.*\]?[-\._\s]*(?P<series>.*)[-\._\s]+(?P<episode>\d+)[-\._\s]',
             r'^\[.*\]?[-\._\s]*(?P<series>.*)[-\._\s]+OVA[-\._\s]*(?P<special>\d+)[-\._\s]',
-            r'^\[.*\]?[-\._\s]*(?P<series>.*)[-\._\s]+S[-\._\s]*(?P<season>\d+)[-\._\s]*(?P<episode>\d+)[-\._\s]*',
-            r'(?P<series>.*)[\s\._-]*S(?P<season>\d+)[\s\._-]*E(?P<episode>\d+)',
-            r'^(?P<series>.*)[\s\._-]*\[(?P<season>\d+)x(?P<episode>\d+)\]',
+            r'^\[.*\]?[-\._\s]*(?P<series>.*)[-\._\s]+(s|season)[-\._\s]*(?P<season>\d+)[-\._\s]*(?P<episode>\d+)[-\._\s]*',
+            r'(?P<series>.*)[\s\._-]*S(?P<season>\d+)[\s\._-]*(episode|ep|e)(?P<episode>\d+)',
+			r'(?P<series>.*)[\s\._-]*(episode|ep|e)(?P<episode>\d+)',
+			r'^(?P<series>.*)[\s\._-]*\[(?P<season>\d+)x(?P<episode>\d+)\]',
             r'^(?P<series>.*) - Season (?P<season>\d+) - Episode (?P<episode>\d*) - \w*',  # Also mine
             r'^(?P<series>.*) - Episode (?P<episode>\d*) - \w*',  # My usual format
             r'^(?P<series>.*) - OVA (?P<special>\d+) - \w*',
@@ -142,7 +143,7 @@ def _compile_regexs():
 _compile_regexs.regexList = []
     
 def _search(filename):
-    for count, regex in enumerate(_REGEX):
+    for count, regex in enumerate(_compile_regexs()):
         result = regex.search(filename)
         if result:
             Logger.get_logger().info("Regex #{} matched {}".format(count, filename))
