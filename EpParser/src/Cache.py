@@ -8,7 +8,7 @@ import sqlite3
 import atexit
 
 from Episode import Episode
-from Utils import RESOURCEPATH
+from Constants import RESOURCEPATH
 from Logger import get_logger
 
 class Cache(object):

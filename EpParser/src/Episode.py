@@ -4,9 +4,11 @@
 import ConfigParser
 import re
 import os
-import Utils
-import Logger
 import zlib
+
+import Utils
+import Constants
+import Logger
 
 from math import log10
 
@@ -86,9 +88,9 @@ class EpisodeFormatter(object):
     def load_format_config(self, configFileName=""):
         """Load tokens from the format config file in RESOURCEPATH"""
         if configFileName == "":
-            path = os.path.join(Utils.RESOURCEPATH, 'tags.cfg')
+            path = os.path.join(Constants.RESOURCEPATH, 'tags.cfg')
         else:
-            path = os.path.join(Utils.RESOURCEPATH, configFileName)
+            path = os.path.join(Constants.RESOURCEPATH, configFileName)
 
         if not os.path.exists(path):
             Logger.get_logger().warning("Tag config file was not found")

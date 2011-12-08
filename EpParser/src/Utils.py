@@ -2,10 +2,6 @@
 # author:  Dan Tracy
 # program: Utils.py
 
-__all__ = ["PROJECTPATH", "RESOURCEPATH", "PROJECTSOURCEPATH", "WEBSOURCESPATH",
-           "rename_files", "rename", "get_URL_descriptor", "clean_filenames", "remove_punctuation",
-           "replace_invalid_path_chars", "encode", "intToText"]
-
 import os
 import re
 import gzip
@@ -18,37 +14,7 @@ from urllib2 import Request, urlopen, URLError
 from contextlib import closing
 from cStringIO import StringIO
 
-
-VIDEO_EXTENSIONS = {'.mkv', '.ogm', '.asf', '.asx', '.avi', '.flv', '.mov',
-                    '.mp4', '.mpg', '.rm',  '.swf', '.vob', '.wmv', '.mpeg'}
-
-PROJECTPATH = os.path.abspath(os.path.join(os.path.dirname(os.path.join(__file__)), '..'))
-RESOURCEPATH = os.path.join( PROJECTPATH, 'resources')
-PROJECTSOURCEPATH = os.path.join(PROJECTPATH, 'src')
-WEBSOURCESPATH = os.path.join(PROJECTSOURCEPATH, 'web_sources')
-
-
-## Common video naming formats, will be compiled if they are needed during episode renaming
-## in the _compile_regexs function, otherwise they will not be compiled for simple episode 
-## information retrieval purposes
-_REGEX = (  r'^\[.*\]?[-\._\s]*(?P<series>.*)[-\._\s]+(?P<episode>\d+)[-\._\s]',
-            r'^\[.*\]?[-\._\s]*(?P<series>.*)[-\._\s]+OVA[-\._\s]*(?P<special>\d+)[-\._\s]',
-            r'^\[.*\]?[-\._\s]*(?P<series>.*)[-\._\s]+(s|season)[-\._\s]*(?P<season>\d+)[-\._\s]*(?P<episode>\d+)[-\._\s]*',
-            r'(?P<series>.*)[\s\._-]*S(?P<season>\d+)[\s\._-]*(episode|ep|e)(?P<episode>\d+)',
-			r'(?P<series>.*)[\s\._-]*(episode|ep|e)(?P<episode>\d+)',
-			r'^(?P<series>.*)[\s\._-]*\[(?P<season>\d+)x(?P<episode>\d+)\]',
-            r'^(?P<series>.*) - Season (?P<season>\d+) - Episode (?P<episode>\d*) - \w*',  # Also mine
-            r'^(?P<series>.*) - Episode (?P<episode>\d*) - \w*',  # My usual format
-            r'^(?P<series>.*) - OVA (?P<special>\d+) - \w*',
-            r'(?P<series>.*)[-\._\s]+(?P<episode>\d+)',
-            )
-
-_numDict = { '0' : '','1' : 'one', '2' : 'two', '3' : 'three', '4' : 'four', '5' : 'five', '6' : 'six',
-        '7' : 'seven', '8' : 'eight', '9' : 'nine', '10' : 'ten', '11' : 'eleven', '12' : 'twelve',
-        '13' : 'thirteen', '14' : 'fourteen', '15' : 'fifteen', '16' : 'sixteen', '17' : 'seventeen',
-        '18' : 'eighteen', '19' : 'nineteen', '20' : 'twenty', '30' : 'thirty', '40' : 'forty',
-        '50' : 'fifty', '60' : 'sixty', '70' : 'seventy', '80' : 'eighty', '90' : 'ninety'}
-
+from Constants import VIDEO_EXTENSIONS, REGEX, NUM_DICT
 
 def get_URL_descriptor(url):
     """Returns an autoclosing url descriptor or None"""
@@ -136,7 +102,7 @@ def _compile_regexs():
     # This function will only compile the regexs once and store the results
     # in a list within the function.  Monkey-patching is strange.
     if not _compile_regexs.regexList:
-        for r in _REGEX:
+        for r in REGEX:
             _compile_regexs.regexList.append(re.compile(r, re.I))
     return _compile_regexs.regexList
 
@@ -270,7 +236,7 @@ def intToText(num):
     # The 12 kingdoms and twelve kingdoms will yield the same result in the DB
 
     if num < 20:
-        return _numDict[str(num)]
+        return NUM_DICT[str(num)]
 
     args = []
     num = str(num)
@@ -280,11 +246,11 @@ def intToText(num):
         length = len(num)
 
         if length == 3:
-            args.append( _numDict[num[0]] )
+            args.append( NUM_DICT[num[0]] )
             args.append("hundred")
         else:
             value = str( digit * (10**(length-1)) )
-            args.append( _numDict[value] )
+            args.append( NUM_DICT[value] )
 
         num = num[1:]
 

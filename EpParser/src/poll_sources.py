@@ -7,7 +7,7 @@ import sys
 from os import listdir
 from itertools import ifilter
 
-from Utils import WEBSOURCESPATH
+from Constants import WEBSOURCESPATH
 from Logger import get_logger
 
 def locate_show(title):
@@ -18,7 +18,7 @@ def locate_show(title):
     sys.path.append(WEBSOURCESPATH)
     ## This will import all the modules within the web_sources directory so that we
     ## can easily plug in new sources for finding episode information
-    mods = filter( lambda x: x.endswith('py') and not x.startswith('__'),  listdir(WEBSOURCESPATH))
+    mods = ifilter( lambda x: x.endswith('py') and not x.startswith('__'),  listdir(WEBSOURCESPATH))
 
     for m in mods:
         get_logger().info("Importing web resource {}".format(m[:-3]))

@@ -8,6 +8,7 @@ from urllib import quote_plus
 
 from EpParser.src.Logger import get_logger
 from EpParser.src.Episode import Episode
+from EpParser.src.Constants import RESOURCEPATH
 
 try:
     from BeautifulSoup import BeautifulStoneSoup as Soup
@@ -20,7 +21,7 @@ priority = 2
 
 def poll(title):	
     try:
-        with open( join(Utils.RESOURCEPATH,'tvdb.apikey') ,'r') as api:
+        with open( join(RESOURCEPATH,'tvdb.apikey') ,'r') as api:
             API_KEY = api.readline()
     except:
         get_logger().error( "The TvDB Api key file could not be found, unable to poll TvDB" )

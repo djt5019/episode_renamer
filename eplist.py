@@ -39,6 +39,9 @@ def main():
 
     cmd.add_argument('-s', '--season', default="", type=str,
         help="The specific season to search for")
+    
+    cmd.add_argument('-e', '--episode', default="", type=str,
+        help="The specific episode to search for")
 
     cmd.add_argument('-r', '--rename', dest='pathname',
         help="Rename the files in the path provided")
@@ -78,21 +81,14 @@ def main():
     # If the user specified a specific season we will filter our results
     # this also checks to make sure its a reasonable season number
     if args.season:
-        if '-' in args.season:
-            high, low = args.season.split('-')
-            high = int(high)
-            low = int(low)
-        else:
-            high = low = int(args.season)
-
-        high = min(high, show.episodeList[-1].season)
-        low = max(low, 1)
-
-        if low > high:
-            low, high = high, low
-
-        seasonRange = xrange(low, high + 1)
-        show.episodeList = [x for x in show.episodeList if x.season in seasonRange]
+        seasonRange = list(parse_range(args.season, show))
+        if seasonRange[-1] <= show.numSeasons:
+            show.episodeList = [x for x in show.episodeList if x.season in seasonRange]
+        
+    if args.episode:
+        episodeRange = parse_range(args.episode, show)
+        
+        show.episodeList = [x for x in show.episodeList if x.episodeCount in episodeRange]
 
     if rename:
         eps = Utils.rename_files(args.pathname, show)
@@ -126,6 +122,22 @@ def main():
         print show.formatter.display(eps)
         curr_season = eps.season
 
+
+def parse_range(range, show):
+    print range
+    if '-' in range:
+        high, low = range.split('-')
+        high = int(high)
+        low = int(low)
+    else:
+        high = low = int(range)
+
+    low = max(low, 1)
+
+    if low > high:
+        low, high = high, low
+
+    return xrange(low, high + 1)
 
 if __name__ == '__main__':
     main()
