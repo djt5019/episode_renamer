@@ -1,39 +1,38 @@
-import re
-import os
-import time
-import urllib2
 import difflib
 
-import EpParser.src.Utils as Utils
 import EpParser.src.Episode as Episode
 import EpParser.src.Logger as Logger
-import EpParser.src.Constants as Constants
 
 from BeautifulSoup import BeautifulStoneSoup as Soup
 from string import punctuation as punct
 
+import EpParser.src.Source_Poll_API as API
+
 priority = 3
 
 def _parse_local(title):
-    '''Try to find the anime ID (aid) in the dump file provided by AniDB '''
-    if not os.path.exists(os.path.join(Constants.RESOURCEPATH, 'animetitles.dat')):
+    """
+    Try to find the anime ID (aid) in the dump file provided by AniDB
+    """
+    if not API.file_exists_in_resources('animetitles.dat'):
         Logger.get_logger().warning("AniDB database file not found")
         return -1
 
-    regex = re.compile(r'(?P<aid>\d+)\|(?P<type>\d)\|(?P<lang>.+)\|(?P<title>.*)', re.I)
+    regex = API.regex_compile(r'(?P<aid>\d+)\|(?P<type>\d)\|(?P<lang>.+)\|(?P<title>.*)')
 
-    sequence = difflib.SequenceMatcher(lambda x: x in punct, title.lower(), "")
+    sequence = difflib.SequenceMatcher(lambda x: x in punct, title.lower())
 
     guesses = []
+    foundTitle = ""
 
-    with open(os.path.join(Constants.RESOURCEPATH, 'animetitles.dat'), 'r') as f:
+    with API.open_file_in_resources('animetitles.dat') as f:
         for line in f:
             res = regex.search(line)
 
             if not res:
                 continue
 
-            foundTitle = Utils.encode(res.group('title'))
+            foundTitle = API.encode(res.group('title'))
 
             sequence.set_seq2(foundTitle.lower())
             ratio = sequence.ratio()
@@ -49,13 +48,13 @@ def _parse_local(title):
 
     return aid, foundTitle
 
-def _connect_UDP(aid):
-    pass
-
-def _connect_HTTP(aid, language='en'):
+def _connect_HTTP(aid):
+    """
+    Connect to AniDB using the public HTTP Api, this is used as an alternative to the UDP connection function
+    """
     url = r'http://api.anidb.net:9001/httpapi?request=anime&client=eprenamer&clientver=1&protover=1&aid={}'.format(aid)
 
-    fd = Utils.get_URL_descriptor(url)
+    fd = API.get_url_descriptor(url)
 
     if fd is None:
         return []
@@ -69,7 +68,7 @@ def _connect_HTTP(aid, language='en'):
 
     episodes = soup.findAll('episode')
 
-    if episodes == []:
+    if not episodes:
         return []
 
     epList = []
@@ -81,37 +80,22 @@ def _connect_HTTP(aid, language='en'):
         epNum = int(e.epno.getText())
         title = e.find('title', {'xml:lang':'en'})
         title = title.getText()
-        epList.append(Episode.Episode(Utils.encode(title), epNum, -1, epNum))
+        epList.append(Episode.Episode(API.encode(title), epNum, -1, epNum))
 
     return epList
 
 
-def _able_to_poll():
-    '''Check to see if a sufficent amount of time has passed since the last
-    poll attempt.  This will prevent flooding'''   
-    now = time.time()
-
-    if now - _able_to_poll.last_poll > 2:
-        Logger.get_logger().info("Able to poll AniDB")
-        last_poll = now
-        return True
-
-    return False
-
-_able_to_poll.last_poll = 0
-
 def poll(title):
     aid, found_title = _parse_local(title)
-    episodes = []
 
     if aid < 0:
-        return "", []
+        return API.show_not_found
 
     Logger.get_logger().info("Found AID: {}".format(aid))
 
-    if _able_to_poll():
+    if API.able_to_poll('AniDB'):
         episodes = _connect_HTTP(aid)
         if episodes:
             return found_title, episodes
 
-    return "", []
+    return API.show_not_found

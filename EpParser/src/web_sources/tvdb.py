@@ -1,14 +1,10 @@
 import zipfile
 
-import EpParser.src.Utils as Utils
-
-from tempfile import TemporaryFile
-from os.path import join
 from urllib import quote_plus
 
 from EpParser.src.Logger import get_logger
 from EpParser.src.Episode import Episode
-from EpParser.src.Constants import RESOURCEPATH
+import EpParser.src.Source_Poll_API as API
 
 try:
     from BeautifulSoup import BeautifulStoneSoup as Soup
@@ -19,28 +15,25 @@ except ImportError:
 
 priority = 2
 
-def poll(title):	    
-    no_episodes = title, []
-
-    try:
-        with open( join(RESOURCEPATH,'tvdb.apikey') ,'r') as api:
-            API_KEY = api.readline()
-    except:
-        get_logger().error( "The TvDB Api key file could not be found, unable to poll TvDB" )
-        return
+def poll(title):
+    if API.file_exists_in_resources('tvdb.apikey'):
+        with API.open_file_in_resources('tvdb.apikey') as f:
+            API_KEY = f.readline().strip()
+    else:
+        return API.show_not_found
 
     if Soup is None:
-        return no_episodes
+        return API.show_not_found
 
 
     cleanTitle = quote_plus(title)
 
     #1) First we need to find the series ID
     seriesIdLoc = "http://www.thetvdb.com/api/GetSeries.php?seriesname={0}".format(cleanTitle)
-    seriesFileDesc = Utils.get_URL_descriptor( seriesIdLoc )
+    seriesFileDesc = API.get_url_descriptor( seriesIdLoc )
 
     if seriesFileDesc is None:
-        return no_episodes
+        return API.show_not_found
 
     with seriesFileDesc as fd:
         seriesIdXml = Soup( fd.read(), convertEntities=Soup.HTML_ENTITIES )
@@ -48,7 +41,7 @@ def poll(title):
     seriesIds = seriesIdXml.findAll('series')
 
     if not seriesIds: 
-        return no_episodes
+        return API.show_not_found
 
     if len(seriesIds) > 1:
         get_logger().warn( "Conflict with series title ID on TVdB" )
@@ -61,11 +54,11 @@ def poll(title):
 
     #2) Get base info zip file
     infoLoc = "http://www.thetvdb.com/api/{0}/series/{1}/all/en.zip".format(API_KEY, seriesID)
-    infoFileDesc = Utils.get_URL_descriptor(infoLoc)
+    infoFileDesc = API.get_url_descriptor(infoLoc)
     if infoFileDesc is None: 
-        return no_episodes
+        return API.show_not_found
 
-    tempZip = TemporaryFile(suffix='.zip')
+    tempZip = API.temporary_file(suffix='.zip')
     tempZip.seek(0)
 
     with infoFileDesc as z:
@@ -76,10 +69,10 @@ def poll(title):
                 break
             tempZip.write(packet)
 
-    with zipfile.ZipFile(tempZip, 'r') as z:
+    with zipfile.ZipFile(tempZip) as z:
         if 'en.xml' not in z.namelist():
             get_logger().error("English episode list was not found")
-            return no_episodes
+            return API.show_not_found
 
         with z.open('en.xml') as d:
             soup = Soup( d, convertEntities=Soup.HTML_ENTITIES )
@@ -107,10 +100,9 @@ def poll(title):
     series_info = soup.find('series')
     if series_info:
         found_title = series_info.seriesname.getText()
-        print "FOUND TITLE = {}".format(found_title)
-        print len(eps)
     else:
         found_title = title
+        
     soup.close()
     tempZip.close()
 

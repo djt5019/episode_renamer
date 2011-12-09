@@ -1,6 +1,4 @@
-import re
-
-from EpParser.src.Utils import get_URL_descriptor, prepare_title
+import EpParser.src.Source_Poll_API as API
 from EpParser.src.Episode import Episode
 
 priority = 1
@@ -24,18 +22,18 @@ pattern = r"""
 
     
 def poll(title):
-    cleanTitle = prepare_title(title)
+    cleanTitle = API.prepare_title(title)
     episodes = []
     url = "http://www.epguides.com/{0}".format(cleanTitle)
-    fd = get_URL_descriptor(url)
+    fd = API.get_url_descriptor(url)
     
     if fd is None: 
-        return title,[]
+        return API.show_not_found
 
     with fd as request:
         data = request.readlines()
         
-    regex = re.compile(pattern, re.X | re.I)
+    regex = API.regex_compile(pattern)
 
     count = 1
     for line in data:
@@ -44,7 +42,7 @@ def poll(title):
             name = info.group('name')
             episode = info.group('episode')
             season = int(info.group('season'))
-            name = re.sub('<.*?>', '', name).strip()
+            name = API.regex_sub('<.*?>', '', name).strip()
 
             episodes.append( Episode(name, episode, season, count) )
             count += 1
