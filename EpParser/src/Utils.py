@@ -154,10 +154,10 @@ def rename_files( path, show):
                 pass
 
         fileName = encode( file.name )
-        newName = replace_invalid_path_chars(show.formatter.display(ep) + file.ext)
+        newName = replace_invalid_path_chars(show.formatter.display(ep, file) + file.ext)
 
         if newName == fileName:
-            Logger.get_logger().info("File {} and Epiosde {} have same name".format(file.name, ep.title))
+            Logger.get_logger().info("File {} and Episode {} have same name".format(file.name, ep.title))
             continue
 
         newName = os.path.join(path, newName)

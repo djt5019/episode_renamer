@@ -53,6 +53,9 @@ class Episode(object):
 
 
 class EpisodeFile(object):
+    """
+    Represents a TV show file.  Used for renaming purposes
+    """
     def __init__(self, path, index, season=-1):
         self.path = path
         self.index = index
@@ -60,7 +63,7 @@ class EpisodeFile(object):
         self.ext = os.path.splitext(self.path)[1]
         self.name = Utils.encode(os.path.split(self.path)[1])
 
-    def calc_crc32(self):
+    def crc32(self):
         with open(self.path, 'rb') as f:
             checksum = 0
             for line in f:
@@ -81,6 +84,7 @@ class EpisodeFormatter(object):
         self.episodeNameTokens = {"title", "name", "epname"}
         self.seriesNameTokens = {"show", "series"}
         self.episodeCounterTokens = {"count", "number"}
+        self.hashTokens = {"crc32", "hash"}
         self.re = re.compile('(?P<tag><.*?>)', re.I)
 
     def set_format(self, fmt):
@@ -134,8 +138,10 @@ class EpisodeFormatter(object):
                 self.seriesNameTokens = tokens
             elif s == "season_number":
                 self.seasonTokens = tokens
+            elif s == "hash":
+                self.hashTokens = tokens
 
-    def display(self, ep):
+    def display(self, ep, epFile=None):
         """Displays the episode according to the users format"""
         args = []
 
@@ -150,7 +156,7 @@ class EpisodeFormatter(object):
             for tag in tags:
                 if self.re.match(tag):
                     #If it's a tag try to resolve it
-                    a.append( self._parse(ep, tag[1:-1]) )
+                    a.append( self._parse(ep, tag[1:-1], epFile) )
                 else:
                     a.append(tag)
 
@@ -158,7 +164,7 @@ class EpisodeFormatter(object):
 
         return Utils.encode(' '.join(args))
 
-    def _parse(self, ep, tag):
+    def _parse(self, ep, tag, epFile=None):
         caps = lower = pad = False
         tag = tag.lower()
 
@@ -186,7 +192,7 @@ class EpisodeFormatter(object):
 
         elif tag in self.seasonTokens:
             if pad: 
-                #Number of digits in the hightest numbered season
+                #Number of digits in the highest numbered season
                 pad = int(log10(self.show.numSeasons) + 1)
             return str(ep.season).zfill(pad)
 
@@ -209,6 +215,13 @@ class EpisodeFormatter(object):
             elif caps:
                 return self.show.title.upper()
             return self.show.title.title()
+
+        elif tag in self.hashTokens:
+            if not epFile:
+                return "<" + tag + ">"
+
+            if isinstance(epFile, EpisodeFile):
+                return str(epFile.crc32())[2:]  # To remove the 0x from the hex string
 
         else: 
             # If it reaches this case it's most likely an invalid tag
