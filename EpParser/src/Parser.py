@@ -44,7 +44,11 @@ class EpParser(object):
 
         # The show was not in the database so now we try the website
         get_logger().info( "Show not found in database, polling web")
-        self.show.add_episodes(self._parseHTMLData())
+        found_name, eps = self._parseHTMLData()
+        self.show.add_episodes(eps)
+        
+        if found_name:
+            self.show.title = found_name
 
         if not self.show.episodeList:
             get_logger().error("Show was not found, check spelling and try again")

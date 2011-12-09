@@ -34,7 +34,7 @@ def locate_show(title):
     for source in modules:
         get_logger().info( "Polling {0}".format(source.__name__) )
 
-        episodes = source.poll(title)
+        found_title, episodes = source.poll(title)
 
         if episodes:
             get_logger().info( "LOCATED {0}".format(title) )
@@ -43,6 +43,7 @@ def locate_show(title):
 
     if not episodes:
         get_logger().info("Unable to locate the show: " + title)
-        return []
+        return title,[]
 
-    return sorted(ifilter(lambda x: x.episodeNumber > 0, episodes), key=lambda x:x.episodeCount)
+    episodes = sorted(ifilter(lambda x: x.episodeNumber > 0, episodes), key=lambda x:x.episodeCount)
+    return found_title, episodes    

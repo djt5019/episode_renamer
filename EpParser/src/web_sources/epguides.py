@@ -30,7 +30,7 @@ def poll(title):
     fd = get_URL_descriptor(url)
     
     if fd is None: 
-        return []
+        return title,[]
 
     with fd as request:
         data = request.readlines()
@@ -49,4 +49,4 @@ def poll(title):
             episodes.append( Episode(name, episode, season, count) )
             count += 1
             
-    return episodes
+    return title, episodes

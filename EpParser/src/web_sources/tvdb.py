@@ -19,7 +19,9 @@ except ImportError:
 
 priority = 2
 
-def poll(title):	
+def poll(title):	    
+    no_episodes = title, []
+
     try:
         with open( join(RESOURCEPATH,'tvdb.apikey') ,'r') as api:
             API_KEY = api.readline()
@@ -28,9 +30,8 @@ def poll(title):
         return
 
     if Soup is None:
-        return []
+        return no_episodes
 
-    episodes = []
 
     cleanTitle = quote_plus(title)
 
@@ -39,7 +40,7 @@ def poll(title):
     seriesFileDesc = Utils.get_URL_descriptor( seriesIdLoc )
 
     if seriesFileDesc is None:
-        return []
+        return no_episodes
 
     with seriesFileDesc as fd:
         seriesIdXml = Soup( fd.read(), convertEntities=Soup.HTML_ENTITIES )
@@ -47,7 +48,7 @@ def poll(title):
     seriesIds = seriesIdXml.findAll('series')
 
     if not seriesIds: 
-        return []
+        return no_episodes
 
     if len(seriesIds) > 1:
         get_logger().warn( "Conflict with series title ID on TVdB" )
@@ -62,7 +63,7 @@ def poll(title):
     infoLoc = "http://www.thetvdb.com/api/{0}/series/{1}/all/en.zip".format(API_KEY, seriesID)
     infoFileDesc = Utils.get_URL_descriptor(infoLoc)
     if infoFileDesc is None: 
-        return []
+        return no_episodes
 
     tempZip = TemporaryFile(suffix='.zip')
     tempZip.seek(0)
@@ -78,13 +79,15 @@ def poll(title):
     with zipfile.ZipFile(tempZip, 'r') as z:
         if 'en.xml' not in z.namelist():
             get_logger().error("English episode list was not found")
-            return []
+            return no_episodes
 
         with z.open('en.xml') as d:
             soup = Soup( d, convertEntities=Soup.HTML_ENTITIES )
 
     #3) Now we have the xml data in the soup variable, just populate the list
     count = 1
+    eps = []
+    
     for data in soup.findAll('episode'):
         name = data.episodename.getText()
         season = int(data.seasonnumber.getText())
@@ -97,11 +100,18 @@ def poll(title):
         if int(season) < 1: 
             continue
 
-        episodes.append(Episode(name, num, season, count))
+        eps.append(Episode(name, num, season, count))
         count += 1
 
-
+    
+    series_info = soup.find('series')
+    if series_info:
+        found_title = series_info.seriesname.getText()
+        print "FOUND TITLE = {}".format(found_title)
+        print len(eps)
+    else:
+        found_title = title
     soup.close()
     tempZip.close()
 
-    return episodes
+    return found_title, eps

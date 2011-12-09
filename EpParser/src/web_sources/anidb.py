@@ -47,7 +47,7 @@ def _parse_local(title):
         _, aid, name = max(guesses)
         Logger.get_logger().info("Best choice is {} with id {}".format(name, aid))
 
-    return aid
+    return aid, foundTitle
 
 def _connect_UDP(aid):
     pass
@@ -88,7 +88,7 @@ def _connect_HTTP(aid, language='en'):
 
 def _able_to_poll():
     '''Check to see if a sufficent amount of time has passed since the last
-    poll attempt.  This will prevent flooding'''
+    poll attempt.  This will prevent flooding'''   
     now = time.time()
 
     if now - _able_to_poll.last_poll > 2:
@@ -101,17 +101,17 @@ def _able_to_poll():
 _able_to_poll.last_poll = 0
 
 def poll(title):
-    aid = _parse_local(title)
+    aid, found_title = _parse_local(title)
     episodes = []
 
     if aid < 0:
-        return []
+        return "", []
 
     Logger.get_logger().info("Found AID: {}".format(aid))
 
     if _able_to_poll():
         episodes = _connect_HTTP(aid)
         if episodes:
-            return episodes
+            return found_title, episodes
 
-    return []
+    return "", []
