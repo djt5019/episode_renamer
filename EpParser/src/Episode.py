@@ -37,6 +37,10 @@ class Show(object):
     def set_format(self, fmt):
         self.formatter.setFormat(fmt)
 
+    def set_name(self, name):
+        self.title = Utils.encode(name.title())
+        self.properTitle = Utils.prepare_title(self.title)
+
 
 class Episode(object):
     """ A simple class to organize the episodes, an alternative would be
