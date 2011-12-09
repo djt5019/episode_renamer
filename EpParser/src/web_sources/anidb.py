@@ -23,7 +23,6 @@ def _parse_local(title):
     sequence = difflib.SequenceMatcher(lambda x: x in punct, title.lower())
 
     guesses = []
-    foundTitle = ""
 
     with API.open_file_in_resources('animetitles.dat') as f:
         for line in f:
@@ -38,15 +37,16 @@ def _parse_local(title):
             ratio = sequence.ratio()
 
             if ratio > .80:
-                Logger.get_logger().info("Suitable guess for {} is: {}".format(title, foundTitle))
-                guesses.append( (ratio, res.group('aid'), title) )
+                #Logger.get_logger().info("Suitable guess for {} is: {}".format(title, foundTitle))
+                guesses.append( (ratio, res.group('aid'), foundTitle) )
 
     aid = -1
+    name = title
     if guesses:
         _, aid, name = max(guesses)
         Logger.get_logger().info("Best choice is {} with id {}".format(name, aid))
 
-    return aid, foundTitle
+    return aid, name
 
 def _connect_HTTP(aid):
     """

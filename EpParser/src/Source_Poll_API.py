@@ -11,21 +11,21 @@ from tempfile import TemporaryFile as TemporaryFile_
 from EpParser.src import Utils
 
 show_not_found = "", []
-_last_access = {}
+_site_access_dict = {}
 
 def able_to_poll(site):
     """
     Prevents flooding by waiting two seconds from the last poll
     """
-    last_access = _last_access.get(site, -1)
+    last_access = _site_access_dict.get(site, -1)
     now = int(time_.time())
 
     if last_access < 0:
-        last_access[site] = now
+        _site_access_dict[site] = now
         return True
 
     if now - last_access >= 2:
-        last_access[site] = now
+        _site_access_dict[site] = now
         return True
     
     return False
