@@ -10,6 +10,8 @@ RESOURCEPATH = os.path.join( PROJECTPATH, 'resources')
 PROJECTSOURCEPATH = os.path.join(PROJECTPATH, 'src')
 WEBSOURCESPATH = os.path.join(PROJECTSOURCEPATH, 'web_sources')
 
+SHOW_NOT_FOUND = ("", [])
+
 
 ## Common video naming formats, will be compiled if they are needed during episode renaming
 ## in the _compile_regexs function, otherwise they will not be compiled for simple episode 

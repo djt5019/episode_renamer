@@ -10,13 +10,18 @@ from os import path as path_
 from tempfile import TemporaryFile as TemporaryFile_
 from EpParser.src import Utils
 
-show_not_found = "", []
-_site_access_dict = {}
+show_not_found = Constants.SHOW_NOT_FOUND
+_site_access_dict = None
 
 def able_to_poll(site):
     """
     Prevents flooding by waiting two seconds from the last poll
     """
+    global _site_access_dict
+    if not _site_access_dict:
+        _site_access_dict = load_last_access_times()
+    print _site_access_dict
+
     last_access = _site_access_dict.get(site, -1)
     now = int(time_.time())
 
@@ -81,3 +86,25 @@ def temporary_file(suffix):
     Returns a file object to a temporary file
     """
     return TemporaryFile_(suffix=suffix)
+
+def save_last_access_times():
+    """
+    Save the last access times dictionary to a file in resources
+    """
+    import pickle
+    with open(path_.join(Constants.RESOURCEPATH, 'access_times.dat'), 'w') as p:
+        pickle.dump(_site_access_dict, p)
+
+def load_last_access_times():
+    """
+    Load the access times dictionary from the file in resource path
+    """
+    import pickle
+    name = path_.join(Constants.RESOURCEPATH, 'access_times.dat')
+    if path_.exists(name):
+        with open_file_in_resources(name) as p:
+            data = p.readlines()
+
+        return pickle.loads(''.join(data))
+    else:
+        return {}
