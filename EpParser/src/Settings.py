@@ -7,6 +7,9 @@ class _SettingsDict(dict):
         super(_SettingsDict, self).__init__()
         self.load_config()
 
+    def __getitem__(self, key):
+        return dict.get(self, key, "")
+    
     def load_config(self):
         with open( os.path.join(Constants.RESOURCE_PATH, 'settings.conf')) as f:
             for number, line in enumerate(f):
