@@ -22,7 +22,6 @@ def able_to_poll(site):
     global _site_access_dict
     if not _site_access_dict:
         _site_access_dict = load_last_access_times()
-    print _site_access_dict
 
     last_access = _site_access_dict.get(site, -1)
     now = int(time_.time())

@@ -6,7 +6,15 @@ class _SettingsDict(dict):
     def __init__(self):
         super(_SettingsDict, self).__init__()
         self.load_config()
-    
+
+    def __getitem__(self, item):
+        val = dict.get(self, item)
+
+        if val is None:
+            raise SettingsException("Setting: {} not present in config file".format(item))
+        else:
+            return val
+
     def load_config(self):
         with open( os.path.join(Constants.RESOURCE_PATH, 'settings.conf')) as f:
             for number, line in enumerate(f):
@@ -21,11 +29,14 @@ class _SettingsDict(dict):
                 options = [x.strip() for x in line.split('=')]
 
                 if len(options) != 2:  # possibly an additional equals sign in the config
-                    print("Line {} in the settings config contains an error".format(number))
-                    continue
+                    raise SettingsException("Line {} in the settings config contains an error".format(number))
 
                 opt, value = options
                 self[opt] = str(value)
+
+
+class SettingsException(Exception):
+    pass
 
 
 Settings = _SettingsDict()
