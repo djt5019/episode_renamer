@@ -6,7 +6,7 @@ import EpParser.src.Source_Poll_API as API
 
 from EpParser.src.Episode import Episode
 
-priority = 1
+priority = 3
 
 pattern = r"""
             ^		                # Start of the string
@@ -48,6 +48,9 @@ def poll(title):
             episode = info.group('episode')
             season = int(info.group('season'))
             name = API.regex_sub('<.*?>', '', name).strip()
+            
+            if name == "TBA":
+                continue
 
             episodes.append( Episode(name, episode, season, count) )
             count += 1

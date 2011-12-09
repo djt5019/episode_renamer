@@ -134,12 +134,15 @@ def rename_files( path, show):
     for ep in show.episodeList:
         if ep.season > 0:
             file = files.get(ep.episodeNumber, None)
-
+            
             if file:
-                if file.season != ep.season:
+                if file.season != ep.season and file.index != ep.episodeNumber:
                     continue
 
         elif ep.season == -1:
+            file = files.get(ep.episodeCount, None)
+            
+        if not file:
             file = files.get(ep.episodeCount, None)
 
         if not file:
@@ -157,7 +160,7 @@ def rename_files( path, show):
 
         fileName = encode( file.name )
         newName = replace_invalid_path_chars(show.formatter.display(ep, file) + file.ext)
-
+    
         if newName == fileName:
             Logger.get_logger().info("File {} and Episode {} have same name".format(file.name, ep.title))
             continue
@@ -199,13 +202,13 @@ def rename(files, resp=""):
 
 def save_renamed_file_info(old_order):
     import pickle
-    
+    Logger.get_logger().info("Backing up old filenames")
     with open(os.path.join(Constants.RESOURCE_PATH, Settings['old_renamed_files']), 'w') as f:
         pickle.dump(old_order, f)
 
 def load_last_renamed_files():
     import pickle
-
+    Logger.get_logger().info("Loading up old filenames")
     if not os.path.exists(os.path.join(Constants.RESOURCE_PATH, Settings['old_renamed_files'])):
         Logger.get_logger().warn("There seems to be no files to be un-renamed")
         return

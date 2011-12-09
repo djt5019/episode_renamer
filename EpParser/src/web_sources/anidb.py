@@ -12,7 +12,7 @@ from string import punctuation as punct
 
 import EpParser.src.Source_Poll_API as API
 
-priority = 3
+priority = 2
 
 def _parse_local(title):
     """

@@ -111,7 +111,10 @@ def main():
             print "Failed to find any files to rename"
             exit(1)
 
-        print "PATH = {}".format(os.path.dirname(files[0][0]))
+        p = os.path.dirname(files[0][0])
+        print "PATH = {}".format(p)
+        print "-------" + '-'*len(p)
+        
         for old, new in files:
             print (u"OLD: {0}".format(os.path.split(old)[1]))
             print (u"NEW: {0}".format(os.path.split(new)[1]))

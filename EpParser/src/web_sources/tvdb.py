@@ -19,7 +19,7 @@ except ImportError:
     Soup = None
     pass
 
-priority = 2
+priority = 1
 
 def poll(title):
     if API.file_exists_in_resources(Settings['tvdb_key']):
