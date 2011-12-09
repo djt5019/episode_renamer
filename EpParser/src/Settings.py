@@ -6,9 +6,6 @@ class _SettingsDict(dict):
     def __init__(self):
         super(_SettingsDict, self).__init__()
         self.load_config()
-
-    def __getitem__(self, key):
-        return dict.get(self, key, "")
     
     def load_config(self):
         with open( os.path.join(Constants.RESOURCE_PATH, 'settings.conf')) as f:
