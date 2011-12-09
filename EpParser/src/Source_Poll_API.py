@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-# author:  Dan Tracy
-# program: Source_Poll_API.py
+__author__='Dan Tracy'
+__email__='djt5019 at gmail dot com'
 
 import re as re_
 import time as time_

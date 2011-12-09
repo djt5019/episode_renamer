@@ -1,7 +1,7 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# author:  Dan Tracy
-# program: test_cache.py
+#!/usr/bin/env python
+__author__='Dan Tracy'
+__email__='djt5019 at gmail dot com'
 
 import unittest
 import sqlite3

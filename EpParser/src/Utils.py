@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-# author:  Dan Tracy
-# program: Utils.py
+__author__='Dan Tracy'
+__email__='djt5019 at gmail dot com'
 
 import os
 import re

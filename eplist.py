@@ -1,20 +1,19 @@
+# -*- coding: utf-8 -*-
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# author:  Dan Tracy
-# program: eplist.py
+__author__='Dan Tracy'
+__email__='djt5019 at gmail dot com'
 
-"""
-This command line program will take a T.V. show as input and
-will return information about each episode, such as the title
-season and number.  I use this program to help clean up my
-TV show collection.  After the show has been found online it
-will be entered into a local database, provided sqlite3 is available,
-for faster lookup in the future.  You are able to filter the shows
-by season along with other options on the command line interface.
-You can also rename files according to a format that you choose as
-well as calculate the CRC32 of a file.  If you mistakenly rename
-files you have the option to revert the last renaming operation
-"""
+#This command line program will take a T.V. show as input and
+#will return information about each episode, such as the title
+#season and number.  I use this program to help clean up my
+#TV show collection.  After the show has been found online it
+#will be entered into a local database, provided sqlite3 is available,
+#for faster lookup in the future.  You are able to filter the shows
+#by season along with other options on the command line interface.
+#You can also rename files according to a format that you choose as
+#well as calculate the CRC32 of a file.  If you mistakenly rename
+#files you have the option to revert the last renaming operation
 
 import argparse
 import os

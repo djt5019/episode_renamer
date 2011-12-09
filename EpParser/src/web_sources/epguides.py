@@ -1,4 +1,9 @@
+# -*- coding: utf-8 -*-
+__author__='Dan Tracy'
+__email__='djt5019 at gmail dot com'
+
 import EpParser.src.Source_Poll_API as API
+
 from EpParser.src.Episode import Episode
 
 priority = 1

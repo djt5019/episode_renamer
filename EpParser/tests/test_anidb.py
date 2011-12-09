@@ -1,4 +1,9 @@
+# -*- coding: utf-8 -*-
+__author__='Dan Tracy'
+__email__='djt5019 at gmail dot com'
+
 import EpParser.src.web_sources.anidb as anidb
+
 from EpParser.src.Utils import get_logger
 
 def test_local_file():
