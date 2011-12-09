@@ -8,7 +8,9 @@ import Constants
 
 from os import path as path_
 from tempfile import TemporaryFile as TemporaryFile_
+
 from EpParser.src import Utils
+from EpParser.src.Settings import Settings
 
 show_not_found = Constants.SHOW_NOT_FOUND
 _site_access_dict = None
@@ -40,7 +42,7 @@ def open_file_in_resources(name):
     Returns a file object if the filename exists in the resources directory
     """
     if file_exists_in_resources(name):
-        name = path_.join(Constants.RESOURCEPATH, name)
+        name = path_.join(Constants.RESOURCE_PATH, name)
         return open(name, 'r')
     return None
 
@@ -48,7 +50,7 @@ def file_exists_in_resources(name):
     """
     Returns true if the filename exists in the resources directory
     """
-    name = path_.join(Constants.RESOURCEPATH, name)
+    name = path_.join(Constants.RESOURCE_PATH, name)
     return path_.exists(name)
 
 def regex_compile(regex):
@@ -92,7 +94,11 @@ def save_last_access_times():
     Save the last access times dictionary to a file in resources
     """
     import pickle
-    with open(path_.join(Constants.RESOURCEPATH, 'access_times.dat'), 'w') as p:
+
+    if not _site_access_dict:
+        return
+    
+    with open(path_.join(Constants.RESOURCE_PATH, Settings['access_time_file']), 'w') as p:
         pickle.dump(_site_access_dict, p)
 
 def load_last_access_times():
@@ -100,7 +106,7 @@ def load_last_access_times():
     Load the access times dictionary from the file in resource path
     """
     import pickle
-    name = path_.join(Constants.RESOURCEPATH, 'access_times.dat')
+    name = path_.join(Constants.RESOURCE_PATH, Settings['access_time_file'])
     if path_.exists(name):
         with open_file_in_resources(name) as p:
             data = p.readlines()

@@ -6,7 +6,8 @@ import atexit
 from os.path import join, abspath
 from datetime import datetime
 
-from Constants import RESOURCEPATH
+from Constants import RESOURCE_PATH
+from Settings import Settings
 
 _logger = None
 def get_logger():
@@ -14,12 +15,12 @@ def get_logger():
     global _logger
     
     if _logger is None:
-        p = abspath(join(RESOURCEPATH,'logger.conf'))
+        p = abspath(join(RESOURCE_PATH,'logger.conf'))
     
-        logging.config.fileConfig( abspath(join(RESOURCEPATH,'logger.conf')))
+        logging.config.fileConfig( abspath(join(RESOURCE_PATH, Settings['log_config'])))
         _logger = logging.getLogger()
         
-        logPath = join(RESOURCEPATH, 'output.log')       
+        logPath = join(RESOURCE_PATH, Settings['log_file'])
         
         fileHandler = logging.handlers.RotatingFileHandler(logPath, maxBytes=2**20, backupCount=3)
         fileHandler.setFormatter( logging.Formatter('%(levelname)s | %(module)s.%(funcName)s - "%(message)s"') )

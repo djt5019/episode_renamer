@@ -5,7 +5,7 @@
 import os
 import re
 import gzip
-from EpParser.src import Constants
+from EpParser.src.Settings import Settings
 
 import Episode
 import Logger
@@ -15,10 +15,11 @@ from urllib2 import Request, urlopen, URLError
 from contextlib import closing
 from cStringIO import StringIO
 
-from Constants import VIDEO_EXTENSIONS, REGEX, NUM_DICT
+from EpParser.src import Constants
+
 
 def get_URL_descriptor(url):
-    """Returns an autoclosing url descriptor or None"""
+    """Returns an auto-closing url descriptor or None"""
     fd = None
     request = Request(url)
     request.add_header('Accept-encoding', 'gzip')
@@ -35,7 +36,7 @@ def get_URL_descriptor(url):
             Logger.get_logger().error( 'ERROR: {0} appears to be down at the moment'.format(url) )
             pass
     except Exception as e:
-        Logger.get_logger().error("A GZip error has occured {}".format(e))
+        Logger.get_logger().error("A GZip error has occurred {}".format(e))
         exit()
     finally:
         if fd:
@@ -52,7 +53,7 @@ def clean_filenames( path ):
     # filter out any directories
     files = os.listdir(path)
     files = ifilter(lambda x: os.path.isfile(os.path.join(path,x)), files)
-    files = ifilter(lambda x: os.path.splitext(x)[1].lower() in VIDEO_EXTENSIONS, files)
+    files = ifilter(lambda x: os.path.splitext(x)[1].lower() in Constants.VIDEO_EXTENSIONS, files)
 
     if not files:
         Logger.get_logger().error( "No video files were found in {}".format( path ) )
@@ -103,7 +104,7 @@ def _compile_regexs():
     # This function will only compile the regexs once and store the results
     # in a list within the function.  Monkey-patching is strange.
     if not _compile_regexs.regexList:
-        for r in REGEX:
+        for r in Constants.REGEX:
             _compile_regexs.regexList.append(re.compile(r, re.I))
     return _compile_regexs.regexList
 
@@ -199,17 +200,17 @@ def rename(files, resp=""):
 def save_renamed_file_info(old_order):
     import pickle
     
-    with open(os.path.join(Constants.RESOURCEPATH, 'last_rename.dat'), 'w') as f:
+    with open(os.path.join(Constants.RESOURCE_PATH, Settings['old_renamed_files']), 'w') as f:
         pickle.dump(old_order, f)
 
 def load_last_renamed_files():
     import pickle
 
-    if not os.path.exists(os.path.join(Constants.RESOURCEPATH, 'last_rename.dat')):
+    if not os.path.exists(os.path.join(Constants.RESOURCE_PATH, Settings['old_renamed_files'])):
         Logger.get_logger().warn("There seems to be no files to be un-renamed")
         return
 
-    with open(os.path.join(Constants.RESOURCEPATH, 'last_rename.dat')) as f:
+    with open(os.path.join(Constants.RESOURCE_PATH, Settings['old_renamed_files'])) as f:
         data = f.readlines()
 
     # Data will be in the form of a list of tuples
@@ -261,7 +262,7 @@ def num_to_text(num):
     # The 12 kingdoms and twelve kingdoms will yield the same result in the DB
 
     if num < 20:
-        return NUM_DICT[str(num)]
+        return Constants.NUM_DICT[str(num)]
 
     args = []
     num = str(num)
@@ -271,11 +272,11 @@ def num_to_text(num):
         length = len(num)
 
         if length == 3:
-            args.append( NUM_DICT[num[0]] )
+            args.append( Constants.NUM_DICT[num[0]] )
             args.append("hundred")
         else:
             value = str( digit * (10**(length-1)) )
-            args.append( NUM_DICT[value] )
+            args.append( Constants.NUM_DICT[value] )
 
         num = num[1:]
 

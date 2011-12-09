@@ -12,6 +12,8 @@ import Logger
 
 from math import log10
 
+from EpParser.src.Settings import Settings
+
 class Show(object):
     """A convenience class to keep track of the list of episodes as well as
        to keep track of the custom formatter for those episodes"""
@@ -35,7 +37,7 @@ class Show(object):
         self.numEpisodes = len(eps)
 
     def set_format(self, fmt):
-        self.formatter.setFormat(fmt)
+        self.formatter.set_format(fmt)
 
     def set_name(self, name):
         self.title = Utils.encode(name.title())
@@ -85,7 +87,8 @@ class EpisodeFormatter(object):
         self.seriesNameTokens = {"show", "series"}
         self.episodeCounterTokens = {"count", "number"}
         self.hashTokens = {"crc32", "hash"}
-        self.re = re.compile('(?P<tag><.*?>)', re.I)
+        re_format = '(?P<tag>\{}.*?\{})'.format(Settings['tag_start'], Settings['tag_end'])
+        self.re = re.compile(re_format, re.I)
 
     def set_format(self, fmt):
         """Set the format string for the formatter"""
@@ -96,9 +99,9 @@ class EpisodeFormatter(object):
     def load_format_config(self, configFileName=""):
         """Load tokens from the format config file in RESOURCEPATH"""
         if configFileName == "":
-            path = os.path.join(Constants.RESOURCEPATH, 'tags.cfg')
+            path = os.path.join(Constants.RESOURCE_PATH, Settings['tag_config'])
         else:
-            path = os.path.join(Constants.RESOURCEPATH, configFileName)
+            path = os.path.join(Constants.RESOURCE_PATH, configFileName)
 
         if not os.path.exists(path):
             Logger.get_logger().warning("Tag config file was not found")
@@ -218,11 +221,11 @@ class EpisodeFormatter(object):
 
         elif tag in self.hashTokens:
             if not epFile:
-                return "<" + tag + ">"
+                return Settings['tag_start'] + tag + Settings['tag_end']
 
-            if isinstance(epFile, EpisodeFile):
+            if hasattr(epFile, 'crc32'):
                 return str(epFile.crc32())[2:]  # To remove the 0x from the hex string
 
         else: 
             # If it reaches this case it's most likely an invalid tag
-            return "<" + tag + ">"
+            return Settings['tag_start'] + tag + Settings['tag_end']

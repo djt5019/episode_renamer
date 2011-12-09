@@ -2,9 +2,11 @@ import zipfile
 
 from urllib import quote_plus
 
+import EpParser.src.Source_Poll_API as API
+
 from EpParser.src.Logger import get_logger
 from EpParser.src.Episode import Episode
-import EpParser.src.Source_Poll_API as API
+from EpParser.src.Settings import Settings
 
 try:
     from BeautifulSoup import BeautifulStoneSoup as Soup
@@ -16,8 +18,8 @@ except ImportError:
 priority = 2
 
 def poll(title):
-    if API.file_exists_in_resources('tvdb.apikey'):
-        with API.open_file_in_resources('tvdb.apikey') as f:
+    if API.file_exists_in_resources(Settings['tvdb_key']):
+        with API.open_file_in_resources(Settings['tvdb_key']) as f:
             API_KEY = f.readline().strip()
     else:
         return API.show_not_found
@@ -62,7 +64,7 @@ def poll(title):
     tempZip.seek(0)
 
     with infoFileDesc as z:
-        # download the entire zipfile into the tempfile
+        # download the entire zipfile into the temp file
         while True:
             packet = z.read()
             if not packet:

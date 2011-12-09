@@ -8,7 +8,7 @@ import sqlite3
 import atexit
 
 from Episode import Episode
-from Constants import RESOURCEPATH
+from Constants import RESOURCE_PATH
 from Logger import get_logger
 
 class Cache(object):
@@ -17,12 +17,12 @@ class Cache(object):
     def __init__(self, dbName=u"episodes.db"):
         """Establish a connection to the show database"""
         if dbName != ':memory:':
-            dbName = os.path.join(RESOURCEPATH, dbName)
+            dbName = os.path.join(RESOURCE_PATH, dbName)
         try:
             if not os.path.exists(dbName) and dbName != ':memory:':
                 self.connection = sqlite3.connect(dbName, detect_types=sqlite3.PARSE_DECLTYPES)
               
-                with open(os.path.join(RESOURCEPATH, 'createDB.sql'), 'r') as f:
+                with open(os.path.join(RESOURCE_PATH, 'createDB.sql'), 'r') as f:
                     sql = f.read()
                 self.connection.executescript(sql)
             else:

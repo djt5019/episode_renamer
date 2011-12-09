@@ -11,6 +11,9 @@ TV show collection.  After the show has been found online it
 will be entered into a local database, provided sqlite3 is available,
 for faster lookup in the future.  You are able to filter the shows
 by season along with other options on the command line interface.
+You can also rename files according to a format that you choose as
+well as calculate the CRC32 of a file.  If you mistakenly rename
+files you have the option to revert the last renaming operation
 """
 
 import argparse
@@ -22,11 +25,12 @@ import EpParser.src.Episode as Episode
 from EpParser.src.Parser import EpParser as Parser
 from EpParser.src.Cache import Cache
 from EpParser.src.Logger import get_logger
-
+from EpParser.src.Settings import Settings
 
 def main():
     """ Our main function for our command line interface"""
-    cmd = argparse.ArgumentParser(description="TV Show Information Parser")
+    cmd = argparse.ArgumentParser(description="Renames your TV shows",
+                                  prog='eplist', usage='%(prog)s [options] title')
 
     cmd.add_argument('title',
         help="The title of the show")
@@ -37,23 +41,25 @@ def main():
     cmd.add_argument('-v', '--verbose', action="store_true",
         help="Be verbose, enable additional output")
 
-    cmd.add_argument('-s', '--season', default="", type=str,
-        help="The specific season to search for")
+    cmd.add_argument('-s', '--season', default="", type=str, metavar='N',
+        help="The specific season range to search for. Ex: 1-3")
     
-    cmd.add_argument('-e', '--episode', default="", type=str,
-        help="The specific episode to search for")
+    cmd.add_argument('-e', '--episode', default="", type=str, metavar='N',
+        help="The specific episode range to search for Ex: 15-30")
 
-    cmd.add_argument('-r', '--rename', dest='pathname',
-        help="Rename the files in the path provided")
-
-    cmd.add_argument('-u', '--undo-rename', action='store_true',
-        help="Rename the files in the path provided")
-
-    cmd.add_argument('-f', '--format', dest="format",
+    cmd.add_argument('-f', '--format', dest="format", metavar='F',
         help="Rename the files in a directory with a custom format")
 
     cmd.add_argument('-g', '--gui-enabled', action="store_true",
         help="Use the gui rather than the command line")
+
+    group = cmd.add_mutually_exclusive_group()
+
+    group.add_argument('-r', '--rename', dest='pathname', metavar="PATH",
+        help="Rename the files in the path provided")
+
+    group.add_argument('-u', '--undo-rename', action='store_true',
+        help="Undo the last rename operation")
 
     args = cmd.parse_args()
     
@@ -71,7 +77,7 @@ def main():
     if rename and not os.path.exists(args.pathname):
         exit("ERROR - Path provided does not exist")
 
-    cache = Cache()
+    cache = Cache(Settings['episode_db'])
     episodeParser = Parser(args.title, cache)
 
     show = episodeParser.getShow()

@@ -5,10 +5,10 @@ from EpParser import __file__ as file_path
 VIDEO_EXTENSIONS = {'.mkv', '.ogm', '.asf', '.asx', '.avi', '.flv', '.mov',
                     '.mp4', '.mpg', '.rm',  '.swf', '.vob', '.wmv', '.mpeg'}
 
-PROJECTPATH = os.path.abspath(os.path.dirname(os.path.join(file_path)))
-RESOURCEPATH = os.path.join( PROJECTPATH, 'resources')
-PROJECTSOURCEPATH = os.path.join(PROJECTPATH, 'src')
-WEBSOURCESPATH = os.path.join(PROJECTSOURCEPATH, 'web_sources')
+PROJECT_PATH = os.path.abspath(os.path.dirname(os.path.join(file_path)))
+RESOURCE_PATH = os.path.join( PROJECT_PATH, 'resources')
+PROJECT_SOURCE_PATH = os.path.join(PROJECT_PATH, 'src')
+WEB_SOURCES_PATH = os.path.join(PROJECT_SOURCE_PATH, 'web_sources')
 
 SHOW_NOT_FOUND = ("", [])
 
