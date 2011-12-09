@@ -5,6 +5,7 @@
 import os
 import re
 import gzip
+from EpParser.src import Constants
 
 import Episode
 import Logger
@@ -176,12 +177,15 @@ def rename(files, resp=""):
         exit(0)
 
     errors = []
-
+    old_order = []
     for old, new in files:
         try:
             os.rename(old, new)
+            old_order.append((new, old))
         except Exception as e:
             errors.append( (old,e) )
+
+    save_renamed_file_info(old_order)
 
     if errors:
         for e in errors:
@@ -190,6 +194,27 @@ def rename(files, resp=""):
         Logger.get_logger().info( "Files were successfully renamed")
 
     return errors
+
+
+def save_renamed_file_info(old_order):
+    import pickle
+    
+    with open(os.path.join(Constants.RESOURCEPATH, 'last_rename.dat'), 'w') as f:
+        pickle.dump(old_order, f)
+
+def load_last_renamed_files():
+    import pickle
+
+    if not os.path.exists(os.path.join(Constants.RESOURCEPATH, 'last_rename.dat')):
+        Logger.get_logger().warn("There seems to be no files to be un-renamed")
+        return
+
+    with open(os.path.join(Constants.RESOURCEPATH, 'last_rename.dat')) as f:
+        data = f.readlines()
+
+    # Data will be in the form of a list of tuples
+    # [ (new1, old1), ..., (newN, oldN) ]
+    return pickle.loads(''.join(data))
 
 
 ## Text based functions
@@ -221,7 +246,7 @@ def prepare_title(title):
     out = []
     for n in title:
         try:
-            value = intToText(int(n))
+            value = num_to_text(int(n))
             out.append(value)
         except Exception:
             out.append(n)
@@ -229,7 +254,7 @@ def prepare_title(title):
     return ''.join(out)
 
 
-def intToText(num):
+def num_to_text(num):
     """Converts a number up to 999 to it's English representation"""
     # The purpose of this function is to resolve numbers to text so we don't
     # have additional entries in the database for the same show.  For example

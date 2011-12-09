@@ -46,6 +46,9 @@ def main():
     cmd.add_argument('-r', '--rename', dest='pathname',
         help="Rename the files in the path provided")
 
+    cmd.add_argument('-u', '--undo-rename', action='store_true',
+        help="Rename the files in the path provided")
+
     cmd.add_argument('-f', '--format', dest="format",
         help="Rename the files in a directory with a custom format")
 
@@ -53,6 +56,7 @@ def main():
         help="Use the gui rather than the command line")
 
     args = cmd.parse_args()
+    
     if args.verbose:
         from logging import NOTSET
         for handle in get_logger().handlers:
@@ -90,18 +94,24 @@ def main():
         
         show.episodeList = [x for x in show.episodeList if x.episodeCount in episodeRange]
 
-    if rename:
-        eps = Utils.rename_files(args.pathname, show)
-        if not eps:
-            print "No files to be renamed"
-            exit(0)
+    if args.undo_rename or rename:
+        if rename:
+            files = Utils.rename_files(args.pathname, show)
+        else:
+            files = Utils.load_last_renamed_files()
 
-        for old, new in eps:
+        if not files:
+            print "Failed to find any files to rename"
+            exit(1)
+
+        print "PATH = {}".format(os.path.dirname(files[0][0]))
+        for old, new in files:
             print (u"OLD: {0}".format(os.path.split(old)[1]))
             print (u"NEW: {0}".format(os.path.split(new)[1]))
-            print ""
+            print
 
-        if Utils.rename(eps) == []:
+        errors = Utils.rename(files)
+        if not errors:
             print "All files were successfully renamed"
 
         exit(0)
