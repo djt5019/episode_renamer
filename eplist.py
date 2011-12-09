@@ -91,14 +91,17 @@ def main():
     # If the user specified a specific season we will filter our results
     # this also checks to make sure its a reasonable season number
     if args.season:
-        seasonRange = list(parse_range(args.season, show))
+        seasonRange = list(parse_range(args.season))
         if seasonRange[-1] <= show.numSeasons:
             show.episodeList = [x for x in show.episodeList if x.season in seasonRange]
         
     if args.episode:
-        episodeRange = parse_range(args.episode, show)
-        
-        show.episodeList = [x for x in show.episodeList if x.episodeCount in episodeRange]
+        episodeRange = list(parse_range(args.episode))
+
+        if not args.season:
+            show.episodeList = [x for x in show.episodeList if x.episodeCount in episodeRange]
+        else:
+            show.episodeList = [x for x in show.episodeList if x.episodeNumber in episodeRange]
 
     if args.undo_rename or rename:
         if rename:
@@ -139,8 +142,7 @@ def main():
         curr_season = eps.season
 
 
-def parse_range(range, show):
-    print range
+def parse_range(range):
     if '-' in range:
         high, low = range.split('-')
         high = int(high)
