@@ -59,12 +59,13 @@ class EpisodeFile(object):
     """
     Represents a TV show file.  Used for renaming purposes
     """
-    def __init__(self, path, index, season=-1):
+    def __init__(self, path, index, season=-1, checksum=-1):
         self.path = path
         self.index = index
         self.season = season
         self.ext = os.path.splitext(self.path)[1]
         self.name = Utils.encode(os.path.split(self.path)[1])
+        self.given_checksum = checksum
 
     def crc32(self):
         with open(self.path, 'rb') as f:
