@@ -20,12 +20,13 @@ SHOW_NOT_FOUND = ("", [])
 ## Common video naming formats, will be compiled if they are needed during episode renaming
 ## in the _compile_regexs function, otherwise they will not be compiled for simple episode 
 ## information retrieval purposes
-REGEX = (  r'^\[.*\]?[-\._\s]*(?P<series>.*)[-\._\s]+(?P<episode>\d+)[-\._\s]',
-            r'^\[.*\]?[-\._\s]*(?P<series>.*)[-\._\s]+OVA[-\._\s]*(?P<special>\d+)[-\._\s]',
-            r'^\[.*\]?[-\._\s]*(?P<series>.*)[-\._\s]+(s|season)[-\._\s]*(?P<season>\d+)[-\._\s]*(?P<episode>\d+)[-\._\s]*',
-            r'(?P<series>.*)[\s\._-]*S(?P<season>\d+)[\s\._-]*(episode|ep|e)(?P<episode>\d+)',
-			r'(?P<series>.*)[\s\._-]*(episode|ep|e)(?P<episode>\d+)',
-			r'^(?P<series>.*)[\s\._-]*\[(?P<season>\d+)x(?P<episode>\d+)\]',
+_sep = r'[\-\~\.\_\s]'
+REGEX = (   r'^\[.*\]?{sep}*(?P<series>.*){sep}+(?P<episode>\d+)'.format(sep=_sep),
+            r'^\[.*\]?{sep}*(?P<series>.*){sep}+OVA[-\._\s]*(?P<special>\d+)'.format(sep=_sep),
+            r'^\[.*\]?{sep}*(?P<series>.*){sep}+(s|season){sep}*(?P<season>\d+){sep}*(?P<episode>\d+)*'.format(sep=_sep),
+            r'(?P<series>.*){sep}*S(?P<season>\d+){sep}*(episode|ep|e)(?P<episode>\d+)'.format(sep=_sep),
+            r'(?P<series>.*){sep}*(episode|ep|e)(?P<episode>\d+)'.format(sep=_sep),
+            r'^(?P<series>.*){sep}*\[(?P<season>\d+)x(?P<episode>\d+)\]'.format(sep=_sep),
             r'^(?P<series>.*) - Season (?P<season>\d+) - Episode (?P<episode>\d*) - \w*',  # Also mine
             r'^(?P<series>.*) - Episode (?P<episode>\d*) - \w*',  # My usual format
             r'^(?P<series>.*) - OVA (?P<special>\d+) - \w*',
