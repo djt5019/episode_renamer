@@ -3,16 +3,16 @@
 __author__='Dan Tracy'
 __email__='djt5019 at gmail dot com'
 
-#This command line program will take a T.V. show as input and
-#will return information about each episode, such as the title
-#season and number.  I use this program to help clean up my
-#TV show collection.  After the show has been found online it
-#will be entered into a local database, provided sqlite3 is available,
-#for faster lookup in the future.  You are able to filter the shows
-#by season along with other options on the command line interface.
-#You can also rename files according to a format that you choose as
-#well as calculate the CRC32 of a file.  If you mistakenly rename
-#files you have the option to revert the last renaming operation
+# This command line program will take a T.V. show as input and
+# will return information about each episode, such as the title
+# season and number.  I use this program to help clean up my
+# TV show collection.  After the show has been found online it
+# will be entered into a local database, provided sqlite3 is available,
+# for faster lookup in the future.  You are able to filter the shows
+# by season along with other options on the command line interface.
+# You can also rename files according to a format that you choose as
+# well as calculate the CRC32 of a file.  If you mistakenly rename
+# files you have the option to revert the last renaming operation
 
 import argparse
 import os
@@ -116,8 +116,8 @@ def main():
         print "-------" + '-'*len(p)
         
         for old, new in files:
-            print (u"OLD: {0}".format(os.path.split(old)[1]))
-            print (u"NEW: {0}".format(os.path.split(new)[1]))
+            print (u"OLD: {0}".format(os.path.split(old)[1]).encode('ascii','replace'))
+            print (u"NEW: {0}".format(os.path.split(new)[1]).encode('ascii','replace'))
             print
 
         errors = Utils.rename(files)
@@ -139,7 +139,7 @@ def main():
             print "\nSeason {0}".format(eps.season)
             print "----------"
 
-        print show.formatter.display(eps)
+        print show.formatter.display(eps).encode('ascii','replace')
         curr_season = eps.season
 
 

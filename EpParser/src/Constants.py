@@ -25,13 +25,14 @@ _sum = r'(.*\[(?P<sum>[a-z0-9]{8})\])'
 REGEX = (   r'^\[.*\]?{sep}*(?P<series>.*){sep}+(?P<episode>\d+){sep}*{sum}?'.format(sep=_sep, sum=_sum),
             r'^\[.*\]?{sep}*(?P<series>.*){sep}+OVA[-\._\s]*(?P<special>\d+){sep}*{sum}?'.format(sep=_sep, sum=_sum),
             r'^\[.*\]?{sep}*(?P<series>.*){sep}+(s|season){sep}*(?P<season>\d+){sep}*(?P<episode>\d+)*{sum}?'.format(sep=_sep, sum=_sum),
-            r'(?P<series>.*){sep}*S(?P<season>\d+){sep}*(episode|ep|e)(?P<episode>\d+){sep}*{sum}?'.format(sep=_sep, sum=_sum),
-            r'(?P<series>.*){sep}*(episode|ep|e)(?P<episode>\d+){sep}*{sum}?'.format(sep=_sep, sum=_sum),
+            r'(?P<series>.*){sep}*S(?P<season>\d+){sep}*(episode|ep)(?P<episode>\d+){sep}*{sum}?'.format(sep=_sep, sum=_sum),
+            r'(?P<series>.*){sep}*(episode|ep)(?P<episode>\d+){sep}*{sum}?'.format(sep=_sep, sum=_sum),
             r'^(?P<series>.*){sep}*\[(?P<season>\d+)x(?P<episode>\d+)\]{sep}*{sum}?'.format(sep=_sep, sum=_sum),
             r'^(?P<series>.*) - Season (?P<season>\d+) - Episode (?P<episode>\d*) - \w*',  # Also mine
             r'^(?P<series>.*) - Episode (?P<episode>\d*) - \w*',  # My usual format
             r'^(?P<series>.*) - OVA (?P<special>\d+) - \w*',
             r'(?P<series>.*)[-\._\s]+(?P<episode>\d+)',
+            r'(?P<series>.*){sep}*(op|ed){sep}*(?P<special>\d*){sep}*{sum}?'.format(sep=_sep, sum=_sum),  # Show intro/outro music, just ignore them
             )
 
 NUM_DICT = { '0' : '','1' : 'one', '2' : 'two', '3' : 'three', '4' : 'four', '5' : 'five', '6' : 'six',

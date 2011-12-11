@@ -5,6 +5,7 @@ __email__='djt5019 at gmail dot com'
 import os
 import re
 import gzip
+import threading
 
 import Episode
 import Logger
@@ -151,17 +152,11 @@ def rename_files( path, show):
             file = files.get(ep.episodeCount, None)
 
         if not file:
-            try:
-                Logger.get_logger().info("Could not find an episode for {}".format(ep.title))
-            except UnicodeEncodeError:
-                pass
+            Logger.get_logger().info("Could not find an episode for {}".format(ep.title))
             continue
-
         else:
-            try:
-                Logger.get_logger().info("Found episode {}".format(ep.title))
-            except UnicodeEncodeError:
-                pass
+            Logger.get_logger().info("Found episode {}".format(ep.title))
+            
 
         fileName = encode( file.name )
         newName = replace_invalid_path_chars(show.formatter.display(ep, file) + file.ext)
@@ -203,6 +198,17 @@ def rename(files, resp=""):
         Logger.get_logger().info( "Files were successfully renamed")
 
     return errors
+    
+class Thread(threading.Thread):
+	def __init__(self, filename):
+		super(Thread, self).__init__()
+		self.file = filename
+		self.sum = 0
+	def run(self):
+		with open(self.file, 'rb') as f:
+			for line in f:
+				self.sum += zlib.crc32(line,self.sum)
+		print self.sum
 
 
 def save_renamed_file_info(old_order):
