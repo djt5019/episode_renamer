@@ -74,6 +74,12 @@ class EpisodeFile(object):
                 checksum = zlib.crc32(line, checksum)
 
         return hex( checksum & 0xFFFFFFFF )
+        
+    def compare_sums(self):
+        if self.given_checksum:
+            return self.given_checksum == self.crc32()
+            
+        return False
 
 
 class EpisodeFormatter(object):
@@ -88,7 +94,7 @@ class EpisodeFormatter(object):
         self.episodeNameTokens = {"title", "name", "epname"}
         self.seriesNameTokens = {"show", "series"}
         self.episodeCounterTokens = {"count", "number"}
-        self.hashTokens = {"crc32", "hash"}
+        self.hashTokens = {"crc32", "hash", "sum", "checksum"}
         re_format = '(?P<tag>\{}.*?\{})'.format(Settings['tag_start'], Settings['tag_end'])
         self.re = re.compile(re_format, re.I)
 

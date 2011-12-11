@@ -5,7 +5,6 @@ __email__='djt5019 at gmail dot com'
 import os
 import re
 import gzip
-from EpParser.src.Settings import Settings
 
 import Episode
 import Logger
@@ -15,6 +14,7 @@ from urllib2 import Request, urlopen, URLError
 from contextlib import closing
 from cStringIO import StringIO
 
+from EpParser.src.Settings import Settings
 from EpParser.src import Constants
 
 
@@ -68,7 +68,8 @@ def clean_filenames( path ):
     for f in files:
         g = _search(f)
         season = -1
-
+        checksum = -1
+        
         if not g:
             Logger.get_logger().error( "Could not find file information for: {}".format(f) )
             continue
@@ -77,6 +78,10 @@ def clean_filenames( path ):
             continue
 
         index = int(g.group('episode'))
+            
+        if 'sum' in g.groupdict():
+            checksum = g.group('sum')
+            checksum = int(checksum, base=16)
 
         if 'season' in g.groupdict():
             season = int(g.group('season'))
@@ -90,7 +95,7 @@ def clean_filenames( path ):
 
         index += epOffset
 
-        cleanFiles[index] = Episode.EpisodeFile(os.path.join(path,f), index, season)
+        cleanFiles[index] = Episode.EpisodeFile(os.path.join(path,f), index, season, checksum)
 
     if not cleanFiles:
         Logger.get_logger().error( "The files could not be matched" )
