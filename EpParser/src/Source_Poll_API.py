@@ -30,7 +30,7 @@ def able_to_poll(site):
         _site_access_dict[site] = now
         return True
 
-    if now - last_access >= 2:
+    if now - last_access >= int(Settings['poll_delay']):
         _site_access_dict[site] = now
         return True
     

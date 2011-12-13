@@ -10,6 +10,7 @@ import atexit
 from Episode import Episode
 from Constants import RESOURCE_PATH
 from Logger import get_logger
+from Settings import Settings
 
 class Cache(object):
     """ Our database logic class"""
