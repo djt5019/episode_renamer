@@ -75,7 +75,7 @@ def main():
     if rename and not os.path.exists(args.pathname):
         exit("ERROR - Path provided does not exist")
 
-    cache = Cache(Settings['episode_db'])
+    cache = Cache(Settings['db_name'])
     episodeParser = Parser(args.title, cache)
 
     show = episodeParser.getShow()

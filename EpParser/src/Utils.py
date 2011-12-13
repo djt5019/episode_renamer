@@ -214,17 +214,17 @@ class Thread(threading.Thread):
 def save_renamed_file_info(old_order):
     import pickle
     Logger.get_logger().info("Backing up old filenames")
-    with open(os.path.join(Constants.RESOURCE_PATH, Settings['old_renamed_files']), 'w') as f:
+    with open(os.path.join(Constants.RESOURCE_PATH, Settings['rename_backup']), 'w') as f:
         pickle.dump(old_order, f)
 
 def load_last_renamed_files():
     import pickle
     Logger.get_logger().info("Loading up old filenames")
-    if not os.path.exists(os.path.join(Constants.RESOURCE_PATH, Settings['old_renamed_files'])):
+    if not os.path.exists(os.path.join(Constants.RESOURCE_PATH, Settings['rename_backup'])):
         Logger.get_logger().warn("There seems to be no files to be un-renamed")
         return
 
-    with open(os.path.join(Constants.RESOURCE_PATH, Settings['old_renamed_files'])) as f:
+    with open(os.path.join(Constants.RESOURCE_PATH, Settings['rename_backup'])) as f:
         data = f.readlines()
 
     # Data will be in the form of a list of tuples

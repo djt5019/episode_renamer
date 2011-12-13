@@ -62,7 +62,9 @@ class Cache(object):
 
         get_logger().info("{} days old".format(diffDays.days))
 
-        if diffDays.days >= 7:
+        update_days = abs(int(Settings['db_update']))
+        
+        if diffDays.days >= update_days:
             #If the show is older than a week remove it then return not found
             get_logger().warning("Show is older than a week, removing...")
             self.remove_show(sid)
