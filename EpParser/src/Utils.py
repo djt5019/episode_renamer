@@ -6,6 +6,7 @@ import os
 import re
 import gzip
 import threading
+import zlib
 
 import Episode
 import Logger
@@ -59,7 +60,7 @@ def clean_filenames( path ):
     if not files:
         Logger.get_logger().error( "No video files were found in {}".format( path ) )
         exit(1)    
-    
+
     _compile_regexs()
     cleanFiles = {}
     curSeason = -1
@@ -70,7 +71,7 @@ def clean_filenames( path ):
         g = _search(f)
         season = -1
         checksum = -1
-        
+
         if not g:
             Logger.get_logger().error( "Could not find file information for: {}".format(f) )
             continue
@@ -79,7 +80,7 @@ def clean_filenames( path ):
             continue
 
         index = int(g.group('episode'))
-            
+
         if 'sum' in g.groupdict():
             checksum = g.group('sum')
             checksum = int(checksum, base=16)
@@ -115,7 +116,7 @@ def _compile_regexs():
     return _compile_regexs.regexList
 
 _compile_regexs.regexList = []
-    
+
 def _search(filename):
     for count, regex in enumerate(_compile_regexs()):
         result = regex.search(filename)
@@ -138,16 +139,17 @@ def rename_files( path, show):
         return []
 
     for ep in show.episodeList:
+        file = None
         if ep.season > 0:
             file = files.get(ep.episodeNumber, None)
-            
+
             if file:
                 if file.season != ep.season and file.index != ep.episodeNumber:
                     continue
 
         elif ep.season == -1:
             file = files.get(ep.episodeCount, None)
-            
+
         if not file:
             file = files.get(ep.episodeCount, None)
 
@@ -156,11 +158,10 @@ def rename_files( path, show):
             continue
         else:
             Logger.get_logger().info("Found episode {}".format(ep.title))
-            
 
         fileName = encode( file.name )
         newName = replace_invalid_path_chars(show.formatter.display(ep, file) + file.ext)
-    
+
         if newName == fileName:
             Logger.get_logger().info("File {} and Episode {} have same name".format(file.name, ep.title))
             continue
@@ -198,17 +199,19 @@ def rename(files, resp=""):
         Logger.get_logger().info( "Files were successfully renamed")
 
     return errors
-    
+
+
 class Thread(threading.Thread):
-	def __init__(self, filename):
-		super(Thread, self).__init__()
-		self.file = filename
-		self.sum = 0
-	def run(self):
-		with open(self.file, 'rb') as f:
-			for line in f:
-				self.sum += zlib.crc32(line,self.sum)
-		print self.sum
+    def __init__(self, filename):
+        super(Thread, self).__init__()
+        self.file = filename
+        self.sum = 0
+
+    def run(self):
+        with open(self.file, 'rb') as f:
+            for line in f:
+                self.sum += zlib.crc32(line,self.sum)
+        print self.sum
 
 
 def save_renamed_file_info(old_order):
