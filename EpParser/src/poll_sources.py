@@ -7,18 +7,17 @@ import sys
 from os import listdir
 from itertools import ifilter
 
-from Constants import WEB_SOURCES_PATH
+import Constants
 from Logger import get_logger
 
 def locate_show(title):
     """Polls the web sources looking for the show"""
-    episodes = []
     modules = []
 
-    sys.path.append(WEB_SOURCES_PATH)
+    sys.path.append(Constants.WEB_SOURCES_PATH)
     ## This will import all the modules within the web_sources directory so that we
     ## can easily plug in new sources for finding episode information
-    mods = ifilter( lambda x: x.endswith('py') and not x.startswith('__'),  listdir(WEB_SOURCES_PATH))
+    mods = ifilter( lambda x: x.endswith('py') and not x.startswith('__'),  listdir(Constants.WEB_SOURCES_PATH))
 
     for m in mods:
         get_logger().info("Importing web resource {}".format(m[:-3]))
@@ -30,6 +29,8 @@ def locate_show(title):
         modules = sorted(modules, key=lambda x: x.priority, reverse=True)
 
     get_logger().info("Searching for {}".format(title))
+
+    found_title, episodes = Constants.SHOW_NOT_FOUND
 
     for source in modules:
         get_logger().info( "Polling {0}".format(source.__name__) )
