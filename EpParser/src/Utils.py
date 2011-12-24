@@ -83,7 +83,10 @@ def clean_filenames( path ):
 
         if 'sum' in g.groupdict():
             checksum = g.group('sum')
-            checksum = int(checksum, base=16)
+            if checksum:
+                checksum = int(checksum, base=16)
+            else:
+                checksum = 0x0
 
         if 'season' in g.groupdict():
             season = int(g.group('season'))

@@ -21,7 +21,7 @@ SHOW_NOT_FOUND = ("", [])
 ## in the _compile_regexs function, otherwise they will not be compiled for simple episode 
 ## information retrieval purposes
 _sep = r'[\-\~\.\_\s]'
-_sum = r'(.*\[(?P<sum>[a-z0-9]{8})\])'
+_sum = r'(.*[\[\(](?P<sum>[a-z0-9]{8})[\]\)])'
 REGEX = (   r'^\[.*\]?{sep}*(?P<series>.*){sep}+(?P<episode>\d+){sep}*{sum}?'.format(sep=_sep, sum=_sum),
             r'^\[.*\]?{sep}*(?P<series>.*){sep}+OVA[-\._\s]*(?P<special>\d+){sep}*{sum}?'.format(sep=_sep, sum=_sum),
             r'^\[.*\]?{sep}*(?P<series>.*){sep}+(s|season){sep}*(?P<season>\d+){sep}*(?P<episode>\d+)*{sum}?'.format(sep=_sep, sum=_sum),
