@@ -164,14 +164,16 @@ def rename_files( path, show):
 
         fileName = encode( file.name )
         newName = replace_invalid_path_chars(show.formatter.display(ep, file) + file.ext)
-
+           
         if newName == fileName:
             Logger.get_logger().info("File {} and Episode {} have same name".format(file.name, ep.title))
             continue
 
-        newName = os.path.join(path, newName)
-
-        renamedFiles.append( (file.path, newName,) )
+        name = os.path.join(path, newName)
+        if len(name) > 256:
+            Logger.get_logger().error('The filename "{}" may be too long to rename'.format(newName))
+         
+        renamedFiles.append( (file.path, name,) )
 
     return renamedFiles
 
@@ -186,11 +188,12 @@ def rename(files, resp=""):
 
     errors = []
     old_order = []
+    
     for old, new in files:
         try:
             os.rename(old, new)
             old_order.append((new, old))
-        except Exception as e:
+        except Exception as e:            
             errors.append( (old,e) )
 
     save_renamed_file_info(old_order)
