@@ -37,12 +37,14 @@ class Show(object):
         self.maxEpisodeNumber = max( x.episodeNumber for x in eps )
         self.numEpisodes = len(eps)
 
-    def set_format(self, fmt):
-        self.formatter.set_format(fmt)
+    @property
+    def show_title(self):
+        return self.title
 
-    def set_name(self, name):
-        self.title = Utils.encode(name.title())
-        self.properTitle = Utils.prepare_title(self.title)
+    @show_title.setter
+    def show_title(self, val):
+        self.title = Utils.encode(val.title())
+        self.properTitle = Utils.prepare_title(val)
 
 
 class Episode(object):

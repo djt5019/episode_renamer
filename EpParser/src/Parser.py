@@ -48,7 +48,7 @@ class EpParser(object):
         self.show.add_episodes(eps)
         
         if found_name:
-            self.show.set_name(found_name)
+            self.show.show_title = found_name
 
         if not self.show.episodeList:
             get_logger().error("Show was not found, check spelling and try again")
