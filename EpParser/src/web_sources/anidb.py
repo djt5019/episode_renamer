@@ -20,7 +20,7 @@ def _parse_local(title):
     """
     if not API.file_exists_in_resources('animetitles.dat'):
         Logger.get_logger().warning("AniDB database file not found")
-        return -1
+        return -1, title
 
     regex = API.regex_compile(r'(?P<aid>\d+)\|(?P<type>\d)\|(?P<lang>.+)\|(?P<title>.*)')
 
@@ -36,21 +36,22 @@ def _parse_local(title):
                 continue
 
             foundTitle = API.encode(res.group('title'))
+            if title == foundTitle:
+                print foundTitle
+                print title
+                return res.group('aid')
 
             sequence.set_seq2(foundTitle.lower())
             ratio = sequence.ratio()
 
             if ratio > .80:
-                #Logger.get_logger().info("Suitable guess for {} is: {}".format(title, foundTitle))
                 guesses.append( (ratio, res.group('aid'), foundTitle) )
 
-    aid = -1
-    name = title
     if guesses:
         _, aid, name = max(guesses)
-        Logger.get_logger().info("Best choice is {} with id {}".format(name, aid))
+        Logger.get_logger().error("Closest show to '{}' is {} with id {}".format(title, name, aid))
 
-    return aid, name
+    return -1
 
 def _connect_HTTP(aid):
     """
@@ -84,13 +85,13 @@ def _connect_HTTP(aid):
         epNum = int(e.epno.getText())
         title = e.find('title', {'xml:lang':'en'})
         title = title.getText()
-        epList.append(Episode.Episode(API.encode(title), epNum, -1, epNum))
+        epList.append(Episode.Episode(API.encode(title.lower()), epNum, -1, epNum))
 
     return epList
 
 
 def poll(title):
-    aid, found_title = _parse_local(title)
+    aid = _parse_local(title.lower())
 
     if aid < 0:
         return API.show_not_found
@@ -100,6 +101,6 @@ def poll(title):
     if API.able_to_poll('AniDB'):
         episodes = _connect_HTTP(aid)
         if episodes:
-            return found_title, episodes
+            return episodes
 
     return API.show_not_found

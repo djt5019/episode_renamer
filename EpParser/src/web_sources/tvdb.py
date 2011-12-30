@@ -101,15 +101,8 @@ def poll(title):
 
         eps.append(Episode(name, num, season, count))
         count += 1
-
-    
-    series_info = soup.find('series')
-    if series_info:
-        found_title = series_info.seriesname.getText()
-    else:
-        found_title = title
         
     soup.close()
     tempZip.close()
 
-    return found_title, eps
+    return eps
