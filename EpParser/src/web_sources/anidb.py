@@ -36,9 +36,7 @@ def _parse_local(title):
                 continue
 
             foundTitle = API.encode(res.group('title'))
-            if title == foundTitle:
-                print foundTitle
-                print title
+            if title == foundTitle.lower():
                 return res.group('aid')
 
             sequence.set_seq2(foundTitle.lower())
@@ -85,7 +83,7 @@ def _connect_HTTP(aid):
         epNum = int(e.epno.getText())
         title = e.find('title', {'xml:lang':'en'})
         title = title.getText()
-        epList.append(Episode.Episode(API.encode(title.lower()), epNum, -1, epNum))
+        epList.append(Episode.Episode(API.encode(title), epNum, -1, epNum))
 
     return epList
 
