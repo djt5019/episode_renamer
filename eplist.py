@@ -111,6 +111,7 @@ def main():
 
     if  rename:
         files = Utils.rename_files(args.pathname, show)
+        print_renamed_files(files)
         errors = Utils.rename(files)
         if not errors:
             print "All files were successfully renamed"
