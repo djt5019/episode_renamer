@@ -16,6 +16,7 @@ __email__='djt5019 at gmail dot com'
 
 import argparse
 import os
+import sys
 
 import EpParser.src.Utils as Utils
 import EpParser.src.Episode as Episode
@@ -26,7 +27,14 @@ from EpParser.src.Logger import get_logger
 from EpParser.src.Settings import Settings
 
 def main():
-    """ Our main function for our command line interface"""
+    if '-u' in sys.argv or '--undo-rename' in sys.argv:
+        files = Utils.load_last_renamed_files()
+        print_renamed_files(files)
+        errors = Utils.rename(files)
+        if not errors:
+            print "All files were successfully renamed"
+        exit(0)
+
     cmd = argparse.ArgumentParser(description="Renames your TV shows",
                                   prog='eplist', usage='%(prog)s [options] title')
 
@@ -101,25 +109,8 @@ def main():
         else:
             show.episodeList = [x for x in show.episodeList if x.episodeNumber in episodeRange]
 
-    if args.undo_rename or rename:
-        if rename:
-            files = Utils.rename_files(args.pathname, show)
-        else:
-            files = Utils.load_last_renamed_files()
-
-        if not files:
-            print "Failed to find any files to rename"
-            exit(1)
-
-        p = os.path.dirname(files[0][0])
-        print "PATH = {}".format(p)
-        print "-------" + '-'*len(p)
-        
-        for old, new in files:
-            print (u"OLD: {0}".format(os.path.split(old)[1]).encode('ascii','replace'))
-            print (u"NEW: {0}".format(os.path.split(new)[1]).encode('ascii','replace'))
-            print
-
+    if  rename:
+        files = Utils.rename_files(args.pathname, show)
         errors = Utils.rename(files)
         if not errors:
             print "All files were successfully renamed"
@@ -141,6 +132,21 @@ def main():
 
         print show.formatter.display(eps).encode('ascii','replace')
         curr_season = eps.season
+
+
+def print_renamed_files(files):
+    if not files:
+        print "Failed to find any files to rename"
+        exit(1)
+
+    p = os.path.dirname(files[0][0])
+    print "PATH = {}".format(p)
+    print "-------" + '-'*len(p)
+
+    for old, new in files:
+        print (u"OLD: {0}".format(os.path.split(old)[1]).encode('ascii','replace'))
+        print (u"NEW: {0}".format(os.path.split(new)[1]).encode('ascii','replace'))
+        print
 
 
 def parse_range(range):
