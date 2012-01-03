@@ -28,7 +28,7 @@ class EpParser(object):
 
     def getShow(self):
         """ The main driver function of this class, it will poll
-        the database first, if the show dosen't exist it will
+        the database first, if the show doesn't exist it will
         then try the internet. """
 
         if self.show.title == '':

@@ -100,6 +100,9 @@ def main():
         seasonRange = list(parse_range(args.season))
         if seasonRange[-1] <= show.numSeasons:
             show.episodeList = [x for x in show.episodeList if x.season in seasonRange]
+        else:
+            print "{} Season {} not found".format(args.title, args.season)
+            exit(1)
         
     if args.episode:
         episodeRange = list(parse_range(args.episode))
@@ -107,7 +110,7 @@ def main():
         if not args.season:
             show.episodeList = [x for x in show.episodeList if x.episodeCount in episodeRange]
         else:
-            show.episodeList = [x for x in show.episodeList if x.episodeNumber in episodeRange]
+            show.episodeList = show.episodeList[episodeRange[0]-1:episodeRange[-1]]
 
     if  rename:
         files = Utils.rename_files(args.pathname, show)
@@ -131,7 +134,7 @@ def main():
             print "\nSeason {0}".format(eps.season)
             print "----------"
 
-        print show.formatter.display(eps).encode('ascii','replace')
+        print show.formatter.display(eps).encode(sys.getdefaultencoding(),'ignore')
         curr_season = eps.season
 
 
@@ -145,8 +148,8 @@ def print_renamed_files(files):
     print "-------" + '-'*len(p)
 
     for old, new in files:
-        print (u"OLD: {0}".format(os.path.split(old)[1]).encode('ascii','replace'))
-        print (u"NEW: {0}".format(os.path.split(new)[1]).encode('ascii','replace'))
+        print (u"OLD: {0}".format(os.path.split(old)[1]).encode(sys.getdefaultencoding(),'ignore'))
+        print (u"NEW: {0}".format(os.path.split(new)[1]).encode(sys.getdefaultencoding(),'ignore'))
         print
 
 
@@ -159,9 +162,11 @@ def parse_range(range):
         high = low = int(range)
 
     low = max(low, 1)
+    high = max(high, 1)
 
     if low > high:
         low, high = high, low
+
 
     return xrange(low, high + 1)
 
