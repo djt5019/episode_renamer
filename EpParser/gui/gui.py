@@ -181,7 +181,7 @@ class Form(QtGui.QWidget):
             InfoMessage(self, "Rename Files", "No Show Information Retrieved")
             return
 
-        files = Utils.rename_files(self.renameDir, self.show)
+        files = Utils.prepare_filenames(self.renameDir, self.show)
         RenameDialog(files, self)
 
 

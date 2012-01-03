@@ -113,7 +113,7 @@ def main():
             show.episodeList = show.episodeList[episodeRange[0]-1:episodeRange[-1]]
 
     if  rename:
-        files = Utils.rename_files(args.pathname, show)
+        files = Utils.prepare_filenames(args.pathname, show)
         print_renamed_files(files)
         errors = Utils.rename(files)
         if not errors:

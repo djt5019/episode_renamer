@@ -7,6 +7,7 @@ import re
 import gzip
 import threading
 import zlib
+import pickle
 
 import Episode
 import Logger
@@ -129,7 +130,7 @@ def _search(filename):
 
     return None
 
-def rename_files( path, show):
+def prepare_filenames( path, show):
     """Rename the files located in 'path' to those in the list 'show' """
     path = os.path.abspath(path)
     renamedFiles = []
@@ -221,13 +222,13 @@ class Thread(threading.Thread):
 
 
 def save_renamed_file_info(old_order):
-    import pickle
+    """ Save the previous names from the last renaming operation to disk """
     Logger.get_logger().info("Backing up old filenames")
     with open(os.path.join(Constants.RESOURCE_PATH, Settings['rename_backup']), 'w') as f:
         pickle.dump(old_order, f)
 
 def load_last_renamed_files():
-    import pickle
+    """ Restore the previous names from the last renaming operation"""
     Logger.get_logger().info("Loading up old filenames")
     if not os.path.exists(os.path.join(Constants.RESOURCE_PATH, Settings['rename_backup'])):
         Logger.get_logger().warn("There seems to be no files to be un-renamed")
