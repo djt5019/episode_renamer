@@ -88,7 +88,7 @@ def _connect_HTTP(aid):
     return epList
 
 
-def poll(title):
+def poll(title=""):
     aid = _parse_local(title.lower())
 
     if aid < 0:
