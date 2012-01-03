@@ -143,38 +143,38 @@ def prepare_filenames( path, show):
         return []
 
     for ep in show.episodeList:
-        file = None
+        file_ = None
         if ep.season > 0:
-            file = files.get(ep.episodeNumber, None)
+            file_ = files.get(ep.episodeNumber, None)
 
-            if file:
-                if file.season != ep.season and file.index != ep.episodeNumber:
+            if file_:
+                if file_.season != ep.season and file_.index != ep.episodeNumber:
                     continue
 
         elif ep.season == -1:
-            file = files.get(ep.episodeCount, None)
+            file_ = files.get(ep.episodeCount, None)
 
-        if not file:
-            file = files.get(ep.episodeCount, None)
+        if not file_:
+            file_ = files.get(ep.episodeCount, None)
 
-        if not file:
+        if not file_:
             Logger.get_logger().info("Could not find an episode for {}".format(ep.title))
             continue
         else:
             Logger.get_logger().info("Found episode {}".format(ep.title))
 
-        fileName = encode( file.name )
-        newName = replace_invalid_path_chars(show.formatter.display(ep, file) + file.ext)
+        fileName = encode( file_.name )
+        newName = replace_invalid_path_chars(show.formatter.display(ep, file_) + file_.ext)
 
         if newName == fileName:
-            Logger.get_logger().info("File {} and Episode {} have same name".format(file.name, ep.title))
+            Logger.get_logger().info("File {} and Episode {} have same name".format(file_.name, ep.title))
             continue
 
         name = os.path.join(path, newName)
         if len(name) > 256:
             Logger.get_logger().error('The filename "{}" may be too long to rename'.format(newName))
 
-        renamedFiles.append( (file.path, name,) )
+        renamedFiles.append( (file_.path, name,) )
 
     return renamedFiles
 
