@@ -35,13 +35,10 @@ def poll(title):
     if fd is None: 
         return API.show_not_found
 
-    with fd as request:
-        data = request.readlines()
-        
     regex = API.regex_compile(pattern)
 
     count = 1
-    for line in data:
+    for line in fd.content:
         info = regex.match(line)
         if info is not None:
             name = info.group('name')

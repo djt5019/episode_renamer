@@ -4,18 +4,16 @@ __email__='djt5019 at gmail dot com'
 
 import os
 import re
-import gzip
 import threading
 import zlib
 import pickle
+import requests
+import requests.exceptions
 
 import Episode
 import Logger
 
 from itertools import ifilter
-from urllib2 import Request, urlopen, URLError
-from contextlib import closing
-from cStringIO import StringIO
 
 from EpParser.src.Settings import Settings
 from EpParser.src import Constants
@@ -23,30 +21,16 @@ from EpParser.src import Constants
 
 def get_URL_descriptor(url):
     """Returns an auto-closing url descriptor or None"""
-    fd = None
-    request = Request(url)
-    request.add_header('Accept-encoding', 'gzip')
-
     try:
-        fd = urlopen(request)
+        resp = requests.get(url)
+    except requests.exceptions.ConnectionError:
+        Logger.get_logger().error("Error connecting to {}".format(url))
+        return None
 
-        if fd.info().get('Content-Encoding') == 'gzip':
-            buffer = StringIO( fd.read() )
-            fd = gzip.GzipFile(fileobj=buffer)
+    if resp.ok:
+        return resp
 
-    except URLError as e:
-        if hasattr(e, 'reason'):
-            Logger.get_logger().error( 'ERROR: {0} appears to be down at the moment'.format(url) )
-            pass
-    except Exception as e:
-        Logger.get_logger().error("A GZip error has occurred {}".format(e))
-        exit()
-    finally:
-        if fd:
-            # If we have a valid descriptor return an auto closing one
-            return closing(fd)
-        else:
-            return None
+    return None
 
 
 ## Renaming utility functions

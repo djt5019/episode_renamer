@@ -57,13 +57,12 @@ def _connect_HTTP(aid):
     """
     url = r'http://api.anidb.net:9001/httpapi?request=anime&client=eprenamer&clientver=1&protover=1&aid={}'.format(aid)
 
-    fd = API.get_url_descriptor(url)
+    resp = API.get_url_descriptor(url)
 
-    if fd is None:
+    if resp is None:
         return []
 
-    with fd as resp:
-        soup = Soup(resp.read())
+    soup = Soup(resp.content)
 
     if soup.find('error'):
         Logger.get_logger().error("Temporally banned from AniDB, most likely due to flooding")

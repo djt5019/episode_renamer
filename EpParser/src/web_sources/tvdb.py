@@ -41,8 +41,7 @@ def poll(title):
     if seriesFileDesc is None:
         return API.show_not_found
 
-    with seriesFileDesc as fd:
-        seriesIdXml = Soup( fd.read(), convertEntities=Soup.HTML_ENTITIES )
+    seriesIdXml = Soup( seriesFileDesc.content, convertEntities=Soup.HTML_ENTITIES )
 
     seriesIds = seriesIdXml.findAll('series')
 
@@ -66,14 +65,8 @@ def poll(title):
 
     tempZip = API.temporary_file(suffix='.zip')
     tempZip.seek(0)
+    tempZip.write(infoFileDesc.content)
 
-    with infoFileDesc as z:
-        # download the entire zipfile into the temp file
-        while True:
-            packet = z.read()
-            if not packet:
-                break
-            tempZip.write(packet)
 
     with zipfile.ZipFile(tempZip) as z:
         if 'en.xml' not in z.namelist():
