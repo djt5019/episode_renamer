@@ -100,15 +100,15 @@ class EpisodeFormatter(object):
         re_format = '(?P<tag>\{}.*?\{})'.format(Settings['tag_start'], Settings['tag_end'])
         self.re = re.compile(re_format, re.I)
 
-    def set_format(self, fmt):
+    def set_format(self, fmt=None):
         """Set the format string for the formatter"""
         if fmt is not None:
             self.formatString = Utils.encode( fmt )
             self.tokens = self.formatString.split()
 
-    def load_format_config(self, configFileName=""):
+    def load_format_config(self, configFileName=None):
         """Load tokens from the format config file in RESOURCEPATH"""
-        if configFileName == "":
+        if not configFileName:
             path = os.path.join(Constants.RESOURCE_PATH, Settings['tag_config'])
         else:
             path = os.path.join(Constants.RESOURCE_PATH, configFileName)

@@ -22,8 +22,8 @@ SHOW_NOT_FOUND = []
 ## information retrieval purposes
 _sep = r'[\-\~\.\_\s]'
 _sum = r'(.*[\[\(](?P<sum>[a-z0-9]{8})[\]\)])'
-REGEX = (   r'^(\[.*\])*{sep}*(?P<series>.*?){sep}+(?P<episode>\d+){sep}*{sum}?'.format(sep=_sep, sum=_sum),
-            r'^(\[.*\])*{sep}*(?P<series>.*?){sep}+OVA[-\._\s]*(?P<special>\d+){sep}*{sum}?'.format(sep=_sep, sum=_sum),
+REGEX = (   r'^(\[.*\])*{sep}*(?P<series>.*?){sep}+OVA[-\._\s]*(?P<special>\d+){sep}*{sum}?'.format(sep=_sep, sum=_sum),
+            r'^(\[.*\])*{sep}*(?P<series>.*?){sep}+(?P<episode>\d+){sep}*{sum}?'.format(sep=_sep, sum=_sum),
             r'^(\[.*\])*{sep}*(?P<series>.*?){sep}+(s|season){sep}*(?P<season>\d+){sep}*(?P<episode>\d+)*{sum}?'.format(sep=_sep, sum=_sum),
             r'(?P<series>.*){sep}*S(?P<season>\d+){sep}*(episode|ep)(?P<episode>\d+){sep}*{sum}?'.format(sep=_sep, sum=_sum),
             r'(?P<series>.*){sep}*(episode|ep)(?P<episode>\d+){sep}*{sum}?'.format(sep=_sep, sum=_sum),
