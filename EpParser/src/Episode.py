@@ -30,6 +30,8 @@ class Show(object):
 
     def add_episodes(self, eps):
         """ Add episodes to the shows episode list """
+        if not eps:
+            return False
         self.episodeList = eps
         self.numSeasons = eps[-1].season
         self.maxEpisodeNumber = max( x.episodeNumber for x in eps )

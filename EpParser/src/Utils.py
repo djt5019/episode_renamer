@@ -125,7 +125,7 @@ def prepare_filenames(path, show):
         if not episode:
             print "Could not find an episode for {}".format(f.name)
 
-        fileName = encode(episode.title)
+        fileName = encode(f.name)
         newName = replace_invalid_path_chars(show.formatter.display(episode, f) + f.ext)
 
         if newName == fileName:
