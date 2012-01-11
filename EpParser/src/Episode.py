@@ -28,11 +28,8 @@ class Show(object):
         self.numSeasons = 0
         self.maxEpisodeNumber = 0
 
-    def add_episodes(self, eps=None):
+    def add_episodes(self, eps):
         """ Add episodes to the shows episode list """
-        if not eps:
-            return
-
         self.episodeList = eps
         self.numSeasons = eps[-1].season
         self.maxEpisodeNumber = max( x.episodeNumber for x in eps )
@@ -50,6 +47,9 @@ class Show(object):
     def show_title(self, val):
         self.title = Utils.encode(val.title())
         self.properTitle = Utils.prepare_title(val)
+
+    def get_season(self, season):
+        return self.episodesBySeason[season]
 
     def get_episode(self, season, episode):
         """ Returns a specific episode from a specific season, None if it's not present
@@ -81,9 +81,9 @@ class EpisodeFile(object):
     """
     Represents a TV show file.  Used for renaming purposes
     """
-    def __init__(self, path, index, season=-1, checksum=-1):
+    def __init__(self, path, episode, season=-1, checksum=-1):
         self.path = path
-        self.index = index
+        self.episode = episode
         self.season = season
         self.ext = os.path.splitext(self.path)[1]
         self.name = Utils.encode(os.path.split(self.path)[1])

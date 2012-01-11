@@ -50,7 +50,7 @@ def clean_filenames( path ):
 
     if not files:
         Logger.get_logger().error( "No video files were found in {}".format( path ) )
-        exit(1)
+        return []
 
     _compile_regexs()
     cleanFiles = []
@@ -108,7 +108,7 @@ def _search(filename):
 
     return None
 
-def prepare_filenames( path, show):
+def prepare_filenames(path, show):
     """Rename the files located in 'path' to those in the list 'show' """
     path = os.path.abspath(path)
     renamedFiles = []
@@ -120,7 +120,7 @@ def prepare_filenames( path, show):
         return []
 
     for f in files:
-        episode = show.get_episode(f.season, f.index)
+        episode = show.get_episode(f.season, f.episode)
 
         if not episode:
             print "Could not find an episode for {}".format(f.name)

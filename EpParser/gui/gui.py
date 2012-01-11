@@ -3,12 +3,11 @@
 __author__='Dan Tracy'
 __email__='djt5019 at gmail dot com'
 
-import sys
 import os
 from PySide import QtGui, QtCore
 
 from EpParser.src.Parser import EpParser
-from EpParser.src.Episode import Episode, Show, EpisodeFormatter
+from EpParser.src.Episode import Show, EpisodeFormatter
 from EpParser.src.Cache import Cache
 from EpParser.src.Logger import get_logger
 import EpParser.src.Utils as Utils
@@ -114,13 +113,12 @@ class Form(QtGui.QWidget):
         self.formatter.load_format_config()
 
     def filterSeasons(self, text):
-        self.episodes = self.show.episodeList
         if text == 'All':
             self.displayShow()
             return
 
         season = int(text)
-        self.episodes = filter(lambda x: x.season == season, self.episodes)
+        self.episodes = self.show.get_season(season)
 
         self.displayShow()
 
