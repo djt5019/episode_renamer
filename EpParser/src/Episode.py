@@ -22,6 +22,7 @@ class Show(object):
         self.title = Utils.encode(seriesTitle.title())
         self.properTitle = Utils.prepare_title(self.title)
         self.episodeList = []
+        self.episodesBySeason = {}
         self.specialsList = []
         self.formatter = EpisodeFormatter(self)
         self.numSeasons = 0
@@ -36,6 +37,10 @@ class Show(object):
         self.numSeasons = eps[-1].season
         self.maxEpisodeNumber = max( x.episodeNumber for x in eps )
         self.numEpisodes = len(eps)
+        for s in xrange(self.numSeasons+1):
+            # Split each seasons episodes into it's own separate list and index it
+            # by the season number.  Very easy for looking up individual episodes
+            self.episodesBySeason[s] = filter(lambda x: x.season == s, self.episodeList)
 
     @property
     def show_title(self):
@@ -45,6 +50,21 @@ class Show(object):
     def show_title(self, val):
         self.title = Utils.encode(val.title())
         self.properTitle = Utils.prepare_title(val)
+
+    def get_episode(self, season, episode):
+        """ Returns a specific episode from a specific season, None if it's not present
+        """
+        if episode < 1:
+            return None
+
+        if season > 0:
+            season = self.episodesBySeason.get(season, None)
+            if season:
+                return season[episode-1]  # Adjust by one since episodes start count at 1 not 0
+            else:
+                return None
+        else:
+            return self.episodeList[episode-1]
 
 
 class Episode(object):

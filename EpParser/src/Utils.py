@@ -47,15 +47,13 @@ def clean_filenames( path ):
         exit(1)
 
     _compile_regexs()
-    cleanFiles = {}
-    curSeason = -1
-    epOffset = 0
+    cleanFiles = []
     # We are going to store the episode number and path in a tuple then sort on the
     # episodes number.  Special episodes will be appended to the end of the clean list
     for f in files:
         g = _search(f)
+        checksum = 0
         season = -1
-        checksum = -1
 
         if not g:
             Logger.get_logger().error( "Could not find file information for: {}".format(f) )
@@ -76,16 +74,7 @@ def clean_filenames( path ):
         if 'season' in g.groupdict():
             season = int(g.group('season'))
 
-            if curSeason == -1:
-                curSeason = season
-
-            elif curSeason != season:
-                curSeason = season
-                epOffset = index
-
-        index += epOffset
-
-        cleanFiles[index] = Episode.EpisodeFile(os.path.join(path,f), index, season, checksum)
+        cleanFiles.append(Episode.EpisodeFile(os.path.join(path,f), index, season, checksum))
 
     if not cleanFiles:
         Logger.get_logger().error( "The files could not be matched" )
@@ -121,44 +110,28 @@ def prepare_filenames( path, show):
 
     files = clean_filenames(path)
     #Match the list of EpisodeFiles to the list of shows in the 'show' variable
-
     if not files:
         Logger.get_logger().info("No files were able to be renamed")
         return []
 
-    for ep in show.episodeList:
-        file_ = None
-        if ep.season > 0:
-            file_ = files.get(ep.episodeNumber, None)
+    for f in files:
+        episode = show.get_episode(f.season, f.index)
 
-            if file_:
-                if file_.season != ep.season and file_.index != ep.episodeNumber:
-                    continue
+        if not episode:
+            print "Could not find an episode for {}".format(f.name)
 
-        elif ep.season == -1:
-            file_ = files.get(ep.episodeCount, None)
-
-        if not file_:
-            file_ = files.get(ep.episodeCount, None)
-
-        if not file_:
-            Logger.get_logger().info("Could not find an episode for {}".format(ep.title))
-            continue
-        else:
-            Logger.get_logger().info("Found episode {}".format(ep.title))
-
-        fileName = encode( file_.name )
-        newName = replace_invalid_path_chars(show.formatter.display(ep, file_) + file_.ext)
+        fileName = encode(episode.title)
+        newName = replace_invalid_path_chars(show.formatter.display(episode, f) + f.ext)
 
         if newName == fileName:
-            Logger.get_logger().info("File {} and Episode {} have same name".format(file_.name, ep.title))
+            Logger.get_logger().info("File {} and Episode {} have same name".format(f.name, episode.title))
             continue
 
         name = os.path.join(path, newName)
         if len(name) > 256:
             Logger.get_logger().error('The filename "{}" may be too long to rename'.format(newName))
 
-        renamedFiles.append( (file_.path, name,) )
+        renamedFiles.append( (f.path, name,) )
 
     return renamedFiles
 
