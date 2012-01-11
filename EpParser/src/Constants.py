@@ -23,10 +23,11 @@ SHOW_NOT_FOUND = []
 _sep = r'[\-\~\.\_\s]'
 _sum = r'(.*[\[\(](?P<sum>[a-z0-9]{8})[\]\)])'
 REGEX = (   r'^(\[.*\])*{sep}*(?P<series>.*?){sep}+OVA[-\._\s]*(?P<special>\d+){sep}*{sum}?'.format(sep=_sep, sum=_sum),
-            r'^(\[.*\])*{sep}*(?P<series>.*?){sep}+(?P<episode>\d+){sep}*{sum}?'.format(sep=_sep, sum=_sum),
+            r'^(\[.*\])*{sep}*(?P<series>.*?){sep}+(?P<episode>\d+){sep}+{sum}?'.format(sep=_sep, sum=_sum),
             r'^(\[.*\])*{sep}*(?P<series>.*?){sep}+(s|season){sep}*(?P<season>\d+){sep}*(?P<episode>\d+)*{sum}?'.format(sep=_sep, sum=_sum),
             r'(?P<series>.*){sep}*S(?P<season>\d+){sep}*(episode|ep)(?P<episode>\d+){sep}*{sum}?'.format(sep=_sep, sum=_sum),
             r'(?P<series>.*){sep}*(episode|ep)(?P<episode>\d+){sep}*{sum}?'.format(sep=_sep, sum=_sum),
+            r'^(?P<series>.*){sep}+(?P<season>\d+)x(?P<episode>\d+){sep}*{sum}?'.format(sep=_sep, sum=_sum),
             r'^(?P<series>.*){sep}*\[(?P<season>\d+)x(?P<episode>\d+)\]{sep}*{sum}?'.format(sep=_sep, sum=_sum),
             r'^(?P<series>.*) - Season (?P<season>\d+) - Episode (?P<episode>\d*) - \w*',  # Also mine
             r'^(?P<series>.*) - Episode (?P<episode>\d*) - \w*',  # My usual format
