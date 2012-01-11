@@ -32,6 +32,13 @@ def get_URL_descriptor(url):
 
     return None
 
+def is_valid_file(filename):
+    ext = os.path.splitext(filename)[1].lower()
+
+    if os.path.isfile(filename) and ext in Constants.VIDEO_EXTENSIONS:
+        return True
+    else:
+        return False
 
 ## Renaming utility functions
 def clean_filenames( path ):
@@ -39,8 +46,7 @@ def clean_filenames( path ):
     # Filter out anything that doesnt have the correct extension and
     # filter out any directories
     files = os.listdir(path)
-    files = ifilter(lambda x: os.path.isfile(os.path.join(path,x)), files)
-    files = ifilter(lambda x: os.path.splitext(x)[1].lower() in Constants.VIDEO_EXTENSIONS, files)
+    files = ifilter(lambda x: is_valid_file(x), files)
 
     if not files:
         Logger.get_logger().error( "No video files were found in {}".format( path ) )
@@ -84,15 +90,14 @@ def clean_filenames( path ):
 
     return cleanFiles
 
+regexList = []
 def _compile_regexs():
     # This function will only compile the regexs once and store the results
     # in a list within the function.  Monkey-patching is strange.
-    if not _compile_regexs.regexList:
+    if not regexList:
         for r in Constants.REGEX:
-            _compile_regexs.regexList.append(re.compile(r, re.I))
-    return _compile_regexs.regexList
-
-_compile_regexs.regexList = []
+            regexList.append(re.compile(r, re.I))
+    return regexList
 
 def _search(filename):
     for count, regex in enumerate(_compile_regexs()):
@@ -189,7 +194,7 @@ def load_last_renamed_files():
     Logger.get_logger().info("Loading up old filenames")
     if not os.path.exists(os.path.join(Constants.RESOURCE_PATH, Settings['rename_backup'])):
         Logger.get_logger().warn("There seems to be no files to be un-renamed")
-        return
+        return []
 
     with open(os.path.join(Constants.RESOURCE_PATH, Settings['rename_backup'])) as f:
         data = f.readlines()
