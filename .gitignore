@@ -1,0 +1,15 @@
+## PyCharm Stuff
+.idea/
+
+*.log
+*.log.*
+*.db
+*.bak
+*.log 
+*.DS_Store
+*.pyc
+*.apikey
+*.tar
+*.gz
+*~
+*.dat
