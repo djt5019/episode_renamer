@@ -26,6 +26,7 @@ def poll(title):
         with API.open_file_in_resources(Settings['tvdb_key']) as f:
             API_KEY = f.readline().strip()
     else:
+        get_logger().warn("The TvDB Api key was not found, unable to poll the TvDB")
         return API.show_not_found
 
     if Soup is None:

@@ -19,8 +19,8 @@ def _parse_local(title):
     Try to find the anime ID (aid) in the dump file provided by AniDB
     """
     if not API.file_exists_in_resources('animetitles.dat'):
-        Logger.get_logger().warning("AniDB database file not found")
-        return -1, title
+        Logger.get_logger().warning("AniDB database file not found, unable to poll AniDB at this time")
+        return -1
 
     regex = API.regex_compile(r'(?P<aid>\d+)\|(?P<type>\d)\|(?P<lang>.+)\|(?P<title>.*)')
 
@@ -89,7 +89,7 @@ def _connect_HTTP(aid):
 
 def poll(title=""):
     aid = _parse_local(title.lower())
-
+    
     if aid < 0:
         return API.show_not_found
 
