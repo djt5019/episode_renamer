@@ -96,7 +96,7 @@ def _compile_regexs():
     # in a list within the function.  Monkey-patching is strange.
     if not regexList:
         for r in Constants.REGEX:
-            regexList.append(re.compile(r, re.I))
+            regexList.append(re.compile(r, re.I|re.X))
     return regexList
 
 def _search(filename):
