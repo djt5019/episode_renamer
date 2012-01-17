@@ -182,7 +182,31 @@ class Thread(threading.Thread):
                 self.sum += zlib.crc32(line,self.sum)
         print self.sum
 
+def save_last_access_times():
+    """
+    Save the last access times dictionary to a file in resources
+    """
+    if not Settings['access_dict']:
+        return False
+    
+    with open(os.path.join(Constants.RESOURCE_PATH, Settings['access_time_file']), 'w') as p:
+        pickle.dump(Settings['access_dict'] , p)
 
+    return True
+
+def load_last_access_times():
+    """
+    Load the access times dictionary from the file in resource path
+    """
+    name = os.path.join(Constants.RESOURCE_PATH, Settings['access_time_file'])
+    if os.path.exists(name):
+        with open(name, 'r') as p:
+            data = p.readlines()
+
+        return pickle.loads(''.join(data))
+    else:
+        return {}
+        
 def save_renamed_file_info(old_order):
     """ Save the previous names from the last renaming operation to disk """
     Logger.get_logger().info("Backing up old filenames")

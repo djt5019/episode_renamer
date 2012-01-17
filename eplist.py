@@ -20,6 +20,7 @@ import sys
 
 import EpParser.src.Utils as Utils
 import EpParser.src.Episode as Episode
+import EpParser.src.Source_Poll_API as API
 
 from EpParser.src.Parser import EpParser as Parser
 from EpParser.src.Cache import Cache
@@ -58,6 +59,9 @@ def main():
 
     cmd.add_argument('-g', '--gui-enabled', action="store_true",
         help="Use the gui rather than the command line")
+        
+    cmd.add_argument('--update-db', action="store_true",
+        help="Update the AniDB titles file, limit this to once a day since it's large")
 
     group = cmd.add_mutually_exclusive_group()
 
@@ -77,7 +81,22 @@ def main():
     if args.gui_enabled:
         import EpParser.gui.gui as gui
         exit(gui.main())
-
+        
+    if args.update_db:        
+        one_unix_day = 24*60*60
+        def _download():
+            with API.open_file_in_resources(Settings['anidb_db_file'], 'w') as f:
+                url = API.get_url_descriptor(Settings['anidb_db_url'])
+                f.write(url.content)
+     
+        if not API.file_exists_in_resources(Settings['anidb_db_file']):
+            _download()
+        elif API.able_to_poll('db_download', one_unix_day):
+            _download()               
+        else:
+            get_logger().error("Attempting to download the database file multiple times today")
+        
+        
     rename = args.pathname is not None
 
     if rename and not os.path.exists(args.pathname):

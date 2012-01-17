@@ -19,38 +19,42 @@ from tempfile import TemporaryFile as TemporaryFile_
 from EpParser.src import Utils
 from EpParser.src.Settings import Settings
 
-_site_access_dict = None
+Settings['access_dict'] = {}
 show_not_found = Constants.SHOW_NOT_FOUND
 
-def able_to_poll(site):
+def able_to_poll(site, delay=Settings['poll_delay']):
     """
     Prevents flooding by waiting two seconds from the last poll
     """
-    global _site_access_dict
-    if not _site_access_dict:
-        _site_access_dict = load_last_access_times()
+    if not Settings['access_dict'] :
+        Settings['access_dict']  = load_last_access_times()
 
-    last_access = _site_access_dict.get(site, -1)
+    last_access = Settings['access_dict'] .get(site, -1)
     now = int(time_.time())
 
     if last_access < 0:
-        _site_access_dict[site] = now
+        Settings['access_dict'] [site] = now
         return True
 
-    if now - last_access >= int(Settings['poll_delay']):
-        _site_access_dict[site] = now
+    if now - last_access >= int(delay):
+        Settings['access_dict'] [site] = now
         return True
     
     return False
 
-def open_file_in_resources(name):
+def open_file_in_resources(name, mode='r'):
     """
     Returns a file object if the filename exists in the resources directory
     """
+    name = path_.join(Constants.RESOURCE_PATH, name)
+    
+    if mode in ('w', 'wb'):
+        return open(name, mode)
+        
     if file_exists_in_resources(name):
-        name = path_.join(Constants.RESOURCE_PATH, name)
-        return open(name, 'r')
-    return None
+        return open(name, mode)
+    
+    raise API_FileNotFoundException()
 
 def file_exists_in_resources(name):
     """
@@ -99,23 +103,18 @@ def save_last_access_times():
     """
     Save the last access times dictionary to a file in resources
     """
-    if not _site_access_dict:
-        return False
-    
-    with open(path_.join(Constants.RESOURCE_PATH, Settings['access_time_file']), 'w') as p:
-        pickle_.dump(_site_access_dict, p)
-
-    return True
+    return Utils.save_last_access_times()
 
 def load_last_access_times():
     """
     Load the access times dictionary from the file in resource path
     """
-    name = path_.join(Constants.RESOURCE_PATH, Settings['access_time_file'])
-    if path_.exists(name):
-        with open_file_in_resources(name) as p:
-            data = p.readlines()
-
-        return pickle_.loads(''.join(data))
-    else:
-        return {}
+    return Utils.load_last_access_times()
+    
+    
+class API_Exception(Exception):
+    pass
+    
+class API_FileNotFoundException(API_Exception):
+    pass
+    
