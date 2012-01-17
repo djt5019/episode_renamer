@@ -11,7 +11,6 @@ __email__='djt5019 at gmail dot com'
 import re as re_
 import time as time_
 import Constants
-import pickle as pickle_
 
 from os import path as path_
 from tempfile import TemporaryFile as TemporaryFile_
@@ -46,6 +45,7 @@ def open_file_in_resources(name, mode='r'):
     """
     Returns a file object if the filename exists in the resources directory
     """
+    name = path_.split(name)[1]
     name = path_.join(Constants.RESOURCE_PATH, name)
     
     if mode in ('w', 'wb'):
@@ -60,6 +60,7 @@ def file_exists_in_resources(name):
     """
     Returns true if the filename exists in the resources directory
     """
+    name = path_.split(name)[1]
     name = path_.join(Constants.RESOURCE_PATH, name)
     return path_.exists(name)
 
