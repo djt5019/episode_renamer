@@ -20,21 +20,36 @@ SHOW_NOT_FOUND = []
 ## Common video naming formats, will be compiled if they are needed during episode renaming
 ## in the _compile_regexs function, otherwise they will not be compiled for simple episode 
 ## information retrieval purposes
+
 _sep = r'[\-\~\.\_\s]'
-_sum = r'(.*[\[\(](?P<sum>[a-z0-9]{8})[\]\)])'
-REGEX = (   r'^(\[.*\])*{sep}*(?P<series>.*?){sep}+OVA[-\._\s]*(?P<special>\d+){sep}*{sum}?'.format(sep=_sep, sum=_sum),
-            r'^(\[.*\])*{sep}*(?P<series>.*?){sep}+(?P<episode>\d+){sep}+{sum}?'.format(sep=_sep, sum=_sum),
-            r'^(\[.*\])*{sep}*(?P<series>.*?){sep}+(s|season){sep}*(?P<season>\d+){sep}*(?P<episode>\d+)*{sum}?'.format(sep=_sep, sum=_sum),
-            r'(?P<series>.*){sep}*S(?P<season>\d+){sep}*(episode|ep)(?P<episode>\d+){sep}*{sum}?'.format(sep=_sep, sum=_sum),
-            r'(?P<series>.*){sep}*(episode|ep)(?P<episode>\d+){sep}*{sum}?'.format(sep=_sep, sum=_sum),
-            r'^(?P<series>.*){sep}+(?P<season>\d+)x(?P<episode>\d+){sep}*{sum}?'.format(sep=_sep, sum=_sum),
-            r'^(?P<series>.*){sep}*\[(?P<season>\d+)x(?P<episode>\d+)\]{sep}*{sum}?'.format(sep=_sep, sum=_sum),
-            r'^(?P<series>.*) - Season (?P<season>\d+) - Episode (?P<episode>\d*) - \w*',  # Also mine
-            r'^(?P<series>.*) - Episode (?P<episode>\d*) - \w*',  # My usual format
-            r'^(?P<series>.*) - OVA (?P<special>\d+) - \w*',
-            r'(?P<series>.*)[-\._\s]+(?P<episode>\d+)',
-            r'(?P<series>.*){sep}*(op|ed){sep}*(?P<special>\d*){sep}*{sum}?'.format(sep=_sep, sum=_sum),  # Show intro/outro music, just ignore them
+_REGEX_VARS = {
+'sep': _sep,
+'sum': r'(.*[\[\(](?P<sum>[a-z0-9]{8})[\]\)])',
+'year': r'(:P<year>(19|20)?\d\d)',
+'episode': r'(e|episode)?{sep}*(?P<episode>\d+)'.format(sep=_sep),
+'season': r'(s|season)?{sep}*(?P<season>\d+)'.format(sep=_sep),
+'series': r'(?P<series>.*)',
+'subgroup': r'(\[.*\])',
+'special': r'(op|ed|ova|ona|extra|special){sep}*(?P<special>\d+)',
+}
+
+_UNFORMATED_REGEX = (
+            r'^(?P<series>.*?) - Season (?P<season>\d+) - Episode (?P<episode>\d*) - .*',  # Also mine
+            r'^(?P<series>.*?) - Episode (?P<episode>\d*) - .*',  # My usual format
+            #r'^{subgroup}*{sep}*?{series}{sep}*{season}{sep}*{episode}{sep}+{sum}?',
+            #r'^{subgroup}*{sep}*?{series}{sep}*{special}{sep}*{sum}?',
+            #r'^{subgroup}*{sep}*?{series}{sep}*{episode}{sep}+{sum}?',
+            #r'^{series}{sep}+{year}?{sep}{season}{sep}*{episode}*{sep}*{sum}?',
+            #r'^{series}{sep}+{year}?{sep}{episode}{sep}*{sum}?',
+            #r'^{series}{sep}+{year}?{sep}{season}X{episode}{sep}*{sum}?',
+            #r'^{series}{sep}+{year}?{sep}\[{season}X{episode}\]{sep}*{sum}?',
+            #r'^(?P<series>.*) - OVA (?P<special>\d+) - \w*',
+            #r'{series}{sep}*{episode}',  # More of a general catch-all regex, last resort
+            #r'{series}{sep}*(op|ed){sep}*(?P<special>\d*){sep}*{sum}?',  # Show intro/outro music, just ignore them
             )
+
+## Substitute the dictionary variables in to the unformated regexes (is the plural of regex, regexes?)
+REGEX =  [r.format(**_REGEX_VARS) for r in _UNFORMATED_REGEX]
 
 NUM_DICT = { '0' : '','1' : 'one', '2' : 'two', '3' : 'three', '4' : 'four', '5' : 'five', '6' : 'six',
         '7' : 'seven', '8' : 'eight', '9' : 'nine', '10' : 'ten', '11' : 'eleven', '12' : 'twelve',
