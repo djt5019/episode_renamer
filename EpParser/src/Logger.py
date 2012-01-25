@@ -38,6 +38,9 @@ def get_logger():
     return _logger
     
 def _closeLogs():
-    """Properly shutdown the loggers"""
+    """
+    Properly shutdown the loggers called upon program termination,
+    registered to atexit in __init__.py
+    """
     _logger.debug("APPLICATION END: {}".format(datetime.now()))
     logging.shutdown()
