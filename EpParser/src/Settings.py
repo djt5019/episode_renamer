@@ -3,7 +3,7 @@ __author__='Dan Tracy'
 __email__='djt5019 at gmail dot com'
 
 import os
-from EpParser.src import Constants
+import Constants
 
 class _SettingsDict(dict):
     def __init__(self):

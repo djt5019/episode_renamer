@@ -10,13 +10,14 @@ __email__='djt5019 at gmail dot com'
 
 import re as re_
 import time as time_
+
 import Constants
+import Utils
+import Settings
 
 from os import path as path_
 from tempfile import TemporaryFile as TemporaryFile_
 
-from EpParser.src import Utils
-from EpParser.src.Settings import Settings
 
 Settings['access_dict'] = {}
 show_not_found = Constants.SHOW_NOT_FOUND
