@@ -16,11 +16,13 @@ from math import log10
 from EpParser.src.Settings import Settings
 
 class Show(object):
-    """A convenience class to keep track of the list of episodes as well as
-       to keep track of the custom formatter for those episodes"""
+    """
+    A convenience class to keep track of the list of episodes as well as
+    to keep track of the custom formatter for those episodes
+    """
     def __init__(self, seriesTitle):
-        self.title = Utils.encode(seriesTitle.title())
-        self.properTitle = Utils.prepare_title(self.title)
+        self.title = Utils.encode(seriesTitle.capitalize())
+        self.properTitle = Utils.prepare_title(seriesTitle)
         self.episodeList = []
         self.episodesBySeason = {}
         self.specialsList = []
@@ -29,7 +31,9 @@ class Show(object):
         self.maxEpisodeNumber = 0
 
     def add_episodes(self, eps):
-        """ Add episodes to the shows episode list """
+        """
+        Add episodes to the shows episode list
+        """
         if not eps:
             return False
         self.episodeList = eps
@@ -47,15 +51,22 @@ class Show(object):
 
     @show_title.setter
     def show_title(self, val):
+        """
+        Sets the show's title to the value passed as well as prepares it for use
+        """
         Logger.getLogger().debug("Setting show title to: {}".format(val))
-        self.title = Utils.encode(val.title())
+        self.title = Utils.encode(val.capitalize())
         self.properTitle = Utils.prepare_title(val)
 
     def get_season(self, season):
-        return self.episodesBySeason[season]
+        """
+        Returns a list of episodes within the season or an empty list
+        """
+        return self.episodesBySeason.get(season, [])
 
     def get_episode(self, season, episode):
-        """ Returns a specific episode from a specific season, None if it's not present
+        """
+        Returns a specific episode from a specific season, None if it's not present
         """
         if episode < 1:
             return None
@@ -71,9 +82,13 @@ class Show(object):
 
 
 class Episode(object):
-    """ A simple class to organize the episodes, an alternative would be
-        to use a namedtuple though this is easier """
+    """
+    A simple class to organize the episodes
+    """
     def __init__(self, title, epNumber, season, episodeCount):
+        """
+        A container for an episode's information collected from the web
+        """
         self.title = Utils.encode(title)
         self.season = int(season)
         self.episodeNumber = int(epNumber)
@@ -85,6 +100,9 @@ class EpisodeFile(object):
     Represents a TV show file.  Used for renaming purposes
     """
     def __init__(self, path, episode, season=-1, checksum=-1):
+        """
+        A physical episode on disk
+        """
         self.path = path
         self.episode = episode
         self.season = season
@@ -93,6 +111,9 @@ class EpisodeFile(object):
         self.given_checksum = checksum
 
     def crc32(self):
+        """
+        Calculate the CRC32 checksum for a file, painfully slow
+        """
         with open(self.path, 'rb') as f:
             checksum = 0
             for line in f:
@@ -101,6 +122,9 @@ class EpisodeFile(object):
         return hex( checksum & 0xFFFFFFFF )
         
     def compare_sums(self):
+        """
+        Compares the checksum in the filename to the calculated one
+        """
         if self.given_checksum:
             return self.given_checksum == self.crc32()
             
@@ -109,7 +133,9 @@ class EpisodeFile(object):
 
 class EpisodeFormatter(object):
     def __init__(self, show, fmt=None):
-        """Allows printing of custom formatted episode information"""
+        """
+        Allows printing of custom formatted episode information
+        """
         formatString = u"<series> - Episode <count> - <title>"
         self.show = show
         self.formatString = Utils.encode(fmt) if fmt else formatString
@@ -124,13 +150,17 @@ class EpisodeFormatter(object):
         self.re = re.compile(re_format, re.I)
 
     def set_format(self, fmt=None):
-        """Set the format string for the formatter"""
+        """
+        Set the format string for the formatter
+        """
         if fmt is not None:
             self.formatString = Utils.encode( fmt )
             self.tokens = self.formatString.split()
 
     def load_format_config(self, configFileName=None):
-        """Load tokens from the format config file in RESOURCEPATH"""
+        """
+        Load tokens from the format config file in RESOURCEPATH
+        """
         if not configFileName:
             path = os.path.join(Constants.RESOURCE_PATH, Settings['tag_config'])
         else:
@@ -178,7 +208,9 @@ class EpisodeFormatter(object):
                 self.hashTokens = tokens
 
     def display(self, ep, epFile=None):
-        """Displays the episode according to the users format"""
+        """
+        Displays the episode according to the users format
+        """
         args = []
 
         for token in self.tokens:
@@ -201,6 +233,10 @@ class EpisodeFormatter(object):
         return Utils.encode(' '.join(args))
 
     def _parse(self, ep, tag, epFile=None):
+        """
+        Tokenize and substitute tags for their values using an episode
+        as well as the episode file for reference
+        """
         caps = lower = pad = False
         tag = tag.lower()
 
@@ -250,7 +286,7 @@ class EpisodeFormatter(object):
                 return self.show.title.lower()
             elif caps:
                 return self.show.title.upper()
-            return self.show.title.title()
+            return self.show.title.capitalize()
 
         elif tag in self.hashTokens:
             if not epFile:
