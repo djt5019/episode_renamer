@@ -31,14 +31,14 @@ def poll(title):
     episodes = []
     url = "http://www.epguides.com/{0}".format(cleanTitle)
     fd = API.get_url_descriptor(url)
-    
+
     if fd is None: 
         return API.show_not_found
 
     regex = API.regex_compile(pattern)
 
     count = 1
-    for line in fd.content:
+    for line in fd.iter_lines():
         info = regex.match(line)
         if info is not None:
             name = info.group('name')
@@ -52,4 +52,5 @@ def poll(title):
             episodes.append( Episode(name, episode, season, count) )
             count += 1
             
+            print name, episode, season, count
     return episodes
