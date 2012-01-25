@@ -47,6 +47,7 @@ class Show(object):
 
     @show_title.setter
     def show_title(self, val):
+        Logger.getLogger().debug("Setting show title to: {}".format(val))
         self.title = Utils.encode(val.title())
         self.properTitle = Utils.prepare_title(val)
 
@@ -58,9 +59,9 @@ class Show(object):
         """
         if episode < 1:
             return None
-
+            
         if season > 0:
-            season = self.episodesBySeason.get(season, None)
+            season = self.episodesBySeason.get(season, None)            
             if season:
                 return season[episode-1]  # Adjust by one since episodes start count at 1 not 0
             else:
