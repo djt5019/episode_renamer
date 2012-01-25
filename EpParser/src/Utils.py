@@ -62,7 +62,7 @@ def clean_filenames( path ):
         season = -1
 
         if not g:
-            Logger.get_logger().error( "Could not find file information for: {}".format(f) )
+            Logger.get_logger().info( "Could not find file information for: {}".format(f) )
             continue
 
         if 'special' in g.groupdict():
@@ -96,7 +96,7 @@ def _compile_regexs():
     # in a list within the function.  Monkey-patching is strange.
     if not regexList:
         for r in Constants.REGEX:
-            regexList.append(re.compile(r, re.I|re.X))
+            regexList.append(re.compile(r, re.I))
     return regexList
 
 def _search(filename):
@@ -112,6 +112,7 @@ def prepare_filenames(path, show):
     """Rename the files located in 'path' to those in the list 'show' """
     path = os.path.abspath(path)
     renamedFiles = []
+    sameCount = 0
 
     files = clean_filenames(path)
     #Match the list of EpisodeFiles to the list of shows in the 'show' variable
@@ -123,13 +124,14 @@ def prepare_filenames(path, show):
         episode = show.get_episode(f.season, f.episode)
 
         if not episode:
-            print "Could not find an episode for {}".format(f.name)
+            Logger.get_logger().warning("Could not find an episode for {}".format(f.name))
 
         fileName = encode(f.name)
         newName = replace_invalid_path_chars(show.formatter.display(episode, f) + f.ext)
 
         if newName == fileName:
             Logger.get_logger().info("File {} and Episode {} have same name".format(f.name, episode.title))
+            sameCount += 1
             continue
 
         name = os.path.join(path, newName)
@@ -138,6 +140,10 @@ def prepare_filenames(path, show):
 
         renamedFiles.append( (f.path, name,) )
 
+    if not renamedFiles and sameCount > 0:
+        msg = "1 file" if sameCount == 1 else "{} files".format(sameCount)
+        Logger.get_logger().warning(\
+            "{} in this directory would have been renamed to the same filename".format(msg))
     return renamedFiles
 
 def rename(files, resp=""):
