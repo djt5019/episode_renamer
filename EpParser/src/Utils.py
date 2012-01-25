@@ -20,7 +20,9 @@ from EpParser.src import Constants
 
 
 def get_URL_descriptor(url):
-    """Returns an auto-closing url descriptor or None"""
+    """
+    Returns an url descriptor or None
+    """
     try:
         resp = requests.get(url)
     except requests.exceptions.ConnectionError:
@@ -33,6 +35,9 @@ def get_URL_descriptor(url):
     return None
 
 def is_valid_file(filename):
+    """
+    Returns true if the filename is a valid video file
+    """
     ext = os.path.splitext(filename)[1].lower()
 
     if os.path.isfile(filename) and ext in Constants.VIDEO_EXTENSIONS:
@@ -42,7 +47,9 @@ def is_valid_file(filename):
 
 ## Renaming utility functions
 def clean_filenames( path ):
-    """Attempts to extract order information about the files passed"""
+    """
+    Attempts to extract order information about the files passed
+    """
     # Filter out anything that doesnt have the correct extension and
     # filter out any directories
     files = os.listdir(path)
@@ -100,6 +107,9 @@ def _compile_regexs():
     return regexList
 
 def _search(filename):
+    """ 
+    Compare the filename to each of the regular expressions for a match
+    """
     for count, regex in enumerate(_compile_regexs()):
         result = regex.search(filename)
         if result:
@@ -109,7 +119,9 @@ def _search(filename):
     return None
 
 def prepare_filenames(path, show):
-    """Rename the files located in 'path' to those in the list 'show' """
+    """
+    Rename the files located in 'path' to those in the list 'show'
+    """
     path = os.path.abspath(path)
     renamedFiles = []
     sameCount = 0
@@ -125,6 +137,7 @@ def prepare_filenames(path, show):
 
         if not episode:
             Logger.get_logger().warning("Could not find an episode for {}".format(f.name))
+            continue
 
         fileName = encode(f.name)
         newName = replace_invalid_path_chars(show.formatter.display(episode, f) + f.ext)
@@ -147,7 +160,9 @@ def prepare_filenames(path, show):
     return renamedFiles
 
 def rename(files, resp=""):
-    """Performs the actual renaming of the files, returns a list of file that weren't able to be renamed"""
+    """
+    Performs the actual renaming of the files, returns a list of file that weren't able to be renamed
+    """
     if resp == '':
         resp = raw_input("\nDo you wish to rename these files [y|N]: ").lower()
 
@@ -177,6 +192,11 @@ def rename(files, resp=""):
 
 
 class Thread(threading.Thread):
+    """
+    Will most likely be removed later, the original idea was to have several
+    threads compute the crc32 data for files however it is currently as slow if
+    not slower than doing it sequentially
+    """
     def __init__(self, filename):
         super(Thread, self).__init__()
         self.file = filename
@@ -214,13 +234,17 @@ def load_last_access_times():
         return {}
         
 def save_renamed_file_info(old_order):
-    """ Save the previous names from the last renaming operation to disk """
+    """
+    Save the previous names from the last renaming operation to disk
+    """
     Logger.get_logger().info("Backing up old filenames")
     with open(os.path.join(Constants.RESOURCE_PATH, Settings['rename_backup']), 'w') as f:
         pickle.dump(old_order, f)
 
 def load_last_renamed_files():
-    """ Restore the previous names from the last renaming operation"""
+    """
+    Restore the previous names from the last renaming operation
+    """
     Logger.get_logger().info("Loading up old filenames")
     if not os.path.exists(os.path.join(Constants.RESOURCE_PATH, Settings['rename_backup'])):
         Logger.get_logger().warn("There seems to be no files to be un-renamed")
@@ -236,7 +260,9 @@ def load_last_renamed_files():
 
 ## Text based functions
 def remove_punctuation(title):
-    """Remove any punctuation and whitespace from the title"""
+    """
+    Remove any punctuation and whitespace from the title
+    """
     name, ext = os.path.splitext(title)
     exclude = set('!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~')
     name = ''.join( ch for ch in name if ch not in exclude )
@@ -244,14 +270,18 @@ def remove_punctuation(title):
 
 
 def replace_invalid_path_chars(path, replacement='-'):
-    """Replace invalid path character with a different, acceptable, character"""
+    """
+    Replace invalid path character with a different, acceptable, character
+    """
     exclude = set('\\/"?<>|*:')
     path = ''.join( ch if ch not in exclude else replacement for ch in path )
     return path
 
 
 def prepare_title(title):
-    """Remove any punctuation and whitespace from the title"""
+    """
+    Remove any punctuation and whitespace from the title
+    """
     title = remove_punctuation(title).split()
 
     if not title:
@@ -272,7 +302,9 @@ def prepare_title(title):
 
 
 def num_to_text(num):
-    """Converts a number up to 999 to it's English representation"""
+    """
+    Converts a number up to 999 to it's English representation
+    """
     # The purpose of this function is to resolve numbers to text so we don't
     # have additional entries in the database for the same show.  For example
     # The 12 kingdoms and twelve kingdoms will yield the same result in the DB
@@ -299,7 +331,9 @@ def num_to_text(num):
     return '_'.join(args)
 
 def encode(text, encoding='utf-8'):
-    """Returns a unicode representation of the string """
+    """
+    Returns a unicode representation of the string
+    """
     if isinstance(text, basestring):
         if not isinstance(text, unicode):
             text = unicode(text, encoding, 'ignore')

@@ -56,7 +56,7 @@ class Cache(object):
         result = self.cursor.fetchone() 
 
         if not result:
-                return -1         
+            return -1         
 
         sid = int(result[0])
         diffDays = (datetime.datetime.now() - result[1])
