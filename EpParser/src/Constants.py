@@ -40,7 +40,7 @@ for k, v in _REGEX_VARS.iteritems():
     except IndexError as e:
         pass
 
-_UNFORMATED_REGEX = (
+REGEX = [
             r'^(?P<series>.*?) - Season (?P<season>\d+) - Episode (?P<episode>\d*) - .*',  # Also mine
             r'^(?P<series>.*?) - Episode (?P<episode>\d*) - .*',  # My usual format
             r'^{subgroup}*{sep}+{series}{sep}*{season}{sep}*{episode}{sep}+{sum}?',
@@ -54,13 +54,10 @@ _UNFORMATED_REGEX = (
             r'^{series}{sep}*{special}',
             r'{series}{sep}+{episode}.*',  # More of a general catch-all regex, last resort
             r'{series}{sep}*(op|ed){sep}*(?P<special>\d*){sep}*{sum}?',  # Show intro/outro music, just ignore them
-            )
+            ]
 
 ## Substitute the dictionary variables in to the unformated regexes (is the plural of regex, regexes?)
-REGEX =  [r.format(**_REGEX_VARS) for r in _UNFORMATED_REGEX]
-
-del _UNFORMATED_REGEX
-del _REGEX_VARS
+REGEX =  [r.format(**_REGEX_VARS) for r in REGEX]
 
 NUM_DICT = { '0' : '','1' : 'one', '2' : 'two', '3' : 'three', '4' : 'four', '5' : 'five', '6' : 'six',
         '7' : 'seven', '8' : 'eight', '9' : 'nine', '10' : 'ten', '11' : 'eleven', '12' : 'twelve',

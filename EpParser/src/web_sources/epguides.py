@@ -52,5 +52,4 @@ def poll(title):
             episodes.append( Episode(name, episode, season, count) )
             count += 1
             
-            print name, episode, season, count
     return episodes

@@ -6,6 +6,7 @@ import ConfigParser
 import re
 import os
 import zlib
+import string
 
 import Utils
 import Constants
@@ -21,8 +22,8 @@ class Show(object):
     to keep track of the custom formatter for those episodes
     """
     def __init__(self, seriesTitle):
-        self.title = Utils.encode(seriesTitle.capitalize())
-        self.properTitle = Utils.prepare_title(seriesTitle)
+        self.title = Utils.encode(string.capwords(seriesTitle))
+        self.properTitle = Utils.prepare_title(seriesTitle.lower())
         self.episodeList = []
         self.episodesBySeason = {}
         self.specialsList = []
@@ -259,19 +260,19 @@ class EpisodeFormatter(object):
         if tag in self.episodeNumberTokens:
             if pad: 
                 #Obtain the number of digits in the highest numbered episode
-                pad = int( log10(self.show.maxEpisodeNumber) + 1)
+                pad = len(str(self.show.maxEpisodeNumber))
             return str(ep.episodeNumber).zfill(pad)
 
         elif tag in self.seasonTokens:
             if pad: 
                 #Number of digits in the highest numbered season
-                pad = int(log10(self.show.numSeasons) + 1)
+                pad = len(str(self.show.numSeasons))
             return str(ep.season).zfill(pad)
 
         elif tag in self.episodeCounterTokens:
             if pad: 
                 #Total number of digits
-                pad = int(log10(self.show.numEpisodes) + 1)
+                pad = len(str(self.show.numEpisodes))
             return str(ep.episodeCount).zfill(pad)
 
         elif tag in self.episodeNameTokens:
@@ -286,7 +287,7 @@ class EpisodeFormatter(object):
                 return self.show.title.lower()
             elif caps:
                 return self.show.title.upper()
-            return self.show.title.capitalize()
+            return self.show.title
 
         elif tag in self.hashTokens:
             if not epFile:
