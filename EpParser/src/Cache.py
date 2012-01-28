@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
-__author__='Dan Tracy'
-__email__='djt5019 at gmail dot com'
+__author__ = 'Dan Tracy'
+__email__ = 'djt5019 at gmail dot com'
 
 import os
 import datetime
-import sqlite3  
+import sqlite3
 import atexit
 
 from Episode import Episode
@@ -12,9 +12,9 @@ from Constants import RESOURCE_PATH
 from Logger import get_logger
 from Settings import Settings
 
+
 class Cache(object):
-    """ Our database logic class"""
-    
+    """ Our database logic class"""    
     def __init__(self, dbName=u"episodes.db"):
         """Establish a connection to the show database"""
         if dbName != ':memory:':
@@ -22,7 +22,7 @@ class Cache(object):
         try:
             if not os.path.exists(dbName) and dbName != ':memory:':
                 self.connection = sqlite3.connect(dbName, detect_types=sqlite3.PARSE_DECLTYPES)
-              
+
                 with open(os.path.join(RESOURCE_PATH, 'createDB.sql'), 'r') as f:
                     sql = f.read()
                 self.connection.executescript(sql)
@@ -37,7 +37,7 @@ class Cache(object):
 
             #Make sure everything is utf-8
             self.connection.text_factory = lambda x: unicode(x, 'utf-8')
-            atexit.register( self.close )
+            atexit.register(self.close)
 
     def close(self):
         """ Commits any changes to the database then closes connections to it"""
@@ -49,14 +49,13 @@ class Cache(object):
     def get_showId(self, showTitle):
         """Returns the shows ID if found, -1 otherwise. If the show is more than
         a week old update the show"""
-        
         title = (showTitle, )
         self.cursor.execute("SELECT sid, time FROM shows WHERE title=? LIMIT 1", title)
 
-        result = self.cursor.fetchone() 
+        result = self.cursor.fetchone()
 
         if not result:
-            return -1         
+            return -1
 
         sid = int(result[0])
         diffDays = (datetime.datetime.now() - result[1])
@@ -64,7 +63,7 @@ class Cache(object):
         get_logger().info("{} days old".format(diffDays.days))
 
         update_days = abs(int(Settings['db_update']))
-        
+
         if diffDays.days >= update_days:
             #If the show is older than a week remove it then return not found
             get_logger().warning("Show is older than a week, removing...")
@@ -82,10 +81,10 @@ class Cache(object):
 
         result = self.cursor.fetchall()
         eps = []
-        
+
         if result is not None:
             for count, episode in enumerate(result, start=1):
-                eps.append( Episode(episode[0], episode[1], episode[2], count) )
+                eps.append(Episode(episode[0], episode[1], episode[2], count))
 
         return eps
 
@@ -106,5 +105,5 @@ class Cache(object):
 
     def remove_show(self, sid):
         """Removes show and episodes matching the show id """
-        self.cursor.execute("DELETE from SHOWS where sid=?", (sid,) )
-        self.cursor.execute("DELETE from EPISODES where sid=?", (sid,) )
+        self.cursor.execute("DELETE from SHOWS where sid=?", (sid,))
+        self.cursor.execute("DELETE from EPISODES where sid=?", (sid,))

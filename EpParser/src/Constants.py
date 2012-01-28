@@ -1,16 +1,16 @@
 # -*- coding: utf-8 -*-
-__author__='Dan Tracy'
-__email__='djt5019 at gmail dot com'
+__author__ = 'Dan Tracy'
+__email__ = 'djt5019 at gmail dot com'
 
 import os
 
 from EpParser import __file__ as file_path
 
-VIDEO_EXTENSIONS = {'.mkv', '.ogm', '.asf', '.asx', '.avi', '.flv', '.mov',
-                    '.mp4', '.mpg', '.rm',  '.swf', '.vob', '.wmv', '.mpeg'}
+VIDEO_EXTENSIONS = set(['.mkv', '.ogm', '.asf', '.asx', '.avi', '.flv', '.mov',
+                    '.mp4', '.mpg', '.rm',  '.swf', '.vob', '.wmv', '.mpeg'])
 
 PROJECT_PATH = os.path.abspath(os.path.dirname(file_path))
-RESOURCE_PATH = os.path.join( PROJECT_PATH, 'resources')
+RESOURCE_PATH = os.path.join(PROJECT_PATH, 'resources')
 PROJECT_SOURCE_PATH = os.path.join(PROJECT_PATH, 'src')
 WEB_SOURCES_PATH = os.path.join(PROJECT_SOURCE_PATH, 'web_sources')
 
@@ -18,7 +18,7 @@ SHOW_NOT_FOUND = []
 
 
 ## Common video naming formats, will be compiled if they are needed during episode renaming
-## in the _compile_regexs function, otherwise they will not be compiled for simple episode 
+## in the _compile_regexs function, otherwise they will not be compiled for simple episode
 ## information retrieval purposes
 
 _REGEX_VARS = {
@@ -57,10 +57,10 @@ REGEX = [
             ]
 
 ## Substitute the dictionary variables in to the unformated regexes (is the plural of regex, regexes?)
-REGEX =  [r.format(**_REGEX_VARS) for r in REGEX]
+REGEX = [r.format(**_REGEX_VARS) for r in REGEX]
 
-NUM_DICT = { '0' : '','1' : 'one', '2' : 'two', '3' : 'three', '4' : 'four', '5' : 'five', '6' : 'six',
-        '7' : 'seven', '8' : 'eight', '9' : 'nine', '10' : 'ten', '11' : 'eleven', '12' : 'twelve',
-        '13' : 'thirteen', '14' : 'fourteen', '15' : 'fifteen', '16' : 'sixteen', '17' : 'seventeen',
-        '18' : 'eighteen', '19' : 'nineteen', '20' : 'twenty', '30' : 'thirty', '40' : 'forty',
-        '50' : 'fifty', '60' : 'sixty', '70' : 'seventy', '80' : 'eighty', '90' : 'ninety'}
+NUM_DICT = {'0': '', '1': 'one', '2': 'two', '3': 'three', '4': 'four', '5': 'five', '6': 'six',
+        '7': 'seven', '8': 'eight', '9': 'nine', '10': 'ten', '11': 'eleven', '12': 'twelve',
+        '13': 'thirteen', '14': 'fourteen', '15': 'fifteen', '16': 'sixteen', '17': 'seventeen',
+        '18': 'eighteen', '19': 'nineteen', '20': 'twenty', '30': 'thirty', '40': 'forty',
+        '50': 'fifty', '60': 'sixty', '70': 'seventy', '80': 'eighty', '90': 'ninety'}

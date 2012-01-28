@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-__author__='Dan Tracy'
-__email__='djt5019 at gmail dot com'
+__author__ = 'Dan Tracy'
+__email__ = 'djt5019 at gmail dot com'
 
 import os
 import re
@@ -34,6 +34,7 @@ def get_URL_descriptor(url):
 
     return None
 
+
 def is_valid_file(filename):
     """
     Returns true if the filename is a valid video file
@@ -45,8 +46,9 @@ def is_valid_file(filename):
     else:
         return False
 
+
 ## Renaming utility functions
-def clean_filenames( path ):
+def clean_filenames(path):
     """
     Attempts to extract order information about the files passed
     """
@@ -56,7 +58,7 @@ def clean_filenames( path ):
     files = ifilter(lambda x: is_valid_file(x), files)
 
     if not files:
-        Logger.get_logger().error( "No video files were found in {}".format( path ) )
+        Logger.get_logger().error("No video files were found in {}".format(path))
         return []
 
     _compile_regexs()
@@ -69,7 +71,7 @@ def clean_filenames( path ):
         season = -1
 
         if not g:
-            Logger.get_logger().info( "Could not find file information for: {}".format(f) )
+            Logger.get_logger().info("Could not find file information for: {}".format(f))
             continue
 
         if 'special' in g.groupdict():
@@ -87,17 +89,20 @@ def clean_filenames( path ):
         if 'season' in g.groupdict():
             season = int(g.group('season'))
 
-        cleanFiles.append(Episode.EpisodeFile(os.path.join(path,f), index, season, checksum))
+        cleanFiles.append(Episode.EpisodeFile(os.path.join(path, f), index, season, checksum))
 
     if not cleanFiles:
-        Logger.get_logger().error( "The files could not be matched" )
+        Logger.get_logger().error("The files could not be matched")
         return cleanFiles
 
     Logger.get_logger().info("Successfully cleaned the file names")
 
     return cleanFiles
 
+
 regexList = []
+
+
 def _compile_regexs():
     # This function will only compile the regexs once and store the results
     # in a list within the function.  Monkey-patching is strange.
@@ -106,8 +111,9 @@ def _compile_regexs():
             regexList.append(re.compile(r, re.I))
     return regexList
 
+
 def _search(filename):
-    """ 
+    """
     Compare the filename to each of the regular expressions for a match
     """
     for count, regex in enumerate(_compile_regexs()):
@@ -117,6 +123,7 @@ def _search(filename):
             return result
 
     return None
+
 
 def prepare_filenames(path, show):
     """
@@ -151,13 +158,14 @@ def prepare_filenames(path, show):
         if len(name) > 256:
             Logger.get_logger().error('The filename "{}" may be too long to rename'.format(newName))
 
-        renamedFiles.append( (f.path, name,) )
+        renamedFiles.append((f.path, name,))
 
     if not renamedFiles and sameCount > 0:
         msg = "1 file" if sameCount == 1 else "{} files".format(sameCount)
         Logger.get_logger().warning(\
             "{} in this directory would have been renamed to the same filename".format(msg))
     return renamedFiles
+
 
 def rename(files, resp=""):
     """
@@ -167,7 +175,7 @@ def rename(files, resp=""):
         resp = raw_input("\nDo you wish to rename these files [y|N]: ").lower()
 
     if not resp.startswith('y'):
-        Logger.get_logger().info( "Changes were not committed to the files" )
+        Logger.get_logger().info("Changes were not committed to the files")
         exit(0)
 
     errors = []
@@ -178,15 +186,15 @@ def rename(files, resp=""):
             os.rename(old, new)
             old_order.append((new, old))
         except Exception as e:
-            errors.append( (old,e) )
+            errors.append((old, e))
 
     save_renamed_file_info(old_order)
 
     if errors:
         for e in errors:
-            Logger.get_logger().error( "File {} could not be renamed: {}".format( os.path.split(e[0])[1], e[1] ) )
+            Logger.get_logger().error("File {} could not be renamed: {}".format(os.path.split(e[0])[1], e[1]))
     else:
-        Logger.get_logger().info( "Files were successfully renamed")
+        Logger.get_logger().info("Files were successfully renamed")
 
     return errors
 
@@ -205,8 +213,9 @@ class Thread(threading.Thread):
     def run(self):
         with open(self.file, 'rb') as f:
             for line in f:
-                self.sum += zlib.crc32(line,self.sum)
+                self.sum += zlib.crc32(line, self.sum)
         print self.sum
+
 
 def save_last_access_times():
     """
@@ -214,11 +223,12 @@ def save_last_access_times():
     """
     if not Settings['access_dict']:
         return False
-    
+
     with open(os.path.join(Constants.RESOURCE_PATH, Settings['access_time_file']), 'w') as p:
-        pickle.dump(Settings['access_dict'] , p)
+        pickle.dump(Settings['access_dict'], p)
 
     return True
+
 
 def load_last_access_times():
     """
@@ -232,7 +242,8 @@ def load_last_access_times():
         return pickle.loads(''.join(data))
     else:
         return {}
-        
+
+
 def save_renamed_file_info(old_order):
     """
     Save the previous names from the last renaming operation to disk
@@ -240,6 +251,7 @@ def save_renamed_file_info(old_order):
     Logger.get_logger().info("Backing up old filenames")
     with open(os.path.join(Constants.RESOURCE_PATH, Settings['rename_backup']), 'w') as f:
         pickle.dump(old_order, f)
+
 
 def load_last_renamed_files():
     """
@@ -265,8 +277,8 @@ def remove_punctuation(title):
     """
     name, ext = os.path.splitext(title)
     exclude = set('!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~')
-    name = ''.join( ch for ch in name if ch not in exclude )
-    return name+ext
+    name = ''.join(ch for ch in name if ch not in exclude)
+    return name + ext
 
 
 def replace_invalid_path_chars(path, replacement='-'):
@@ -274,7 +286,7 @@ def replace_invalid_path_chars(path, replacement='-'):
     Replace invalid path character with a different, acceptable, character
     """
     exclude = set('\\/"?<>|*:')
-    path = ''.join( ch if ch not in exclude else replacement for ch in path )
+    path = ''.join(ch if ch not in exclude else replacement for ch in path)
     return path
 
 
@@ -288,7 +300,7 @@ def prepare_title(title):
         return ""
 
     if title[0].lower() == 'the':
-        title.remove( title[0] )
+        title.remove(title[0])
 
     out = []
     for n in title:
@@ -320,15 +332,16 @@ def num_to_text(num):
         length = len(num)
 
         if length == 3:
-            args.append( Constants.NUM_DICT[num[0]] )
+            args.append(Constants.NUM_DICT[num[0]])
             args.append("hundred")
         else:
-            value = str( digit * (10**(length-1)) )
-            args.append( Constants.NUM_DICT[value] )
+            value = str(digit * (10 ** (length - 1)))
+            args.append(Constants.NUM_DICT[value])
 
         num = num[1:]
 
     return '_'.join(args)
+
 
 def encode(text, encoding='utf-8'):
     """

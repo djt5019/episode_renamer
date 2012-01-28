@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-__author__='Dan Tracy'
-__email__='djt5019 at gmail dot com'
+__author__ = 'Dan Tracy'
+__email__ = 'djt5019 at gmail dot com'
 
 import logging
 import logging.config
@@ -14,29 +14,29 @@ from Constants import RESOURCE_PATH
 from Settings import Settings
 
 _logger = None
+
+
 def get_logger():
     """Returns the global logger instance"""
     global _logger
-    
+
     if _logger is None:
-        p = abspath(join(RESOURCE_PATH,'logger.conf'))
-    
-        logging.config.fileConfig( abspath(join(RESOURCE_PATH, Settings['log_config'])))
+        logging.config.fileConfig(abspath(join(RESOURCE_PATH, Settings['log_config'])))
         _logger = logging.getLogger()
-        
+
         logPath = join(RESOURCE_PATH, Settings['log_file'])
-        
-        fileHandler = logging.handlers.RotatingFileHandler(logPath, maxBytes=2**20, backupCount=3)
-        fileHandler.setFormatter( logging.Formatter('%(levelname)s | %(module)s.%(funcName)s - "%(message)s"') )
-        fileHandler.setLevel( logging.DEBUG)
-        
+
+        fileHandler = logging.handlers.RotatingFileHandler(logPath, maxBytes=2 ** 20, backupCount=3)
+        fileHandler.setFormatter(logging.Formatter('%(levelname)s | %(module)s.%(funcName)s - "%(message)s"'))
+        fileHandler.setLevel(logging.DEBUG)
         _logger.addHandler(fileHandler)
-                     
+
         _logger.debug("APPLICATION START: {}".format(datetime.now()))
-        atexit.register( _closeLogs )
-     
+        atexit.register(_closeLogs)
+
     return _logger
-    
+
+
 def _closeLogs():
     """
     Properly shutdown the loggers called upon program termination,

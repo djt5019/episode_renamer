@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-__author__='Dan Tracy'
-__email__='djt5019 at gmail dot com'
+__author__ = 'Dan Tracy'
+__email__ = 'djt5019 at gmail dot com'
 
 import ConfigParser
 import re
@@ -15,6 +15,7 @@ import Logger
 from math import log10
 
 from EpParser.src.Settings import Settings
+
 
 class Show(object):
     """
@@ -39,9 +40,10 @@ class Show(object):
             return False
         self.episodeList = eps
         self.numSeasons = eps[-1].season
-        self.maxEpisodeNumber = max( x.episodeNumber for x in eps )
+        self.maxEpisodeNumber = max(x.episodeNumber for x in eps)
         self.numEpisodes = len(eps)
-        for s in xrange(self.numSeasons+1):
+
+        for s in xrange(self.numSeasons + 1):
             # Split each seasons episodes into it's own separate list and index it
             # by the season number.  Very easy for looking up individual episodes
             self.episodesBySeason[s] = filter(lambda x: x.season == s, self.episodeList)
@@ -71,15 +73,15 @@ class Show(object):
         """
         if episode < 1:
             return None
-            
+
         if season > 0:
-            season = self.episodesBySeason.get(season, None)            
+            season = self.episodesBySeason.get(season, None)
             if season:
-                return season[episode-1]  # Adjust by one since episodes start count at 1 not 0
+                return season[episode - 1]  # Adjust by one since episodes start count at 1 not 0
             else:
                 return None
         else:
-            return self.episodeList[episode-1]
+            return self.episodeList[episode - 1]
 
 
 class Episode(object):
@@ -120,15 +122,15 @@ class EpisodeFile(object):
             for line in f:
                 checksum = zlib.crc32(line, checksum)
 
-        return hex( checksum & 0xFFFFFFFF )
-        
+        return hex(checksum & 0xFFFFFFFF)
+
     def compare_sums(self):
         """
         Compares the checksum in the filename to the calculated one
         """
         if self.given_checksum:
             return self.given_checksum == self.crc32()
-            
+
         return False
 
 
@@ -155,7 +157,7 @@ class EpisodeFormatter(object):
         Set the format string for the formatter
         """
         if fmt is not None:
-            self.formatString = Utils.encode( fmt )
+            self.formatString = Utils.encode(fmt)
             self.tokens = self.formatString.split()
 
     def load_format_config(self, configFileName=None):
@@ -184,13 +186,13 @@ class EpisodeFormatter(object):
                 continue
 
             if ',' in tokens:
-                tokens = { t.strip() for t in tokens.split(',') }
+                tokens = {t.strip() for t in tokens.split(',')}
             else:
-                tokens = { tokens }
+                tokens = {tokens}
 
-            for f in tokens.intersection(allTokens):  
+            for f in tokens.intersection(allTokens):
                 #Look for duplicates
-                Logger.get_logger().error("In section [{}]: token '{}' redefined".format(s,f))
+                Logger.get_logger().error("In section [{}]: token '{}' redefined".format(s, f))
                 tokens.remove(f)
 
             allTokens = allTokens.union(tokens)
@@ -218,18 +220,18 @@ class EpisodeFormatter(object):
             tags = self.re.split(token)
 
             if not tags:
-                args.append( token )
+                args.append(token)
                 continue
 
             a = []
             for tag in tags:
                 if self.re.match(tag):
                     #If it's a tag try to resolve it
-                    a.append( self._parse(ep, tag[1:-1], epFile) )
+                    a.append(self._parse(ep, tag[1:-1], epFile))
                 else:
                     a.append(tag)
 
-            args.append( ''.join(a) )
+            args.append(''.join(a))
 
         return Utils.encode(' '.join(args))
 
@@ -243,34 +245,34 @@ class EpisodeFormatter(object):
 
         # Tag modifiers such as number padding and caps
         if ':pad' in tag:
-            tag = tag.replace(':pad','').strip()
+            tag = tag.replace(':pad', '').strip()
             pad = True
         if ':caps' in tag:
-            tag = tag.replace(':caps','').strip()
+            tag = tag.replace(':caps', '').strip()
             caps = True
         if ':upper' in tag:
-            tag = tag.replace(':upper','').strip()
+            tag = tag.replace(':upper', '').strip()
             caps = True
         if ':lower' in tag:
-            tag = tag.replace(':lower','').strip()
+            tag = tag.replace(':lower', '').strip()
             lower = True
         if ':' in tag:
-            tag = tag.split(':',2)[0]
+            tag = tag.split(':', 2)[0]
 
         if tag in self.episodeNumberTokens:
-            if pad: 
+            if pad:
                 #Obtain the number of digits in the highest numbered episode
                 pad = len(str(self.show.maxEpisodeNumber))
             return str(ep.episodeNumber).zfill(pad)
 
         elif tag in self.seasonTokens:
-            if pad: 
+            if pad:
                 #Number of digits in the highest numbered season
                 pad = len(str(self.show.numSeasons))
             return str(ep.season).zfill(pad)
 
         elif tag in self.episodeCounterTokens:
-            if pad: 
+            if pad:
                 #Total number of digits
                 pad = len(str(self.show.numEpisodes))
             return str(ep.episodeCount).zfill(pad)
@@ -296,6 +298,6 @@ class EpisodeFormatter(object):
             if hasattr(epFile, 'crc32'):
                 return str(epFile.crc32())[2:]  # To remove the 0x from the hex string
 
-        else: 
+        else:
             # If it reaches this case it's most likely an invalid tag
             return Settings['tag_start'] + tag + Settings['tag_end']

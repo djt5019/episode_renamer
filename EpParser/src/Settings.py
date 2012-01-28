@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
-__author__='Dan Tracy'
-__email__='djt5019 at gmail dot com'
+__author__ = 'Dan Tracy'
+__email__ = 'djt5019 at gmail dot com'
 
 import os
 import Constants
+
 
 class _SettingsDict(dict):
     def __init__(self):
@@ -19,7 +20,7 @@ class _SettingsDict(dict):
             return val
 
     def load_config(self):
-        with open( os.path.join(Constants.RESOURCE_PATH, 'settings.conf')) as f:
+        with open(os.path.join(Constants.RESOURCE_PATH, 'settings.conf')) as f:
             for number, line in enumerate(f):
                 line = line.strip()
 
@@ -43,4 +44,3 @@ class SettingsException(Exception):
 
 
 Settings = _SettingsDict()
-
