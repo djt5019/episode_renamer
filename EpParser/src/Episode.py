@@ -71,7 +71,7 @@ class Show(object):
         """
         Returns a specific episode from a specific season, None if it's not present
         """
-        if episode < 1:
+        if episode < 1 or episode > len(self.episodeList):
             return None
 
         if season > 0:

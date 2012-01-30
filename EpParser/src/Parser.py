@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
-__author__='Dan Tracy'
-__email__='djt5019 at gmail dot com'
+__author__ = 'Dan Tracy'
+__email__ = 'djt5019 at gmail dot com'
 
 import poll_sources
 import Utils
 
 from Episode import Show
 from Logger import get_logger
+
 
 class EpParser(object):
     """The main parser will poll the internet as well as a database
@@ -22,9 +23,8 @@ class EpParser(object):
         """Sets a new show to search for, the old show will be removed """
         if showTitle:
             self.show = Show(showTitle)
-            self.show.properTitle = Utils.prepare_title( showTitle.lower() )
+            self.show.properTitle = Utils.prepare_title(showTitle.lower())
             self.show.title = showTitle
-
 
     def getShow(self):
         """ The main driver function of this class, it will poll
@@ -35,15 +35,15 @@ class EpParser(object):
             return None
 
         if self.cache is not None:
-            self.show.add_episodes( self._parseCacheData() )
+            self.show.add_episodes(self._parseCacheData())
 
         # The show was found in the database
         if self.show.episodeList:
-            get_logger().info( "Show found in database")
+            get_logger().info("Show found in database")
             return self.show
 
         # The show was not in the database so now we try the website
-        get_logger().info( "Show not found in database, polling web")
+        get_logger().info("Show not found in database, polling web")
         eps = self._parseHTMLData()
         self.show.add_episodes(eps)
 
@@ -54,8 +54,8 @@ class EpParser(object):
         # If we successfully find the show from the internet then
         # we should add it to our database for later use
         if self.cache is not None:
-            get_logger().info( "Adding show to the database" )
-            self.cache.add_show( self.show.properTitle, self.show.episodeList )
+            get_logger().info("Adding show to the database")
+            self.cache.add_show(self.show.properTitle, self.show.episodeList)
 
         return self.show
 
