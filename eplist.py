@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-__author__='Dan Tracy'
-__email__='djt5019 at gmail dot com'
+__author__ = 'Dan Tracy'
+__email__ = 'djt5019 at gmail dot com'
 
 # This command line program will take a T.V. show as input and
 # will return information about each episode, such as the title
@@ -27,6 +27,7 @@ from EpParser.src.Cache import Cache
 from EpParser.src.Logger import get_logger
 from EpParser.src.Settings import Settings
 
+
 def main():
     if '-u' in sys.argv or '--undo-rename' in sys.argv:
         files = Utils.load_last_renamed_files()
@@ -50,7 +51,7 @@ def main():
 
     cmd.add_argument('-s', '--season', default="", type=str, metavar='N',
         help="The specific season range to search for. Ex: 1-3")
-    
+
     cmd.add_argument('-e', '--episode', default="", type=str, metavar='N',
         help="The specific episode range to search for Ex: 15-30")
 
@@ -59,7 +60,7 @@ def main():
 
     cmd.add_argument('-g', '--gui-enabled', action="store_true",
         help="Use the gui rather than the command line")
-        
+
     cmd.add_argument('--update-db', action="store_true",
         help="Update the AniDB titles file, limit this to once a day since it's large")
 
@@ -72,7 +73,11 @@ def main():
         help="Undo the last rename operation")
 
     args = cmd.parse_args()
-    
+
+    if args.title in ('-', '.', 'pwd'):
+        args.title = os.path.split(os.getcwd())[1]  # If a dash is entered use the current basename of the path
+        print args.title
+
     if args.verbose:
         from logging import NOTSET
         for handle in get_logger().handlers:
@@ -81,22 +86,22 @@ def main():
     if args.gui_enabled:
         import EpParser.gui.gui as gui
         exit(gui.main())
-        
-    if args.update_db:        
-        one_unix_day = 24*60*60
+
+    if args.update_db:
+        one_unix_day = 24 * 60 * 60
+
         def _download():
             with API.open_file_in_resources(Settings['anidb_db_file'], 'w') as f:
                 url = API.get_url_descriptor(Settings['anidb_db_url'])
                 f.write(url.content)
-     
+
         if not API.file_exists_in_resources(Settings['anidb_db_file']):
             _download()
         elif API.able_to_poll('db_download', one_unix_day):
-            _download()               
+            _download()
         else:
             get_logger().error("Attempting to download the database file multiple times today")
-        
-        
+
     rename = args.pathname is not None
 
     if rename and not os.path.exists(args.pathname):
@@ -122,14 +127,14 @@ def main():
         else:
             print "{} Season {} not found".format(args.title, args.season)
             exit(1)
-        
+
     if args.episode:
         episodeRange = list(parse_range(args.episode))
 
         if not args.season:
             show.episodeList = [x for x in show.episodeList if x.episodeCount in episodeRange]
         else:
-            show.episodeList = show.episodeList[episodeRange[0]-1:episodeRange[-1]]
+            show.episodeList = show.episodeList[episodeRange[0] - 1:episodeRange[-1]]
 
     if  rename:
         files = Utils.prepare_filenames(args.pathname, show)
@@ -153,7 +158,7 @@ def main():
             print "\nSeason {0}".format(eps.season)
             print "----------"
 
-        print show.formatter.display(eps).encode(sys.getdefaultencoding(),'ignore')
+        print show.formatter.display(eps).encode(sys.getdefaultencoding(), 'ignore')
         curr_season = eps.season
 
 
@@ -164,11 +169,11 @@ def print_renamed_files(files):
 
     p = os.path.dirname(files[0][0])
     print "PATH = {}".format(p)
-    print "-------" + '-'*len(p)
+    print "-------" + '-' * len(p)
 
     for old, new in files:
-        print (u"OLD: {0}".format(os.path.split(old)[1]).encode(sys.getdefaultencoding(),'ignore'))
-        print (u"NEW: {0}".format(os.path.split(new)[1]).encode(sys.getdefaultencoding(),'ignore'))
+        print (u"OLD: {0}".format(os.path.split(old)[1]).encode(sys.getdefaultencoding(), 'ignore'))
+        print (u"NEW: {0}".format(os.path.split(new)[1]).encode(sys.getdefaultencoding(), 'ignore'))
         print
 
 
@@ -186,8 +191,8 @@ def parse_range(range):
     if low > high:
         low, high = high, low
 
-
     return xrange(low, high + 1)
+
 
 if __name__ == '__main__':
     main()

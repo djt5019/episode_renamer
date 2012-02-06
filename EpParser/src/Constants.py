@@ -29,7 +29,7 @@ _REGEX_VARS = {
 'season': r'(s|season)?{sep}*(?P<season>\d+)',
 'series': r'(?P<series>.*)',
 'subgroup': r'(\[.*\])',
-'special': r'(?P<type>op|ed|ova|ona|extra|special|movie){sep}*(?P<special>\d+)',
+'special': r'(?P<type>op|ed|ova|ona|extra|special|movie|dvd|bluray){sep}*(?P<special>\d+)',
 }
 
 for k, v in _REGEX_VARS.iteritems():
