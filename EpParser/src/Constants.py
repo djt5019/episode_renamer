@@ -6,8 +6,8 @@ import os
 
 from EpParser import __file__ as file_path
 
-VIDEO_EXTENSIONS = set(['.mkv', '.ogm', '.asf', '.asx', '.avi', '.flv', '.mov',
-                    '.mp4', '.mpg', '.rm',  '.swf', '.vob', '.wmv', '.mpeg'])
+VIDEO_EXTENSIONS = {'.mkv', '.ogm', '.asf', '.asx', '.avi', '.flv', '.mov', '.mp4', '.mpg', '.rm', '.swf', '.vob',
+                    '.wmv', '.mpeg'}
 
 PROJECT_PATH = os.path.abspath(os.path.dirname(file_path))
 RESOURCE_PATH = os.path.join(PROJECT_PATH, 'resources')

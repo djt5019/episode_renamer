@@ -12,8 +12,6 @@ import Utils
 import Constants
 import Logger
 
-from math import log10
-
 from EpParser.src.Settings import Settings
 
 
@@ -57,7 +55,7 @@ class Show(object):
         """
         Sets the show's title to the value passed as well as prepares it for use
         """
-        Logger.getLogger().debug("Setting show title to: {}".format(val))
+        Logger.get_logger().debug("Setting show title to: {}".format(val))
         self.title = Utils.encode(val.capitalize())
         self.properTitle = Utils.prepare_title(val)
 
@@ -96,6 +94,7 @@ class Episode(object):
         self.season = int(season)
         self.episodeNumber = int(epNumber)
         self.episodeCount = int(episodeCount)
+        self.episode_file = None
 
 
 class EpisodeFile(object):
@@ -111,6 +110,7 @@ class EpisodeFile(object):
         self.season = season
         self.ext = os.path.splitext(self.path)[1]
         self.name = Utils.encode(os.path.split(self.path)[1])
+        self.new_name = ""
         self.given_checksum = checksum
 
     def crc32(self):
@@ -210,7 +210,7 @@ class EpisodeFormatter(object):
             elif s == "hash":
                 self.hashTokens = tokens
 
-    def display(self, ep, epFile=None):
+    def display(self, ep):
         """
         Displays the episode according to the users format
         """
@@ -227,7 +227,7 @@ class EpisodeFormatter(object):
             for tag in tags:
                 if self.re.match(tag):
                     #If it's a tag try to resolve it
-                    a.append(self._parse(ep, tag[1:-1], epFile))
+                    a.append(self._parse(ep, tag[1:-1]))
                 else:
                     a.append(tag)
 
@@ -235,7 +235,7 @@ class EpisodeFormatter(object):
 
         return Utils.encode(' '.join(args))
 
-    def _parse(self, ep, tag, epFile=None):
+    def _parse(self, ep, tag):
         """
         Tokenize and substitute tags for their values using an episode
         as well as the episode file for reference
@@ -292,11 +292,11 @@ class EpisodeFormatter(object):
             return self.show.title
 
         elif tag in self.hashTokens:
-            if not epFile:
+            if not ep.episode_file:
                 return Settings['tag_start'] + tag + Settings['tag_end']
 
-            if hasattr(epFile, 'crc32'):
-                return str(epFile.crc32())[2:]  # To remove the 0x from the hex string
+            if hasattr(ep.episode_file, 'crc32'):
+                return str(ep.episode_file.crc32())[2:]  # To remove the 0x from the hex string
 
         else:
             # If it reaches this case it's most likely an invalid tag

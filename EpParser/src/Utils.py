@@ -130,14 +130,13 @@ def prepare_filenames(path, show):
     Rename the files located in 'path' to those in the list 'show'
     """
     path = os.path.abspath(path)
-    renamedFiles = []
     sameCount = 0
 
     files = clean_filenames(path)
     #Match the list of EpisodeFiles to the list of shows in the 'show' variable
     if not files:
         Logger.get_logger().info("No files were able to be renamed")
-        return []
+        return
 
     for f in files:
         episode = show.get_episode(f.season, f.episode)
@@ -147,7 +146,7 @@ def prepare_filenames(path, show):
             continue
 
         fileName = encode(f.name)
-        newName = replace_invalid_path_chars(show.formatter.display(episode, f) + f.ext)
+        newName = replace_invalid_path_chars(show.formatter.display(episode) + f.ext)
 
         if newName == fileName:
             Logger.get_logger().info("File {} and Episode {} have same name".format(f.name, episode.title))
@@ -158,13 +157,13 @@ def prepare_filenames(path, show):
         if len(name) > 256:
             Logger.get_logger().error('The filename "{}" may be too long to rename'.format(newName))
 
-        renamedFiles.append((f.path, name,))
+        episode.episode_file = f
+        episode.episode_file.new_name = newName
 
-    if not renamedFiles and sameCount > 0:
+    if sameCount > 0:
         msg = "1 file" if sameCount == 1 else "{} files".format(sameCount)
-        Logger.get_logger().warning(\
+        Logger.get_logger().warning(
             "{} in this directory would have been renamed to the same filename".format(msg))
-    return renamedFiles
 
 
 def rename(files, resp=""):
