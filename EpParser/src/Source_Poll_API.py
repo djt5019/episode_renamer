@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-__author__='Dan Tracy'
-__email__='djt5019 at gmail dot com'
+__author__ = 'Dan Tracy'
+__email__ = 'djt5019 at gmail dot com'
 
 #
 # The purpose of this file is just to group together several operations and imports that I
@@ -23,10 +23,13 @@ Settings['access_dict'] = {}
 show_not_found = Constants.SHOW_NOT_FOUND
 
 
-def able_to_poll(site, delay=Settings['poll_delay']):
+def able_to_poll(site, delay=None):
     """
     Prevents flooding by waiting two seconds from the last poll
     """
+    if not delay:
+        delay = Settings['poll_delay']
+
     if not Settings['access_dict']:
         Settings['access_dict'] = load_last_access_times()
 
@@ -41,7 +44,7 @@ def able_to_poll(site, delay=Settings['poll_delay']):
         Settings['access_dict'][site] = now
         return True
 
-    return False
+    raise API_FloodException()
 
 
 def open_file_in_resources(name, mode='r'):
@@ -130,4 +133,8 @@ class API_Exception(Exception):
 
 
 class API_FileNotFoundException(API_Exception):
+    pass
+
+
+class API_FloodException(API_Exception):
     pass

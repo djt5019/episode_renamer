@@ -34,17 +34,16 @@ class Show(object):
         """
         Add episodes to the shows episode list
         """
-        if not eps:
-            return False
-        self.episodeList = eps
-        self.numSeasons = eps[-1].season
-        self.maxEpisodeNumber = max(x.episodeNumber for x in eps)
-        self.numEpisodes = len(eps)
+        if eps:
+            self.episodeList = eps
+            self.numSeasons = eps[-1].season
+            self.maxEpisodeNumber = max(x.episodeNumber for x in eps)
+            self.numEpisodes = len(eps)
 
-        for s in xrange(self.numSeasons + 1):
-            # Split each seasons episodes into it's own separate list and index it
-            # by the season number.  Very easy for looking up individual episodes
-            self.episodesBySeason[s] = filter(lambda x: x.season == s, self.episodeList)
+            for s in xrange(self.numSeasons + 1):
+                # Split each seasons episodes into it's own separate list and index it
+                # by the season number.  Very easy for looking up individual episodes
+                self.episodesBySeason[s] = filter(lambda x: x.season == s, self.episodeList)
 
     @property
     def show_title(self):
@@ -67,7 +66,7 @@ class Show(object):
 
     def get_episode(self, season, episode):
         """
-        Returns a specific episode from a specific season, None if it's not present
+        Returns a specific episode from a specific season or None
         """
         if episode < 1 or episode > len(self.episodeList):
             return None
@@ -75,7 +74,8 @@ class Show(object):
         if season > 0:
             season = self.episodesBySeason.get(season, None)
             if season:
-                return season[episode - 1]  # Adjust by one since episodes start count at 1 not 0
+                # Adjust by one since episodes start count at 1 not 0
+                return season[episode - 1]
             else:
                 return None
         else:
@@ -143,12 +143,12 @@ class EpisodeFormatter(object):
         self.show = show
         self.formatString = Utils.encode(fmt) if fmt else formatString
         self.tokens = self.formatString.split()
-        self.episodeNumberTokens = {"episode", "ep"}
-        self.seasonTokens = {"season"}
-        self.episodeNameTokens = {"title", "name", "epname"}
-        self.seriesNameTokens = {"show", "series"}
-        self.episodeCounterTokens = {"count", "number"}
-        self.hashTokens = {"crc32", "hash", "sum", "checksum"}
+        self.episodeNumberTokens = set(["episode", "ep"])
+        self.seasonTokens = set(["season"])
+        self.episodeNameTokens = set(["title", "name", "epname"])
+        self.seriesNameTokens = set(["show", "series"])
+        self.episodeCounterTokens = set(["count", "number"])
+        self.hashTokens = set(["crc32", "hash", "sum", "checksum"])
         re_format = '(?P<tag>\{}.*?\{})'.format(Settings['tag_start'], Settings['tag_end'])
         self.re = re.compile(re_format, re.I)
 
@@ -186,9 +186,9 @@ class EpisodeFormatter(object):
                 continue
 
             if ',' in tokens:
-                tokens = {t.strip() for t in tokens.split(',')}
+                tokens = set(t.strip() for t in tokens.split(','))
             else:
-                tokens = {tokens}
+                tokens = set(tokens)
 
             for f in tokens.intersection(allTokens):
                 #Look for duplicates
@@ -296,7 +296,8 @@ class EpisodeFormatter(object):
                 return Settings['tag_start'] + tag + Settings['tag_end']
 
             if hasattr(ep.episode_file, 'crc32'):
-                return str(ep.episode_file.crc32())[2:]  # To remove the 0x from the hex string
+                # To remove the 0x from the hex string
+                return str(ep.episode_file.crc32())[2:]
 
         else:
             # If it reaches this case it's most likely an invalid tag

@@ -10,13 +10,13 @@ import pickle
 import requests
 import requests.exceptions
 
-import Episode
-import Logger
-
 from itertools import ifilter
 
-from EpParser.src.Settings import Settings
-from EpParser.src import Constants
+import Constants
+import Episode
+
+from Logger import get_logger
+from Settings import Settings
 
 
 def get_URL_descriptor(url):
@@ -26,7 +26,7 @@ def get_URL_descriptor(url):
     try:
         resp = requests.get(url)
     except requests.exceptions.ConnectionError:
-        Logger.get_logger().error("Error connecting to {}".format(url))
+        get_logger().error("Error connecting to {}".format(url))
         return None
 
     if resp.ok:
@@ -58,7 +58,7 @@ def clean_filenames(path):
     files = ifilter(lambda x: is_valid_file(x), files)
 
     if not files:
-        Logger.get_logger().error("No video files were found in {}".format(path))
+        get_logger().error("No video files were found in {}".format(path))
         return []
 
     _compile_regexs()
@@ -71,8 +71,11 @@ def clean_filenames(path):
         season = -1
 
         if not g:
-            Logger.get_logger().info("Could not find file information for: {}".format(f))
+            get_logger().info("Could not find file information for: {}".format(f))
             continue
+
+        if Settings['verbose']:
+            print g.groupdict()
 
         if 'special' in g.groupdict():
             continue
@@ -92,10 +95,10 @@ def clean_filenames(path):
         cleanFiles.append(Episode.EpisodeFile(os.path.join(path, f), index, season, checksum))
 
     if not cleanFiles:
-        Logger.get_logger().error("The files could not be matched")
+        get_logger().error("The files could not be matched")
         return cleanFiles
 
-    Logger.get_logger().info("Successfully cleaned the file names")
+    get_logger().info("Successfully cleaned the file names")
 
     return cleanFiles
 
@@ -104,8 +107,9 @@ regexList = []
 
 
 def _compile_regexs():
-    # This function will only compile the regexs once and store the results
-    # in a list within the function.  Monkey-patching is strange.
+    """
+    This function will only compile the regexs once.
+    """
     if not regexList:
         for r in Constants.REGEX:
             regexList.append(re.compile(r, re.I))
@@ -119,7 +123,7 @@ def _search(filename):
     for count, regex in enumerate(_compile_regexs()):
         result = regex.search(filename)
         if result:
-            Logger.get_logger().info("Regex #{} matched {}".format(count, filename))
+            get_logger().info("Regex #{} matched {}".format(count, filename))
             return result
 
     return None
@@ -135,34 +139,34 @@ def prepare_filenames(path, show):
     files = clean_filenames(path)
     #Match the list of EpisodeFiles to the list of shows in the 'show' variable
     if not files:
-        Logger.get_logger().info("No files were able to be renamed")
+        get_logger().info("No files were able to be renamed")
         return
 
     for f in files:
         episode = show.get_episode(f.season, f.episode)
 
         if not episode:
-            Logger.get_logger().warning("Could not find an episode for {}".format(f.name))
+            get_logger().warning("Could not find an episode for {}".format(f.name))
             continue
 
         fileName = encode(f.name)
         newName = replace_invalid_path_chars(show.formatter.display(episode) + f.ext)
 
         if newName == fileName:
-            Logger.get_logger().info("File {} and Episode {} have same name".format(f.name, episode.title))
+            get_logger().info("File {} and Episode {} have same name".format(f.name, episode.title))
             sameCount += 1
             continue
 
         name = os.path.join(path, newName)
         if len(name) > 256:
-            Logger.get_logger().error('The filename "{}" may be too long to rename'.format(newName))
+            get_logger().error('The filename "{}" may be too long to rename'.format(newName))
 
         episode.episode_file = f
         episode.episode_file.new_name = newName
 
     if sameCount > 0:
         msg = "1 file" if sameCount == 1 else "{} files".format(sameCount)
-        Logger.get_logger().warning(
+        get_logger().warning(
             "{} in this directory would have been renamed to the same filename".format(msg))
 
 
@@ -174,7 +178,7 @@ def rename(files, resp=""):
         resp = raw_input("\nDo you wish to rename these files [y|N]: ").lower()
 
     if not resp.startswith('y'):
-        Logger.get_logger().info("Changes were not committed to the files")
+        get_logger().info("Changes were not committed to the files")
         exit(0)
 
     errors = []
@@ -191,9 +195,9 @@ def rename(files, resp=""):
 
     if errors:
         for e in errors:
-            Logger.get_logger().error("File {} could not be renamed: {}".format(os.path.split(e[0])[1], e[1]))
+            get_logger().error("File {} could not be renamed: {}".format(os.path.split(e[0])[1], e[1]))
     else:
-        Logger.get_logger().info("Files were successfully renamed")
+        get_logger().info("Files were successfully renamed")
 
     return errors
 
@@ -247,7 +251,7 @@ def save_renamed_file_info(old_order):
     """
     Save the previous names from the last renaming operation to disk
     """
-    Logger.get_logger().info("Backing up old filenames")
+    get_logger().info("Backing up old filenames")
     with open(os.path.join(Constants.RESOURCE_PATH, Settings['rename_backup']), 'w') as f:
         pickle.dump(old_order, f)
 
@@ -256,9 +260,9 @@ def load_last_renamed_files():
     """
     Restore the previous names from the last renaming operation
     """
-    Logger.get_logger().info("Loading up old filenames")
+    get_logger().info("Loading up old filenames")
     if not os.path.exists(os.path.join(Constants.RESOURCE_PATH, Settings['rename_backup'])):
-        Logger.get_logger().warn("There seems to be no files to be un-renamed")
+        get_logger().warn("There seems to be no files to be un-renamed")
         return []
 
     with open(os.path.join(Constants.RESOURCE_PATH, Settings['rename_backup'])) as f:

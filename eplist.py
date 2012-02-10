@@ -78,7 +78,9 @@ def main():
         args.title = os.path.split(os.getcwd())[1]  # If a dash is entered use the current basename of the path
         print args.title
 
+    Settings['verbose'] = False
     if args.verbose:
+        Settings['verbose'] = True
         from logging import NOTSET
         for handle in get_logger().handlers:
             handle.setLevel(NOTSET)

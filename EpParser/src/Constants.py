@@ -6,8 +6,8 @@ import os
 
 from EpParser import __file__ as file_path
 
-VIDEO_EXTENSIONS = {'.mkv', '.ogm', '.asf', '.asx', '.avi', '.flv', '.mov', '.mp4', '.mpg', '.rm', '.swf', '.vob',
-                    '.wmv', '.mpeg'}
+VIDEO_EXTENSIONS = ['.mkv', '.ogm', '.asf', '.asx', '.avi', '.flv', '.mov', '.mp4', '.mpg', '.rm', '.swf', '.vob',
+                    '.wmv', '.mpeg']
 
 PROJECT_PATH = os.path.abspath(os.path.dirname(file_path))
 RESOURCE_PATH = os.path.join(PROJECT_PATH, 'resources')
@@ -25,8 +25,8 @@ _REGEX_VARS = {
 'sep': r'[\-\~\.\_\s]',
 'sum': r'(.*[\[\(](?P<sum>[a-z0-9]{8})[\]\)])',
 'year': r'(:P<year>(19|20)?\d\d)',
-'episode': r'(e|episode)?{sep}*(?P<episode>\d+)(?:v\d)?',
-'season': r'(s|season)?{sep}*(?P<season>\d+)',
+'episode': r'(e|episode)?{sep}+(?P<episode>\d+)(?:v\d)?',  # ex: e3v2
+'season': r'(s|season)?{sep}+(?P<season>\d+)',
 'series': r'(?P<series>.*)',
 'subgroup': r'(\[.*\])',
 'special': r'(?P<type>op|ed|ova|ona|extra|special|movie|dvd|bluray){sep}*(?P<special>\d+)',
@@ -43,9 +43,9 @@ for k, v in _REGEX_VARS.iteritems():
 REGEX = [
             r'^(?P<series>.*?) - Season (?P<season>\d+) - Episode (?P<episode>\d*) - .*',  # Also mine
             r'^(?P<series>.*?) - Episode (?P<episode>\d*) - .*',  # My usual format
-            r'^{subgroup}*{sep}+{series}{sep}+{special}{sep}*{sum}?',
-            r'^{subgroup}*{sep}+{series}{sep}{episode}{sep}+{sum}?',
-            r'^{subgroup}*{sep}+{series}{sep}{season}{sep}+{episode}{sep}+{sum}?',
+            r'^{subgroup}*{sep}+{series}{sep}+{special}{sep}+{sum}?',
+            r'^{subgroup}*{sep}+{series}{sep}+{episode}{sep}+{sum}?',
+            r'^{subgroup}*{sep}+{series}{sep}+{season}{sep}+{episode}{sep}+{sum}?',
             r'^{series}{sep}+{year}?{sep}{season}{sep}*{episode}{sep}*{sum}?',
             r'^{series}{sep}+{year}?{sep}{episode}{sep}*{sum}?',
             r'^{series}{sep}+{year}?{sep}{season}X{episode}{sep}*{sum}?',

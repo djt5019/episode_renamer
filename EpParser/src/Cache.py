@@ -14,7 +14,7 @@ from Settings import Settings
 
 
 class Cache(object):
-    """ Our database logic class"""    
+    """ Our database logic class"""
     def __init__(self, dbName=u"episodes.db"):
         """Establish a connection to the show database"""
         if dbName != ':memory:':
