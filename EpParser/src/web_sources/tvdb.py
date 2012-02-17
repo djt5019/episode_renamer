@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-__author__='Dan Tracy'
-__email__='djt5019 at gmail dot com'
+__author__ = 'Dan Tracy'
+__email__ = 'djt5019 at gmail dot com'
 
 import zipfile
 
@@ -21,6 +21,7 @@ except ImportError:
 
 priority = 1
 
+
 def poll(title):
     if API.file_exists_in_resources(Settings['tvdb_key']):
         with API.open_file_in_resources(Settings['tvdb_key']) as f:
@@ -32,28 +33,26 @@ def poll(title):
     if Soup is None:
         return API.show_not_found
 
-
     cleanTitle = quote_plus(title)
 
     #1) First we need to find the series ID
     seriesIdLoc = "http://www.thetvdb.com/api/GetSeries.php?seriesname={0}".format(cleanTitle)
-    seriesFileDesc = API.get_url_descriptor( seriesIdLoc )
+    seriesFileDesc = API.get_url_descriptor(seriesIdLoc)
 
     if seriesFileDesc is None:
         return API.show_not_found
 
-    seriesIdXml = Soup( seriesFileDesc.content, convertEntities=Soup.HTML_ENTITIES )
+    seriesIdXml = Soup(seriesFileDesc.content, convertEntities=Soup.HTML_ENTITIES)
 
     seriesIds = seriesIdXml.findAll('series')
 
-    if not seriesIds: 
+    if not seriesIds:
         return API.show_not_found
 
     if len(seriesIds) > 1:
-        get_logger().warn( "Conflict with series title ID on TVdB" )
+        get_logger().warn("Conflict with series title ID on TVdB")
         for seriesName in seriesIdXml.findAll('seriesname'):
-            get_logger().info( "Alternate series: {}".format(seriesName.getText()) )
-
+            get_logger().info("Alternate series: {}".format(seriesName.getText()))
 
     seriesID = seriesIds[0].seriesid.getString()
     seriesIdXml.close()
@@ -61,13 +60,12 @@ def poll(title):
     #2) Get base info zip file
     infoLoc = "http://www.thetvdb.com/api/{0}/series/{1}/all/en.zip".format(API_KEY, seriesID)
     infoFileDesc = API.get_url_descriptor(infoLoc)
-    if infoFileDesc is None: 
+    if infoFileDesc is None:
         return API.show_not_found
 
     tempZip = API.temporary_file(suffix='.zip')
     tempZip.seek(0)
     tempZip.write(infoFileDesc.content)
-
 
     with zipfile.ZipFile(tempZip) as z:
         if 'en.xml' not in z.namelist():
@@ -75,12 +73,12 @@ def poll(title):
             return API.show_not_found
 
         with z.open('en.xml') as d:
-            soup = Soup( d, convertEntities=Soup.HTML_ENTITIES )
+            soup = Soup(d, convertEntities=Soup.HTML_ENTITIES)
 
     #3) Now we have the xml data in the soup variable, just populate the list
     count = 1
     eps = []
-    
+
     for data in soup.findAll('episode'):
         name = data.episodename.getText()
         season = int(data.seasonnumber.getText())
@@ -90,12 +88,12 @@ def poll(title):
             get_logger().error("The name pulled from TvDB appears to be empty")
             continue
 
-        if int(season) < 1: 
+        if int(season) < 1:
             continue
 
         eps.append(Episode(name, num, season, count))
         count += 1
-        
+
     soup.close()
     tempZip.close()
 

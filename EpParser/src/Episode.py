@@ -35,10 +35,16 @@ class Show(object):
         Add episodes to the shows episode list
         """
         if eps:
+            specials = filter(lambda x: isinstance(x, Special), eps)
+            offset = -len(specials)
+            eps = eps[:offset]  # Split the specials and episodes
+
             self.episodeList = eps
             self.numSeasons = eps[-1].season
             self.maxEpisodeNumber = max(x.episodeNumber for x in eps)
             self.numEpisodes = len(eps)
+
+            self.specialsList = specials
 
             for s in xrange(self.numSeasons + 1):
                 # Split each seasons episodes into it's own separate list and index it
@@ -97,6 +103,16 @@ class Episode(object):
         self.episode_file = None
 
 
+class Special(object):
+    """
+    Container class for Specials/Movies/OVAs
+    """
+    def __init__(self, title, num, type):
+        self.title = title
+        self.num = int(num)
+        self.type = type
+
+
 class EpisodeFile(object):
     """
     Represents a TV show file.  Used for renaming purposes
@@ -112,6 +128,7 @@ class EpisodeFile(object):
         self.name = Utils.encode(os.path.split(self.path)[1])
         self.new_name = ""
         self.given_checksum = checksum
+        self.verified = False
 
     def crc32(self):
         """
@@ -122,15 +139,19 @@ class EpisodeFile(object):
             for line in f:
                 checksum = zlib.crc32(line, checksum)
 
-        return hex(checksum & 0xFFFFFFFF)
+        return checksum & 0xFFFFFFFF
 
-    def compare_sums(self):
+    def verify_integrity(self):
         """
         Compares the checksum in the filename to the calculated one
         """
-        if self.given_checksum:
-            return self.given_checksum == self.crc32()
+        if self.verified:
+            return True
 
+        if self.given_checksum > 0:
+            if self.given_checksum == self.crc32():
+                self.verified = True
+                return True
         return False
 
 
@@ -297,7 +318,10 @@ class EpisodeFormatter(object):
 
             if hasattr(ep.episode_file, 'crc32'):
                 # To remove the 0x from the hex string
-                return str(ep.episode_file.crc32())[2:]
+                checksum = hex(ep.episode_file.crc32())[2:]
+                if checksum.endswith('L'):
+                    checksum = checksum.replace('L', '')
+                return checksum
 
         else:
             # If it reaches this case it's most likely an invalid tag

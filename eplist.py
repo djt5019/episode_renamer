@@ -64,6 +64,9 @@ def main():
     cmd.add_argument('--update-db', action="store_true",
         help="Update the AniDB titles file, limit this to once a day since it's large")
 
+    cmd.add_argument('--verify', action="store_true",
+        help="Verify the checksums in the filename if they are present")
+
     group = cmd.add_mutually_exclusive_group()
 
     group.add_argument('-r', '--rename', dest='pathname', metavar="PATH",
@@ -79,6 +82,7 @@ def main():
         print args.title
 
     Settings['verbose'] = False
+
     if args.verbose:
         Settings['verbose'] = True
         from logging import NOTSET
@@ -90,20 +94,9 @@ def main():
         exit(gui.main())
 
     if args.update_db:
-        one_unix_day = 24 * 60 * 60
+        update_db()
 
-        def _download():
-            with API.open_file_in_resources(Settings['anidb_db_file'], 'w') as f:
-                url = API.get_url_descriptor(Settings['anidb_db_url'])
-                f.write(url.content)
-
-        if not API.file_exists_in_resources(Settings['anidb_db_file']):
-            _download()
-        elif API.able_to_poll('db_download', one_unix_day):
-            _download()
-        else:
-            get_logger().error("Attempting to download the database file multiple times today")
-
+    Settings['path'] = args.pathname
     rename = args.pathname is not None
 
     if rename and not os.path.exists(args.pathname):
@@ -144,6 +137,7 @@ def main():
         for e in show.episodeList:
             if e.episode_file:
                 files.append((e.episode_file.name, e.episode_file.new_name))
+
         print_renamed_files(files)
         errors = Utils.rename(files)
         if not errors:
@@ -166,6 +160,52 @@ def main():
 
         print show.formatter.display(eps).encode(sys.getdefaultencoding(), 'ignore')
         curr_season = eps.season
+
+    if args.verify:
+        verify_files(show)
+
+
+def update_db():
+        one_unix_day = 24 * 60 * 60
+
+        def _download():
+            with API.open_file_in_resources(Settings['anidb_db_file'], 'w') as f:
+                get_logger().info("Retrieving AniDB Database file")
+                url = API.get_url_descriptor(Settings['anidb_db_url'])
+
+                f.write(url.content)
+
+        if not API.file_exists_in_resources(Settings['anidb_db_file']):
+            _download()
+        elif API.able_to_poll('db_download', one_unix_day):
+            _download()
+        else:
+            get_logger().error("Attempting to download the database file multiple times today")
+
+
+def verify_files(show):
+    if not show:
+        return
+
+    episode_files = show.episodeList
+    path = Settings.get('path', os.getcwd())
+    if not all([e.episode_file for e in episode_files]):
+        Utils.prepare_filenames(path, show)
+
+    for f in episode_files:
+        if not f.episode_file:
+            continue
+
+        ep_file = f.episode_file
+
+        if ep_file.given_checksum < 0:
+            get_logger().warn("Episode {} dosen't have a checksum to compare to".format(ep_file.name))
+            continue
+
+        if ep_file.verify_integrity():
+            print("Episode {} has passed verification".format(ep_file.name))
+        else:
+            print("Episode {} has failed verification".format(ep_file.name))
 
 
 def print_renamed_files(files):

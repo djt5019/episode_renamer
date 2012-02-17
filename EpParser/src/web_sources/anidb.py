@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-__author__='Dan Tracy'
-__email__='djt5019 at gmail dot com'
+__author__ = 'Dan Tracy'
+__email__ = 'djt5019 at gmail dot com'
 
 import difflib
 
@@ -13,6 +13,7 @@ from string import punctuation as punct
 import EpParser.src.Source_Poll_API as API
 
 priority = 2
+
 
 def _parse_local(title):
     """
@@ -43,13 +44,14 @@ def _parse_local(title):
             ratio = sequence.ratio()
 
             if ratio > .80:
-                guesses.append( (ratio, res.group('aid'), foundTitle) )
+                guesses.append((ratio, res.group('aid'), foundTitle))
 
     if guesses:
         _, aid, name = max(guesses)
         Logger.get_logger().error("Closest show to '{}' is {} with id {}".format(title, name, aid))
 
     return -1
+
 
 def _connect_HTTP(aid):
     """
@@ -80,7 +82,7 @@ def _connect_HTTP(aid):
             continue
 
         epNum = int(e.epno.getText())
-        title = e.find('title', {'xml:lang':'en'})
+        title = e.find('title', {'xml:lang': 'en'})
         title = title.getText()
         epList.append(Episode.Episode(API.encode(title), epNum, -1, epNum))
 
@@ -89,7 +91,7 @@ def _connect_HTTP(aid):
 
 def poll(title=""):
     aid = _parse_local(title.lower())
-    
+
     if aid < 0:
         return API.show_not_found
 

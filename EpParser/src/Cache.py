@@ -7,7 +7,7 @@ import datetime
 import sqlite3
 import atexit
 
-from Episode import Episode
+from Episode import Episode, Special
 from Constants import RESOURCE_PATH
 from Logger import get_logger
 from Settings import Settings
@@ -102,6 +102,28 @@ class Cache(object):
             show = (showId, eps.title, eps.season, eps.episodeNumber,)
             self.cursor.execute(
                 "INSERT INTO episodes values (NULL, ?, ?, ?, ?)", show)
+
+    def get_specials(self, specialId):
+        mid = (specialId, )
+        self.cursor.execute(
+            "SELECT title, shownumber, type FROM episodes\
+            WHERE mid=?", mid)
+
+        result = self.cursor.fetchall()
+        eps = []
+
+        if result is not None:
+            eps = [Special(*episode) for episode in result]
+
+        return eps
+
+    def add_specials(self, showTitle, episodes):
+        showId = self.get_showId(showTitle)
+
+        for eps in episodes:
+            show = (showId, eps.title, eps.episodeNumber, eps.type)
+            self.cursor.execute(
+                "INSERT INTO specials values (NULL, ?, ?, ?, ?)", show)
 
     def remove_show(self, sid):
         """Removes show and episodes matching the show id """

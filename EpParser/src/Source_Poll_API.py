@@ -13,6 +13,7 @@ import time as time_
 
 import Constants
 import Utils
+import Exceptions
 
 from os import path as path_
 from tempfile import TemporaryFile as TemporaryFile_
@@ -44,7 +45,7 @@ def able_to_poll(site, delay=None):
         Settings['access_dict'][site] = now
         return True
 
-    raise API_FloodException()
+    return False
 
 
 def open_file_in_resources(name, mode='r'):
@@ -60,7 +61,7 @@ def open_file_in_resources(name, mode='r'):
     if file_exists_in_resources(name):
         return open(name, mode)
 
-    raise API_FileNotFoundException()
+    raise Exceptions.API_FileNotFoundException()
 
 
 def file_exists_in_resources(name):
@@ -126,15 +127,3 @@ def load_last_access_times():
     Load the access times dictionary from the file in resource path
     """
     return Utils.load_last_access_times()
-
-
-class API_Exception(Exception):
-    pass
-
-
-class API_FileNotFoundException(API_Exception):
-    pass
-
-
-class API_FloodException(API_Exception):
-    pass

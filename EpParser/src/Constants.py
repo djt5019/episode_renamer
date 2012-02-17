@@ -15,7 +15,7 @@ PROJECT_SOURCE_PATH = os.path.join(PROJECT_PATH, 'src')
 WEB_SOURCES_PATH = os.path.join(PROJECT_SOURCE_PATH, 'web_sources')
 
 SHOW_NOT_FOUND = []
-
+regexList = []
 
 ## Common video naming formats, will be compiled if they are needed during episode renaming
 ## in the _compile_regexs function, otherwise they will not be compiled for simple episode
@@ -29,7 +29,7 @@ _REGEX_VARS = {
 'season': r'(s|season)?{sep}+(?P<season>\d+)',
 'series': r'(?P<series>.*)',
 'subgroup': r'(\[.*\])',
-'special': r'(?P<type>op|ed|ova|ona|extra|special|movie|dvd|bluray){sep}*(?P<special>\d+)',
+'special': r'(?P<type>op|ed|ova|ona|extra|special|movie|dvd|bluray){sep}+(?P<special>\d+)',
 }
 
 for k, v in _REGEX_VARS.iteritems():
@@ -52,8 +52,8 @@ REGEX = [
             r'^{series}{sep}+{year}?{sep}\[{season}X{episode}\]{sep}*{sum}?',
             r'^(?P<series>.*) - OVA (?P<special>\d+) - \w*',
             r'^{series}{sep}*{special}',
-            r'{series}{sep}+{episode}.*',  # More of a general catch-all regex, last resort
-            r'{series}{sep}*(op|ed){sep}*(?P<special>\d*){sep}*{sum}?',  # Show intro/outro music, just ignore them
+            r'{series}{sep}*{episode}',  # More of a general catch-all regex, last resort
+            r'{series}{sep}*(op|ed){sep}*(?P<special>\d*){sep}*{sum}?',  # Show intro /outro music, just ignore them
             ]
 
 ## Substitute the dictionary variables in to the unformated regexes (is the plural of regex, regexes?)

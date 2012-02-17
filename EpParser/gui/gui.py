@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #!/usr/bin/env python
-__author__='Dan Tracy'
-__email__='djt5019 at gmail dot com'
+__author__ = 'Dan Tracy'
+__email__ = 'djt5019 at gmail dot com'
 
 import os
 from PySide import QtGui, QtCore
@@ -167,7 +167,7 @@ class Form(QtGui.QWidget):
         self.renameDir = newDir
         self.dirList.clear()
 
-        for f in Utils.clean_filenames(self.renameDir).itervalues():
+        for f in Utils.clean_filenames(self.renameDir):
             self.dirList.addItem(f.name)
 
     def displayRenameDialog(self):

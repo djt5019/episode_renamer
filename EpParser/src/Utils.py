@@ -4,13 +4,9 @@ __email__ = 'djt5019 at gmail dot com'
 
 import os
 import re
-import threading
-import zlib
 import pickle
 import requests
 import requests.exceptions
-
-from itertools import ifilter
 
 import Constants
 import Episode
@@ -41,13 +37,14 @@ def is_valid_file(filename):
     """
     ext = os.path.splitext(filename)[1].lower()
 
-    if os.path.isfile(filename) and ext in Constants.VIDEO_EXTENSIONS:
-        return True
-    else:
-        return False
+    return os.path.isfile(filename) and ext in Constants.VIDEO_EXTENSIONS
 
 
+##############################
 ## Renaming utility functions
+##############################
+
+
 def clean_filenames(path):
     """
     Attempts to extract order information about the files passed
@@ -55,7 +52,7 @@ def clean_filenames(path):
     # Filter out anything that doesnt have the correct extension and
     # filter out any directories
     files = os.listdir(path)
-    files = ifilter(lambda x: is_valid_file(x), files)
+    files = filter(lambda x: is_valid_file(os.path.join(path, x)), files)
 
     if not files:
         get_logger().error("No video files were found in {}".format(path))
@@ -74,8 +71,7 @@ def clean_filenames(path):
             get_logger().info("Could not find file information for: {}".format(f))
             continue
 
-        if Settings['verbose']:
-            print g.groupdict()
+        get_logger().debug(g.groupdict())
 
         if 'special' in g.groupdict():
             continue
@@ -103,17 +99,14 @@ def clean_filenames(path):
     return cleanFiles
 
 
-regexList = []
-
-
 def _compile_regexs():
     """
     This function will only compile the regexs once.
     """
-    if not regexList:
+    if not Constants.regexList:
         for r in Constants.REGEX:
-            regexList.append(re.compile(r, re.I))
-    return regexList
+            Constants.regexList.append(re.compile(r, re.I))
+    return Constants.regexList
 
 
 def _search(filename):
@@ -174,14 +167,14 @@ def rename(files, resp=""):
     """
     Performs the actual renaming of the files, returns a list of file that weren't able to be renamed
     """
+    errors = []
     if resp == '':
         resp = raw_input("\nDo you wish to rename these files [y|N]: ").lower()
 
     if not resp.startswith('y'):
         get_logger().info("Changes were not committed to the files")
-        exit(0)
+        return errors
 
-    errors = []
     old_order = []
 
     for old, new in files:
@@ -200,24 +193,6 @@ def rename(files, resp=""):
         get_logger().info("Files were successfully renamed")
 
     return errors
-
-
-class Thread(threading.Thread):
-    """
-    Will most likely be removed later, the original idea was to have several
-    threads compute the crc32 data for files however it is currently as slow if
-    not slower than doing it sequentially
-    """
-    def __init__(self, filename):
-        super(Thread, self).__init__()
-        self.file = filename
-        self.sum = 0
-
-    def run(self):
-        with open(self.file, 'rb') as f:
-            for line in f:
-                self.sum += zlib.crc32(line, self.sum)
-        print self.sum
 
 
 def save_last_access_times():
@@ -273,7 +248,11 @@ def load_last_renamed_files():
     return pickle.loads(''.join(data))
 
 
+########################
 ## Text based functions
+#######################
+
+
 def remove_punctuation(title):
     """
     Remove any punctuation and whitespace from the title

@@ -17,7 +17,8 @@ def locate_show(title):
 
     sys.path.append(Constants.WEB_SOURCES_PATH)
     # This will import all the modules within the web_sources directory so that
-    # we can easily plug in new sources for finding episode information
+    # we can easily plug in new sources for finding episode information so long
+    # as they define a poll function
 
     for m in listdir(Constants.WEB_SOURCES_PATH):
         if m.endswith('.py') and not m.startswith('__'):
@@ -38,10 +39,6 @@ def locate_show(title):
 
     for source in modules:
         log().info("Polling {0}".format(source.__name__))
-
-        if not hasattr(source, 'poll'):
-            # Only use sources that have the poll method
-            continue
 
         episodes = source.poll(title)
 

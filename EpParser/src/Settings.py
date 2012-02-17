@@ -5,6 +5,8 @@ __email__ = 'djt5019 at gmail dot com'
 import os
 import Constants
 
+from Exceptions import SettingsException
+
 
 class _SettingsDict(dict):
     def __init__(self):
@@ -37,10 +39,5 @@ class _SettingsDict(dict):
 
                 opt, value = options
                 self[opt] = str(value)
-
-
-class SettingsException(Exception):
-    pass
-
 
 Settings = _SettingsDict()
