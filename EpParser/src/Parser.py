@@ -62,12 +62,7 @@ class EpParser(object):
     def _parseCacheData(self):
         """The query should return a positive show id otherwise
         it's not in the database"""
-        showId = self.cache.get_showId(self.show.properTitle)
-
-        if showId == -1:
-            return []
-
-        return self.cache.get_episodes(showId)
+        return self.cache.get_episodes(self.show.properTitle)
 
     def _parseHTMLData(self):
         """ Passes the sites contents through the regex to seperate episode

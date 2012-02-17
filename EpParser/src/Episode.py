@@ -36,8 +36,10 @@ class Show(object):
         """
         if eps:
             specials = filter(lambda x: isinstance(x, Special), eps)
-            offset = -len(specials)
-            eps = eps[:offset]  # Split the specials and episodes
+            offset = len(specials)
+
+            if offset > 0:
+                eps = eps[:-offset]  # Split the specials and episodes
 
             self.episodeList = eps
             self.numSeasons = eps[-1].season

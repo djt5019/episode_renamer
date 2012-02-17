@@ -46,48 +46,6 @@ class Cache(object):
         self.connection.close()
         get_logger().info("Connections have been closed")
 
-    def get_showId(self, showTitle):
-        """Returns the shows ID if found, -1 otherwise. If the show is more than
-        a week old update the show"""
-        title = (showTitle, )
-        self.cursor.execute("SELECT sid, time FROM shows WHERE title=? LIMIT 1", title)
-
-        result = self.cursor.fetchone()
-
-        if not result:
-            return -1
-
-        sid = int(result[0])
-        diffDays = (datetime.datetime.now() - result[1])
-
-        get_logger().info("{} days old".format(diffDays.days))
-
-        update_days = abs(int(Settings['db_update']))
-
-        if diffDays.days >= update_days:
-            #If the show is older than a week remove it then return not found
-            get_logger().warning("Show is older than a week, removing...")
-            self.remove_show(sid)
-            return -1
-        else:
-            return sid
-
-    def get_episodes(self, showId):
-        """Returns the episodes associated with the show id"""
-        sid = (showId, )
-        self.cursor.execute(
-            "SELECT eptitle, shownumber, season FROM episodes\
-            WHERE sid=?", sid)
-
-        result = self.cursor.fetchall()
-        eps = []
-
-        if result is not None:
-            for count, episode in enumerate(result, start=1):
-                eps.append(Episode(episode[0], episode[1], episode[2], count))
-
-        return eps
-
     def add_show(self, showTitle, episodes):
         """ If we find a show on the internet that is not in our database
         we can use this function to add it into our database for the future"""
@@ -103,14 +61,52 @@ class Cache(object):
             self.cursor.execute(
                 "INSERT INTO episodes values (NULL, ?, ?, ?, ?)", show)
 
-    def get_specials(self, specialId):
-        mid = (specialId, )
+    def remove_show(self, sid):
+        """Removes show and episodes matching the show id """
+        self.cursor.execute("DELETE from SHOWS where sid=?", (sid,))
+        self.cursor.execute("DELETE from EPISODES where sid=?", (sid,))
+
+    def get_episodes(self, showTitle):
+        """Returns the episodes associated with the show id"""
+        title = (showTitle, )
         self.cursor.execute(
-            "SELECT title, shownumber, type FROM episodes\
-            WHERE mid=?", mid)
+            """SELECT eptitle, season, showNumber, shows.sid, shows.time
+               FROM episodes INNER JOIN shows
+               ON shows.sid=episodes.sid AND shows.title=?""", title)
 
         result = self.cursor.fetchall()
         eps = []
+
+        if not result:
+            return eps
+
+        diffDays = (datetime.datetime.now() - result[0][-1])
+
+        get_logger().info("{} days old".format(diffDays.days))
+
+        update_days = abs(int(Settings['db_update']))
+
+        if diffDays.days >= update_days:
+            #If the show is older than a week remove it then return not found
+            get_logger().warning("Show is older than a week, removing...")
+            sid = result[0][-2]
+            self.remove_show(sid)
+            return eps
+
+        for count, episode in enumerate(result, start=1):
+            eps.append(Episode(episode[0], episode[1], episode[2], count))
+
+        return eps
+
+    def get_specials(self, specialId):
+        """ Returns a list of Special episode objects """
+        mid = (specialId, )
+        self.cursor.execute(
+            """SELECT title, showNumber, type
+               FROM specials INNER JOIN shows
+               ON specials.sid=shows.sid AND shows.title=?""", mid)
+
+        result = self.cursor.fetchall()
 
         if result is not None:
             eps = [Special(*episode) for episode in result]
@@ -118,14 +114,10 @@ class Cache(object):
         return eps
 
     def add_specials(self, showTitle, episodes):
+        """ Add a list of special episode objects """
         showId = self.get_showId(showTitle)
 
         for eps in episodes:
             show = (showId, eps.title, eps.episodeNumber, eps.type)
             self.cursor.execute(
                 "INSERT INTO specials values (NULL, ?, ?, ?, ?)", show)
-
-    def remove_show(self, sid):
-        """Removes show and episodes matching the show id """
-        self.cursor.execute("DELETE from SHOWS where sid=?", (sid,))
-        self.cursor.execute("DELETE from EPISODES where sid=?", (sid,))
