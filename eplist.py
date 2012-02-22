@@ -29,18 +29,10 @@ from EpParser.src.Settings import Settings
 
 
 def main():
-    if '-u' in sys.argv or '--undo-rename' in sys.argv:
-        files = Utils.load_last_renamed_files()
-        print_renamed_files(files)
-        errors = Utils.rename(files)
-        if not errors:
-            print "All files were successfully renamed"
-        exit(0)
-
     cmd = argparse.ArgumentParser(description="Renames your TV shows",
                                   prog='eplist', usage='%(prog)s [options] title')
 
-    cmd.add_argument('title',
+    cmd.add_argument('title', default="", nargs='?',
         help="The title of the show")
 
     cmd.add_argument('-d', '--display-header', action="store_true",
@@ -96,11 +88,23 @@ def main():
     if args.update_db:
         update_db()
 
+    if args.undo_rename:
+        files = Utils.load_last_renamed_files()
+        print_renamed_files(files)
+        errors = Utils.rename(files)
+        if not errors:
+            print "All files were successfully renamed"
+        exit(0)
+
     Settings['path'] = args.pathname
     rename = args.pathname is not None
 
     if rename and not os.path.exists(args.pathname):
         exit("ERROR - Path provided does not exist")
+
+    if not args.title:
+        cmd.print_usage()
+        exit(1)
 
     cache = Cache(Settings['db_name'])
     episodeParser = Parser(args.title, cache)
@@ -135,8 +139,10 @@ def main():
         Utils.prepare_filenames(args.pathname, show)
         files = []
         for e in show.episodeList:
-            if e.episode_file:
-                files.append((e.episode_file.name, e.episode_file.new_name))
+            if e.episode_file and e.episode_file.new_name:
+                old = os.path.join(args.pathname, e.episode_file.name)
+                new = os.path.join(args.pathname, e.episode_file.new_name)
+                files.append((old, new))
 
         print_renamed_files(files)
         errors = Utils.rename(files)
@@ -174,6 +180,7 @@ def update_db():
                 url = API.get_url_descriptor(Settings['anidb_db_url'])
 
                 f.write(url.content)
+            get_logger().info("Successfully downloaded the new database")
 
         if not API.file_exists_in_resources(Settings['anidb_db_file']):
             _download()

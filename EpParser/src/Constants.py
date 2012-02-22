@@ -25,7 +25,7 @@ _REGEX_VARS = {
 'sep': r'[\-\~\.\_\s]',
 'sum': r'(.*[\[\(](?P<sum>[a-z0-9]{8})[\]\)])',
 'year': r'(:P<year>(19|20)?\d\d)',
-'episode': r'(e|episode)?{sep}+(?P<episode>\d+)(?:v\d)?',  # ex: e3v2
+'episode': r'(e|ep|episode)?{sep}+(?P<episode>\d+)(?:v\d)?',  # ex: e3v2
 'season': r'(s|season)?{sep}+(?P<season>\d+)',
 'series': r'(?P<series>.*)',
 'subgroup': r'(\[.*\])',

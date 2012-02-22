@@ -136,6 +136,7 @@ class EpisodeFile(object):
         """
         Calculate the CRC32 checksum for a file, painfully slow
         """
+        Logger.get_logger().info("calculating CRC for {}".format(os.path.split(self.path)[1]))
         with open(self.path, 'rb') as f:
             checksum = 0
             for line in f:

@@ -142,6 +142,8 @@ def prepare_filenames(path, show):
             get_logger().warning("Could not find an episode for {}".format(f.name))
             continue
 
+        episode.episode_file = f
+
         fileName = encode(f.name)
         newName = replace_invalid_path_chars(show.formatter.display(episode) + f.ext)
 
@@ -150,12 +152,13 @@ def prepare_filenames(path, show):
             sameCount += 1
             continue
 
+        episode.episode_file.new_name = newName
+
         name = os.path.join(path, newName)
         if len(name) > 256:
-            get_logger().error('The filename "{}" may be too long to rename'.format(newName))
-
-        episode.episode_file = f
-        episode.episode_file.new_name = newName
+            get_logger().error('The filename "{}" may be too long to rename, truncating'.format(newName))
+            offset = 255 - len(f.ext)
+            name = name[:offset]
 
     if sameCount > 0:
         msg = "1 file" if sameCount == 1 else "{} files".format(sameCount)
