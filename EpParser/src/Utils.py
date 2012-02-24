@@ -48,7 +48,7 @@ def extract_file_info(episode_filename):
     result = regex_search(episode_filename)
     info_dict = {}
 
-    if not result:
+    if not result or 'junk' in result.groupdict():
         get_logger().info("Could not find file information for: {}".format(episode_filename))
         return info_dict
 
