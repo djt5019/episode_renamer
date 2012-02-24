@@ -78,13 +78,24 @@ def _connect_HTTP(aid):
     epList = []
 
     for e in episodes:
-        if e.epno.attrs[0][1] != '1':
+        # 1 is a normal episode, 2 is a special
+        ep_type = e.epno.attrs[0][1]
+        if ep_type not in ('1', '2'):
             continue
 
-        epNum = int(e.epno.getText())
+        # Hacky way to skip over interviews and the like
+        if not e.find('rating'):
+            continue
+
         title = e.find('title', {'xml:lang': 'en'})
         title = title.getText()
-        epList.append(Episode.Episode(API.encode(title), epNum, -1, epNum))
+
+        if ep_type == '1':
+            epNum = int(e.epno.getText())
+            epList.append(Episode.Episode(API.encode(title), epNum, -1, epNum))
+        else:
+            epNum = int(e.epno.getText()[1:])
+            epList.append(Episode.Special(API.encode(title), epNum, 'OVA'))
 
     return epList
 

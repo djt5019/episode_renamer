@@ -44,10 +44,33 @@ def is_valid_file(filename):
 ## Renaming utility functions
 ##############################
 
+def extract_file_info(episode_filename):
+    result = regex_search(episode_filename)
+    info_dict = {}
+
+    if not result:
+        get_logger().info("Could not find file information for: {}".format(episode_filename))
+        return info_dict
+
+    res_dict = result.groupdict()
+    get_logger().debug(res_dict)
+
+    if 'special' in result.groupdict():
+        info_dict['special_number'] = int(res_dict['special'])
+        info_dict['special_type'] = res_dict.get('type', 'OVA')
+    else:
+        info_dict['episode_number'] = int(res_dict['episode'])
+        info_dict['season'] = int(res_dict.get('season', -1))
+
+    info_dict['checksum'] = int(res_dict.get('sum', '0'), base=16)
+
+    return info_dict
+
 
 def clean_filenames(path):
     """
     Attempts to extract order information about the files passed
+    returns: list of EpisodeFiles
     """
     # Filter out anything that doesnt have the correct extension and
     # filter out any directories
@@ -63,32 +86,12 @@ def clean_filenames(path):
     # We are going to store the episode number and path in a tuple then sort on the
     # episodes number.  Special episodes will be appended to the end of the clean list
     for f in files:
-        g = _search(f)
-        checksum = 0
-        season = -1
+        info = extract_file_info(f)
 
-        if not g:
-            get_logger().info("Could not find file information for: {}".format(f))
+        if not info:
             continue
 
-        get_logger().debug(g.groupdict())
-
-        if 'special' in g.groupdict():
-            continue
-
-        index = int(g.group('episode'))
-
-        if 'sum' in g.groupdict():
-            checksum = g.group('sum')
-            if checksum:
-                checksum = int(checksum, base=16)
-            else:
-                checksum = 0x0
-
-        if 'season' in g.groupdict():
-            season = int(g.group('season'))
-
-        cleanFiles.append(Episode.EpisodeFile(os.path.join(path, f), index, season, checksum))
+        cleanFiles.append(Episode.EpisodeFile(os.path.join(path, f), **info))
 
     if not cleanFiles:
         get_logger().error("The files could not be matched")
@@ -109,7 +112,7 @@ def _compile_regexs():
     return Constants.regexList
 
 
-def _search(filename):
+def regex_search(filename):
     """
     Compare the filename to each of the regular expressions for a match
     """
@@ -136,7 +139,14 @@ def prepare_filenames(path, show):
         return
 
     for f in files:
-        episode = show.get_episode(f.season, f.episode)
+
+        if f.is_ova:
+            episode = show.get_special(f.special_number)
+        else:
+            episode = show.get_episode(f.season, f.episode_number)
+
+        if f.episode_number > show.maxEpisodeNumber:
+            episode = show.get_special(f.episode_number - show.maxEpisodeNumber)
 
         if not episode:
             get_logger().warning("Could not find an episode for {}".format(f.name))
@@ -158,7 +168,7 @@ def prepare_filenames(path, show):
         if len(name) > 256:
             get_logger().error('The filename "{}" may be too long to rename, truncating'.format(newName))
             offset = 255 - len(f.ext)
-            name = name[:offset]
+            name = name[:offset] + f.ext
 
     if sameCount > 0:
         msg = "1 file" if sameCount == 1 else "{} files".format(sameCount)

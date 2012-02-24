@@ -34,8 +34,10 @@ class EpParser(object):
         if self.show.title == '':
             return None
 
-        if self.cache is not None:
-            self.show.add_episodes(self._parseCacheData())
+        if self.cache:
+            (eps, specials) = self._parseCacheData()
+            self.show.add_episodes(eps)
+            self.show.add_specials(specials)
 
         # The show was found in the database
         if self.show.episodeList:
@@ -44,8 +46,9 @@ class EpParser(object):
 
         # The show was not in the database so now we try the website
         get_logger().info("Show not found in database, polling web")
-        eps = self._parseHTMLData()
+        eps, specials = self._parseHTMLData()
         self.show.add_episodes(eps)
+        self.show.add_specials(specials)
 
         if not self.show.episodeList:
             get_logger().error("Show was not found, check spelling and try again")
@@ -56,13 +59,16 @@ class EpParser(object):
         if self.cache is not None:
             get_logger().info("Adding show to the database")
             self.cache.add_show(self.show.properTitle, self.show.episodeList)
+            self.cache.add_specials(self.show.properTitle, self.show.specialsList)
 
         return self.show
 
     def _parseCacheData(self):
         """The query should return a positive show id otherwise
         it's not in the database"""
-        return self.cache.get_episodes(self.show.properTitle)
+        eps = self.cache.get_episodes(self.show.properTitle)
+        spc = self.cache.get_specials(self.show.properTitle)
+        return (eps, spc)
 
     def _parseHTMLData(self):
         """ Passes the sites contents through the regex to seperate episode

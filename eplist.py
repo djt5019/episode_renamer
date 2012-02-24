@@ -138,7 +138,7 @@ def main():
     if  rename:
         Utils.prepare_filenames(args.pathname, show)
         files = []
-        for e in show.episodeList:
+        for e in show.episodeList + show.specialsList:
             if e.episode_file and e.episode_file.new_name:
                 old = os.path.join(args.pathname, e.episode_file.name)
                 new = os.path.join(args.pathname, e.episode_file.new_name)
@@ -166,6 +166,9 @@ def main():
 
         print show.formatter.display(eps).encode(sys.getdefaultencoding(), 'ignore')
         curr_season = eps.season
+
+    for eps in show.specialsList:
+        print show.formatter.display(eps).encode(sys.getdefaultencoding(), 'ignore')
 
     if args.verify:
         verify_files(show)

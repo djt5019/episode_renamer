@@ -13,19 +13,48 @@ from Logger import get_logger
 from Settings import Settings
 
 
+_create_db_query = """
+PRAGMA foreign_keys = ON;
+
+CREATE TABLE shows (
+    sid INTEGER PRIMARY KEY,
+    title TEXT NOT NULL,
+    time TIMESTAMP
+);
+
+CREATE TABLE episodes (
+    eid INTEGER PRIMARY KEY,
+    sid INTEGER NOT NULL,
+    eptitle TEXT NOT NULL,
+    season INTEGER NOT NULL,
+    showNumber INTEGER NOT NULL,
+    FOREIGN KEY(sid) REFERENCES shows(sid)
+);
+
+CREATE TABLE specials(
+    mid INTEGER PRIMARY KEY,
+    sid INTEGER NOT NULL,
+    title TEXT NOT NULL,
+    showNumber INTEGER NOT NULL,
+    type TEXT NOT NULL,
+    FOREIGN KEY(sid) REFERENCES shows(sid)
+);
+
+"""
+
+
 class Cache(object):
     """ Our database logic class"""
     def __init__(self, dbName=u"episodes.db"):
         """Establish a connection to the show database"""
         if dbName != ':memory:':
             dbName = os.path.join(RESOURCE_PATH, dbName)
+
         try:
             if not os.path.exists(dbName) and dbName != ':memory:':
                 self.connection = sqlite3.connect(dbName, detect_types=sqlite3.PARSE_DECLTYPES)
-
-                with open(os.path.join(RESOURCE_PATH, 'createDB.sql'), 'r') as f:
-                    sql = f.read()
-                self.connection.executescript(sql)
+                get_logger().debug("Creating database: {}".format(dbName))
+                self.connection.executescript(_create_db_query)
             else:
                 self.connection = sqlite3.connect(dbName, detect_types=sqlite3.PARSE_DECLTYPES)
         except sqlite3.OperationalError as e:
@@ -38,6 +67,9 @@ class Cache(object):
             #Make sure everything is utf-8
             self.connection.text_factory = lambda x: unicode(x, 'utf-8')
             atexit.register(self.close)
+        else:
+            get_logger().critical("Unable to open a connection to the database")
+            raise sqlite3.OperationalError
 
     def close(self):
         """ Commits any changes to the database then closes connections to it"""
@@ -70,9 +102,9 @@ class Cache(object):
         """Returns the episodes associated with the show id"""
         title = (showTitle, )
         self.cursor.execute(
-            """SELECT eptitle, season, showNumber, shows.sid, shows.time
-               FROM episodes INNER JOIN shows
-               ON shows.sid=episodes.sid AND shows.title=?""", title)
+            """SELECT e.eptitle, e.showNumber,e.season, s.sid, s.time
+               FROM episodes AS e INNER JOIN shows AS s
+               ON s.sid=e.sid AND s.title=?""", title)
 
         result = self.cursor.fetchall()
         eps = []
@@ -98,13 +130,13 @@ class Cache(object):
 
         return eps
 
-    def get_specials(self, specialId):
+    def get_specials(self, showTitle):
         """ Returns a list of Special episode objects """
-        mid = (specialId, )
+        title = (showTitle, )
         self.cursor.execute(
-            """SELECT title, showNumber, type
-               FROM specials INNER JOIN shows
-               ON specials.sid=shows.sid AND shows.title=?""", mid)
+            """SELECT sp.title, sp.showNumber, sp.type
+               FROM specials AS sp INNER JOIN shows
+               ON sp.sid=shows.sid AND shows.title=?""", title)
 
         result = self.cursor.fetchall()
 
@@ -115,9 +147,13 @@ class Cache(object):
 
     def add_specials(self, showTitle, episodes):
         """ Add a list of special episode objects """
-        showId = self.get_showId(showTitle)
+        query = """
+        INSERT INTO specials (mid,  sid, title, showNumber, type)
+        SELECT NULL, sid, ?, ?, ?
+        FROM shows
+        WHERE shows.title=?
+        """
 
         for eps in episodes:
-            show = (showId, eps.title, eps.episodeNumber, eps.type)
-            self.cursor.execute(
-                "INSERT INTO specials values (NULL, ?, ?, ?, ?)", show)
+            show = (eps.title, eps.num, eps.type, showTitle)
+            self.cursor.execute(query, show)

@@ -25,14 +25,14 @@ pattern = r"""
             $			            # End of line
             """
 
-    
+
 def poll(title):
     cleanTitle = API.prepare_title(title)
     episodes = []
     url = "http://www.epguides.com/{0}".format(cleanTitle)
     fd = API.get_url_descriptor(url)
 
-    if fd is None: 
+    if fd is None:
         return API.show_not_found
 
     regex = API.regex_compile(pattern)
@@ -45,11 +45,11 @@ def poll(title):
             episode = info.group('episode')
             season = int(info.group('season'))
             name = API.regex_sub('<.*?>', '', name).strip()
-            
+
             if name == "TBA":
                 continue
 
             episodes.append( Episode(name, episode, season, count) )
             count += 1
-            
+
     return episodes
