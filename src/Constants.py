@@ -2,17 +2,15 @@
 __author__ = 'Dan Tracy'
 __email__ = 'djt5019 at gmail dot com'
 
-import os
-
-from EpParser import __file__ as file_path
+from os.path import split, join
 
 VIDEO_EXTENSIONS = ['.mkv', '.ogm', '.asf', '.asx', '.avi', '.flv', '.mov', '.mp4', '.mpg', '.rm', '.swf', '.vob',
                     '.wmv', '.mpeg']
 
-PROJECT_PATH = os.path.abspath(os.path.dirname(file_path))
-RESOURCE_PATH = os.path.join(PROJECT_PATH, 'resources')
-PROJECT_SOURCE_PATH = os.path.join(PROJECT_PATH, 'src')
-WEB_SOURCES_PATH = os.path.join(PROJECT_SOURCE_PATH, 'web_sources')
+PROJECT_SOURCE_PATH = split(__file__)[0]
+PROJECT_PATH = split(PROJECT_SOURCE_PATH)[0]
+RESOURCE_PATH = join(PROJECT_PATH, 'resources')
+WEB_SOURCES_PATH = join(PROJECT_SOURCE_PATH, 'web_sources')
 
 SHOW_NOT_FOUND = []
 regexList = []

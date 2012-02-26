@@ -18,14 +18,14 @@ import argparse
 import os
 import sys
 
-import EpParser.src.Utils as Utils
-import EpParser.src.Episode as Episode
-import EpParser.src.Source_Poll_API as API
+import src.Utils as Utils
+import src.Episode as Episode
+import src.Source_Poll_API as API
 
-from EpParser.src.Parser import EpParser as Parser
-from EpParser.src.Cache import Cache
-from EpParser.src.Logger import get_logger
-from EpParser.src.Settings import Settings
+from src.Parser import Parser
+from src.Cache import Cache
+from src.Logger import get_logger
+from src.Settings import Settings
 
 
 def main():

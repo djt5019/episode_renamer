@@ -4,13 +4,16 @@ __email__ = 'djt5019 at gmail dot com'
 
 import difflib
 
-import EpParser.src.Episode as Episode
-import EpParser.src.Logger as Logger
-
-from BeautifulSoup import BeautifulStoneSoup as Soup
 from string import punctuation as punct
 
-import EpParser.src.Source_Poll_API as API
+import src.Episode as Episode
+import src.Logger as Logger
+import src.Source_Poll_API as API
+
+try:
+    from BeautifulSoup import BeautifulStoneSoup as Soup
+except ImportError:
+    Logger.get_logger().critical(u"Error: BeautifulSoup was not found, unable to parse AniDB")
 
 priority = 2
 
@@ -101,6 +104,11 @@ def _connect_HTTP(aid):
 
 
 def poll(title=""):
+    try:
+        Soup
+    except NameError:
+        return API.show_not_found
+
     aid = _parse_local(title.lower())
 
     if aid < 0:

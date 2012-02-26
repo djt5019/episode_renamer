@@ -9,7 +9,7 @@ from Episode import Show
 from Logger import get_logger
 
 
-class EpParser(object):
+class Parser(object):
     """The main parser will poll the internet as well as a database
     looking for the show by using the parseData() function"""
 

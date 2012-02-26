@@ -56,8 +56,6 @@ def locate_show(title):
         log().info("Unable to locate the show: " + title)
         return (eps, specials)
 
-    print episodes
-
     for e in episodes:
         if isinstance(e, Special):
             specials.append(e)

@@ -6,14 +6,14 @@ __email__ = 'djt5019 at gmail dot com'
 import os
 from PySide import QtGui, QtCore
 
-from src.Parser import EpParser
+from src.Parser import Parser
 from src.Episode import Show, EpisodeFormatter
 from src.Cache import Cache
 from src.Logger import get_logger
 import src.Utils as Utils
 
 cache = Cache()
-parser = EpParser(cache=cache)
+parser = Parser(cache=cache)
 logger = get_logger()
 
 

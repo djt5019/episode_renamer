@@ -12,7 +12,7 @@ import Utils
 import Constants
 import Logger
 
-from EpParser.src.Settings import Settings
+from Settings import Settings
 
 
 class Show(object):

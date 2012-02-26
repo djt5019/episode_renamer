@@ -6,18 +6,16 @@ import zipfile
 
 from urllib import quote_plus
 
-import EpParser.src.Source_Poll_API as API
+import src.Source_Poll_API as API
 
-from EpParser.src.Logger import get_logger
-from EpParser.src.Episode import Episode
-from EpParser.src.Settings import Settings
+from src.Logger import get_logger
+from src.Episode import Episode
+from src.Settings import Settings
 
 try:
     from BeautifulSoup import BeautifulStoneSoup as Soup
 except ImportError:
     get_logger().critical(u"Error: BeautifulSoup was not found, unable to parse theTVdb")
-    Soup = None
-    pass
 
 priority = 1
 
@@ -30,7 +28,9 @@ def poll(title):
         get_logger().warn("The TvDB Api key was not found, unable to poll the TvDB")
         return API.show_not_found
 
-    if Soup is None:
+    try:
+        Soup
+    except NameError:
         return API.show_not_found
 
     cleanTitle = quote_plus(title)
