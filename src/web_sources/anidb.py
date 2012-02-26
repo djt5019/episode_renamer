@@ -15,7 +15,7 @@ try:
 except ImportError:
     Logger.get_logger().critical(u"Error: BeautifulSoup was not found, unable to parse AniDB")
 
-priority = 2
+priority = 3
 
 
 def _parse_local(title):

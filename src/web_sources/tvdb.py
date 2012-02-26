@@ -9,7 +9,7 @@ from urllib import quote_plus
 import src.Source_Poll_API as API
 
 from src.Logger import get_logger
-from src.Episode import Episode
+from src.Episode import Episode, Special
 from src.Settings import Settings
 from src.Exceptions import SettingsException
 
@@ -86,13 +86,17 @@ def poll(title):
         num = int(data.episodenumber.getText())
 
         if name == "":
-            get_logger().error("The name pulled from TvDB appears to be empty")
+            get_logger().info("The name pulled from TvDB appears to be empty")
             continue
 
-        if int(season) < 1:
+        if 'commentary' in name.lower():
             continue
 
-        eps.append(Episode(name, num, season, count))
+        if int(season) > 0:
+            eps.append(Episode(name, num, season, count))
+        else:
+            eps.append(Special(name, num, 'OVA'))
+
         count += 1
 
     soup.close()

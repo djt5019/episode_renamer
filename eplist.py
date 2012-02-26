@@ -77,18 +77,18 @@ def main():
     args = cmd.parse_args()
 
     if args.generate_config:
-        print generate_default_config()
+        generate_default_config()
 
     if args.delete_cache:
         try:
             os.remove(os.path.join(Constants.RESOURCE_PATH, Settings['db_name']))
         except Exception as e:
-            print e
+            get_logger().warning(e)
             exit(1)
 
     if args.title in ('-', '.', 'pwd'):
         args.title = os.path.split(os.getcwd())[1]  # If a dash is entered use the current basename of the path
-        print args.title
+        print "Searching for {}".format(args.title)
 
     Settings['verbose'] = False
 
@@ -171,6 +171,7 @@ def main():
     if args.display_header or args.verbose:
         print "\nShow: {0}".format(args.title)
         print "Number of episodes: {0}".format(len(show.episodeList))
+        print "Number of specials: {0}".format(len(show.specialsList))
         print "Number of seasons: {0}".format(show.episodeList[-1].season)
         print "-" * 30
 
@@ -183,6 +184,10 @@ def main():
 
         print show.formatter.display(eps).encode(sys.getdefaultencoding(), 'ignore')
         curr_season = eps.season
+
+    if args.display_header:
+        print "\nSpecials"
+        print "---------"
 
     for eps in show.specialsList:
         print show.formatter.display(eps).encode(sys.getdefaultencoding(), 'ignore')

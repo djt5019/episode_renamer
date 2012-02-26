@@ -6,6 +6,8 @@ import src.Source_Poll_API as API
 
 from src.Episode import Episode
 
+priority = 2
+
 pattern = r"""
             ^		                # Start of the string
             (?:[\s]*?[\d]*\.?)	    # Number on list
