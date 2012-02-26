@@ -11,6 +11,7 @@ import src.Source_Poll_API as API
 from src.Logger import get_logger
 from src.Episode import Episode
 from src.Settings import Settings
+from src.Exceptions import SettingsException
 
 try:
     from BeautifulSoup import BeautifulStoneSoup as Soup
@@ -21,11 +22,11 @@ priority = 1
 
 
 def poll(title):
-    if API.file_exists_in_resources(Settings['tvdb_key']):
-        with API.open_file_in_resources(Settings['tvdb_key']) as f:
-            API_KEY = f.readline().strip()
-    else:
+    try:
+        API_KEY = Settings['tvdb_key']
+    except SettingsException as e:
         get_logger().warn("The TvDB Api key was not found, unable to poll the TvDB")
+        get_logger().warn(e)
         return API.show_not_found
 
     try:

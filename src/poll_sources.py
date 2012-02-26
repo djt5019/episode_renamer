@@ -27,10 +27,16 @@ def locate_show(title):
     for m in listdir(Constants.WEB_SOURCES_PATH):
         if m.endswith('.py') and not m.startswith('__'):
             log().info("Importing web resource {}".format(m[:-3]))
+
             x = __import__(m[:-3])
             if not hasattr(x, 'poll'):
-                log().error("Module {} doesn't have a poll method defined: defaulting to level 0".format(m))
+                log().error("Module {} doesn't have a poll method defined, ignoring module".format(m))
+                continue
+
+            if not hasattr(x, 'priority'):
+                log().error("Module {} doesn't have a priority defined, defaulting to 0".format(m))
                 x.priority = 0
+
             modules.append(x)
 
     # If the modules have a poll priority we will respect it

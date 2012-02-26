@@ -21,11 +21,12 @@ import sys
 import src.Utils as Utils
 import src.Episode as Episode
 import src.Source_Poll_API as API
+import src.Constants as Constants
 
 from src.Parser import Parser
 from src.Cache import Cache
 from src.Logger import get_logger
-from src.Settings import Settings
+from src.Settings import Settings, generate_default_config
 
 
 def main():
@@ -53,12 +54,6 @@ def main():
     cmd.add_argument('-g', '--gui-enabled', action="store_true",
         help="Use the gui rather than the command line")
 
-    cmd.add_argument('--update-db', action="store_true",
-        help="Update the AniDB titles file, limit this to once a day since it's large")
-
-    cmd.add_argument('--verify', action="store_true",
-        help="Verify the checksums in the filename if they are present")
-
     group = cmd.add_mutually_exclusive_group()
 
     group.add_argument('-r', '--rename', dest='pathname', metavar="PATH",
@@ -67,7 +62,29 @@ def main():
     group.add_argument('-u', '--undo-rename', action='store_true',
         help="Undo the last rename operation")
 
+    cmd.add_argument('--delete-cache', action="store_true",
+        help="Delete the cache file and create a new one")
+
+    cmd.add_argument('--update-db', action="store_true",
+        help="Update the AniDB titles file, limit this to once a day since it's large")
+
+    cmd.add_argument('--generate-config', action="store_true",
+        help="Recreate the default config file to resources folder, settings.conf")
+
+    cmd.add_argument('--verify', action="store_true",
+        help="Verify the checksums in the filename if they are present")
+
     args = cmd.parse_args()
+
+    if args.generate_config:
+        print generate_default_config()
+
+    if args.delete_cache:
+        try:
+            os.remove(os.path.join(Constants.RESOURCE_PATH, Settings['db_name']))
+        except Exception as e:
+            print e
+            exit(1)
 
     if args.title in ('-', '.', 'pwd'):
         args.title = os.path.split(os.getcwd())[1]  # If a dash is entered use the current basename of the path

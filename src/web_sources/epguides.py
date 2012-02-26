@@ -1,12 +1,10 @@
 # -*- coding: utf-8 -*-
-__author__='Dan Tracy'
-__email__='djt5019 at gmail dot com'
+__author__ = 'Dan Tracy'
+__email__ = 'djt5019 at gmail dot com'
 
 import src.Source_Poll_API as API
 
 from src.Episode import Episode
-
-priority = 3
 
 pattern = r"""
             ^		                # Start of the string
@@ -18,7 +16,7 @@ pattern = r"""
             (?P<episode>[\d]*)	    # Episode number
             [\s]{2,}		        # Whitespace
             (?P<product>.+|)	    # Product number
-            [\s]{2,}		        # Whitespace
+            [\s]{1,}		        # Whitespace
             (?P<airdate>[\w\s/]*?)  # Air-date
             [\s]{2,}		        # Ignore whitespace
             (?P<name>.*)	        # Episode name
