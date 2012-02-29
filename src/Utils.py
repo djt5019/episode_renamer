@@ -4,20 +4,24 @@ __email__ = 'djt5019 at gmail dot com'
 
 import os
 import re
+import time
 import pickle
 import requests
 import requests.exceptions
 
 import Constants
 import Episode
+import Exceptions
+
+from tempfile import TemporaryFile
 
 from Logger import get_logger
 from Settings import Settings
 
 
-def get_URL_descriptor(url):
+def get_url_descriptor(url):
     """
-    Returns an url descriptor or None
+    Returns an url descriptor or None on failure
     """
     try:
         resp = requests.get(url)
@@ -62,7 +66,10 @@ def extract_file_info(episode_filename):
         info_dict['episode_number'] = int(res_dict['episode'])
         info_dict['season'] = int(res_dict.get('season', -1))
 
-    info_dict['checksum'] = int(res_dict.get('sum', '0'), base=16)
+    checksum = res_dict.get('sum', '0')
+    if checksum is None:
+        checksum = '0'
+    info_dict['checksum'] = int(checksum, base=16)
 
     return info_dict
 
@@ -116,18 +123,21 @@ def regex_search(filename):
     """
     Compare the filename to each of the regular expressions for a match
     """
+    filename = re.sub(r'\[H\..*?\]', "", filename)
+    result = None
     for count, regex in enumerate(_compile_regexs()):
         result = regex.search(filename)
         if result:
             get_logger().info("Regex #{} matched {}".format(count, filename))
-            return result
+            break
 
-    return None
+    return result
 
 
 def prepare_filenames(path, show):
     """
-    Rename the files located in 'path' to those in the list 'show'
+    Rename the files located in 'path' to those in the list 'show', modifies
+    the show objects episodeList/specialsList
     """
     path = os.path.abspath(path)
     sameCount = 0
@@ -139,14 +149,12 @@ def prepare_filenames(path, show):
         return
 
     for f in files:
-
         if f.is_ova:
             episode = show.get_special(f.special_number)
+        elif f.episode_number > show.maxEpisodeNumber:
+            episode = show.get_special(f.episode_number - show.maxEpisodeNumber)
         else:
             episode = show.get_episode(f.season, f.episode_number)
-
-        if f.episode_number > show.maxEpisodeNumber:
-            episode = show.get_special(f.episode_number - show.maxEpisodeNumber)
 
         if not episode:
             get_logger().warning("Could not find an episode for {}".format(f.name))
@@ -206,33 +214,6 @@ def rename(files, resp=""):
         get_logger().info("Files were successfully renamed")
 
     return errors
-
-
-def save_last_access_times():
-    """
-    Save the last access times dictionary to a file in resources
-    """
-    if not Settings['access_dict']:
-        return False
-
-    with open(os.path.join(Constants.RESOURCE_PATH, Settings['access_time_file']), 'w') as p:
-        pickle.dump(Settings['access_dict'], p)
-
-    return True
-
-
-def load_last_access_times():
-    """
-    Load the access times dictionary from the file in resource path
-    """
-    name = os.path.join(Constants.RESOURCE_PATH, Settings['access_time_file'])
-    if os.path.exists(name):
-        with open(name, 'r') as p:
-            data = p.readlines()
-
-        return pickle.loads(''.join(data))
-    else:
-        return {}
 
 
 def save_renamed_file_info(old_order):
@@ -346,3 +327,107 @@ def encode(text, encoding='utf-8'):
         if not isinstance(text, unicode):
             text = unicode(text, encoding, 'ignore')
     return text
+
+
+###############################
+##  Web Source Functionality
+###############################
+
+show_not_found = Constants.SHOW_NOT_FOUND
+
+
+def able_to_poll(site, delay=None):
+    """
+    Prevents flooding by waiting two seconds from the last poll
+    """
+    if not delay:
+        delay = Settings['poll_delay']
+
+    if not Settings['access_dict']:
+        Settings['access_dict'] = load_last_access_times()
+
+    last_access = Settings['access_dict'] .get(site, -1)
+    now = int(time.time())
+
+    if last_access < 0:
+        Settings['access_dict'][site] = now
+        return True
+
+    if now - last_access >= int(delay):
+        Settings['access_dict'][site] = now
+        return True
+
+    return False
+
+
+def open_file_in_resources(name, mode='r'):
+    """
+    Returns a file object if the filename exists in the resources directory
+    """
+    name = os.path.split(name)[1]
+    name = os.path.join(Constants.RESOURCE_PATH, name)
+
+    if mode in ('w', 'wb'):
+        return open(name, mode)
+
+    if file_exists_in_resources(name):
+        return open(name, mode)
+
+    raise Exceptions.API_FileNotFoundException()
+
+
+def file_exists_in_resources(name):
+    """
+    Returns true if the filename exists in the resources directory
+    """
+    name = os.path.split(name)[1]
+    name = os.path.join(Constants.RESOURCE_PATH, name)
+    return os.path.exists(name)
+
+
+def regex_compile(regex):
+    """
+    Returns a compiled regex instance, ignore case and verbose are activated by default
+    """
+    return re.compile(regex, re.I | re.X)
+
+
+def regex_sub(pattern, replacement, target):
+    """
+    Substitutes the replacement in the target if it matches the pattern
+    """
+    return re.sub(pattern, replacement, target)
+
+
+def temporary_file(suffix):
+    """
+    Returns a file object to a temporary file
+    """
+    return TemporaryFile(suffix=suffix)
+
+
+def save_last_access_times():
+    """
+    Save the last access times dictionary to a file in resources
+    """
+    if not Settings['access_dict']:
+        return False
+
+    with open(os.path.join(Constants.RESOURCE_PATH, Settings['access_time_file']), 'w') as p:
+        pickle.dump(Settings['access_dict'], p)
+
+    return True
+
+
+def load_last_access_times():
+    """
+    Load the access times dictionary from the file in resource path
+    """
+    name = os.path.join(Constants.RESOURCE_PATH, Settings['access_time_file'])
+    if os.path.exists(name):
+        with open(name, 'r') as p:
+            data = p.readlines()
+
+        return pickle.loads(''.join(data))
+    else:
+        return {}

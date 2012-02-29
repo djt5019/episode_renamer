@@ -8,7 +8,7 @@ from string import punctuation as punct
 
 import src.Episode as Episode
 import src.Logger as Logger
-import src.Source_Poll_API as API
+import src.Utils as API
 
 try:
     from BeautifulSoup import BeautifulStoneSoup as Soup
@@ -50,6 +50,7 @@ def _parse_local(title):
                 guesses.append((ratio, res.group('aid'), foundTitle))
 
     if guesses:
+        Logger.get_logger().info("{} possibilities".format(len(guesses)))
         _, aid, name = max(guesses)
         Logger.get_logger().error("Closest show to '{}' is {} with id {}".format(title, name, aid))
 
@@ -84,10 +85,6 @@ def _connect_HTTP(aid):
         # 1 is a normal episode, 2 is a special
         ep_type = e.epno.attrs[0][1]
         if ep_type not in ('1', '2'):
-            continue
-
-        # Hacky way to skip over interviews and the like
-        if not e.find('rating'):
             continue
 
         title = e.find('title', {'xml:lang': 'en'})

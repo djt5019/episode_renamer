@@ -153,12 +153,13 @@ def main():
             show.episodeList = show.episodeList[episodeRange[0] - 1:episodeRange[-1]]
 
     if  rename:
-        Utils.prepare_filenames(args.pathname, show)
+        path = args.pathname if args.pathname != '.' else os.getcwd()
+        Utils.prepare_filenames(path, show)
         files = []
         for e in show.episodeList + show.specialsList:
             if e.episode_file and e.episode_file.new_name:
-                old = os.path.join(args.pathname, e.episode_file.name)
-                new = os.path.join(args.pathname, e.episode_file.new_name)
+                old = os.path.join(path, e.episode_file.name)
+                new = os.path.join(path, e.episode_file.new_name)
                 files.append((old, new))
 
         print_renamed_files(files)

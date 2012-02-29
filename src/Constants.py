@@ -23,8 +23,8 @@ _REGEX_VARS = {
 'sep': r'[\-\~\.\_\s]',
 'sum': r'(.*[\[\(](?P<sum>[a-z0-9]{8})[\]\)])',
 'year': r'(:P<year>(19|20)?\d\d)',
-'episode': r'(e|ep|episode)?{sep}+(?P<episode>\d+)(?:v\d)?',  # ex: e3v2
-'season': r'(s|season)?{sep}+(?P<season>\d+)',
+'episode': r'(e|ep|episode)?{sep}+?(?P<episode>\d+)(?:v\d)?',  # ex: e3v2
+'season': r'(s|season)?{sep}*?(?P<season>\d+)',
 'series': r'(?P<series>.*)',
 'subgroup': r'(\[.*\])',
 'special': r'(?P<type>ova|ona|extra|special|movie|dvd|bluray){sep}+(?P<special>\d+)',
@@ -44,10 +44,10 @@ REGEX = [
             r'^{subgroup}*{sep}+{series}{sep}+{special}{sep}+{sum}?',
             r'^{subgroup}*{sep}+{series}{sep}+{episode}{sep}+{sum}?',
             r'^{subgroup}*{sep}+{series}{sep}+{season}{sep}+{episode}{sep}+{sum}?',
-            r'^{series}{sep}+{year}?{sep}{season}{sep}*{episode}{sep}*{sum}?',
-            r'^{series}{sep}+{year}?{sep}{episode}{sep}*{sum}?',
-            r'^{series}{sep}+{year}?{sep}{season}X{episode}{sep}*{sum}?',
-            r'^{series}{sep}+{year}?{sep}\[{season}X{episode}\]{sep}*{sum}?',
+            r'^{series}{sep}*\[{season}X{episode}\]{sep}*{sum}?',
+            r'^{series}{sep}*{season}{sep}*{episode}{sep}*{sum}?',
+            r'^{series}{sep}*{episode}{sep}*{sum}?',
+            r'^{series}{sep}+{season}X{episode}{sep}*{sum}?',
             r'^(?P<series>.*) - OVA (?P<special>\d+) - \w*',
             r'^{series}{sep}*{special}',
             r'{series}{sep}*{episode}',  # More of a general catch-all regex, last resort
