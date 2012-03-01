@@ -31,8 +31,6 @@ class _SettingsDict(dict):
 
                 if '#' in line:
                     line = line.split('#')[0]
-                elif '//' in line:
-                    line = line.split('//')[0]
 
                 if not line:  # We have read in a blank line from the config
                     continue
