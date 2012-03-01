@@ -378,7 +378,7 @@ class EpisodeFormatter(object):
         elif tag in self.episodeCounterTokens:
             if pad:
                 #Total number of digits
-                pad = len(str(self.show.specialsList))
+                pad = len(str(self.show.specialsList[-1].num))
             return str(ep.num).zfill(pad)
 
         elif tag in self.episodeNameTokens:
