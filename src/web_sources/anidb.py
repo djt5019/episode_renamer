@@ -39,7 +39,7 @@ def _parse_local(title):
             if not res:
                 continue
 
-            foundTitle = API.encode(res.group('title'))
+            foundTitle = API.remove_punctuation(API.encode(res.group('title')))
             if title == foundTitle.lower():
                 return res.group('aid')
 
