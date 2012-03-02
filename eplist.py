@@ -99,7 +99,7 @@ def main():
             handle.setLevel(NOTSET)
 
     if args.gui_enabled:
-        import EpParser.gui.gui as gui
+        import src.gui.gui as gui
         exit(gui.main())
 
     if args.update_db:

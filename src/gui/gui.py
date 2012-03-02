@@ -130,9 +130,9 @@ class Form(QtGui.QWidget):
             self.displayShow()
 
     def findShow(self):
-        showTitle = self.epLine.text().strip()
+        showTitle = Utils.remove_punctuation(self.epLine.text().strip())
 
-        if showTitle == "":
+        if not showTitle:
             InfoMessage(self, "Find Show", "No show specified")
             return
 
@@ -166,6 +166,7 @@ class Form(QtGui.QWidget):
         self.currentDirLabel.setText(os.path.abspath(newDir))
         self.renameDir = newDir
         self.dirList.clear()
+        self.epLine.setText(os.path.split(self.renameDir)[1])
 
         for f in Utils.clean_filenames(self.renameDir):
             self.dirList.addItem(f.name)
@@ -192,7 +193,7 @@ class RenameDialog(QtGui.QDialog):
     def __init__(self, files, parent=None):
         super(RenameDialog, self).__init__(parent)
         self.setGeometry(100, 100, 750, 500)
-        self.setWindowTitle("&Rename Files Utility")
+        self.setWindowTitle("Rename Files Utility")
 
         self.files = files
 
@@ -201,46 +202,62 @@ class RenameDialog(QtGui.QDialog):
         self.buttonBox.accepted.connect(self.rename)
         self.buttonBox.rejected.connect(self.close)
 
-        self.fileList = QtGui.QListWidget()
+        self.model = QtGui.QStandardItemModel()
+        self.view = QtGui.QListView()
+
+        self.view.setModel(self.model)
 
         layout = QtGui.QVBoxLayout()
-        layout.addWidget(self.fileList)
+        layout.addWidget(self.view)
         layout.addWidget(self.buttonBox)
 
         self.setLayout(layout)
 
-        self.fileList.addItem("Files will be renamed in the following format")
-        self.fileList.addItem("-" * 55)
-
         if not self.files:
-            self.fileList.addItem("No files need to be renamed")
+            self.model.appendRow(QtGui.QStandardItem("No files need to be renamed"))
+            self.view.show()
             self.show()
             return
 
         for old, new in self.files:
+            item = QtGui.QStandardItem()
+
             try:
-                old = Utils.encode(os.path.split(old)[1])
-                new = Utils.encode(os.path.split(new)[1])
-                string = Utils.encode("OLD: {}\nNEW:  {}\n".format(old, new))
+                old_name = Utils.encode(os.path.split(old)[1])
+                new_name = Utils.encode(os.path.split(new)[1])
+                string = Utils.encode("OLD: {}\nNEW: {}\n".format(old_name, new_name))
+                item.setText(string)
+                item.setCheckState(QtCore.Qt.Checked)
+                item.setCheckable(True)
+                item.rename_info = (old, new)
             except:
                 logger.critical("Unable to rename " + new)
 
-            self.fileList.addItem(string)
+            if item.text():
+                self.model.appendRow(item)
 
+        self.view.show()
         self.show()
 
     def rename(self):
-        errors = Utils.rename(self.files, 'yes')
-        self.fileList.clear()
+        files = []
+
+        for itemIndex in xrange(self.model.rowCount()):
+            item = self.model.item(itemIndex)
+            if item.checkState() == QtCore.Qt.Checked:
+                files.append(item.rename_info)
+
+        errors = Utils.rename(files, 'yes')
+        self.model.clear()
         self.buttonBox.accepted.disconnect()
 
         if errors:
-            self.fileList.addItem("&The following files could not be renamed\n")
+            self.model.appendRow(QtGui.QStandardItem("&The following files could not be renamed\n"))
             for e in errors:
-                self.fileList.addItem(e)
+                self.model.appendRow(QtGui.QStandardItem(e[0]))
                 logger.error('Unable to rename: {}'.format(e))
         else:
-            self.fileList.addItem("The files were renamed successfully")
+            self.model.appendRow(QtGui.QStandardItem("The files were renamed successfully"))
             logger.info("Filenames renamed succesfully")
 
         self.buttonBox.accepted.connect(self.close)

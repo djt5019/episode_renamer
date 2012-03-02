@@ -3,7 +3,7 @@
 # author:  Dan Tracy
 # program: gui.py
 
-import EpParser.gui.gui as gui
+import src.gui.gui as gui
 
-if __name__=='__main__':
-	exit(gui.main())
+if __name__ == '__main__':
+    exit(gui.main())

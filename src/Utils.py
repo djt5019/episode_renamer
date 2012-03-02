@@ -141,7 +141,7 @@ def prepare_filenames(path, show):
     """
     path = os.path.abspath(path)
     sameCount = 0
-
+    cleanFiles = []
     files = clean_filenames(path)
     #Match the list of EpisodeFiles to the list of shows in the 'show' variable
     if not files:
@@ -172,16 +172,20 @@ def prepare_filenames(path, show):
 
         episode.episode_file.new_name = newName
 
-        name = os.path.join(path, newName)
-        if len(name) > 256:
+        newName = os.path.join(path, newName)
+        if len(newName) > 256:
             get_logger().error('The filename "{}" may be too long to rename, truncating'.format(newName))
             offset = 255 - len(f.ext)
-            name = name[:offset] + f.ext
+            newName = newName[:offset] + f.ext
+
+        cleanFiles.append((f.path, newName))
 
     if sameCount > 0:
         msg = "1 file" if sameCount == 1 else "{} files".format(sameCount)
         get_logger().warning(
             "{} in this directory would have been renamed to the same filename".format(msg))
+
+    return cleanFiles
 
 
 def rename(files, resp=""):
