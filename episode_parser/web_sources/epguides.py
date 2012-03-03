@@ -2,9 +2,9 @@
 __author__ = 'Dan Tracy'
 __email__ = 'djt5019 at gmail dot com'
 
-import src.Utils as API
+import episode_parser.Utils as Utils
 
-from src.Episode import Episode
+from episode_parser.Episode import Episode
 
 priority = 2
 
@@ -27,15 +27,15 @@ pattern = r"""
 
 
 def poll(title):
-    cleanTitle = API.prepare_title(title)
+    cleanTitle = Utils.prepare_title(title)
     episodes = []
     url = "http://www.epguides.com/{0}".format(cleanTitle)
-    fd = API.get_url_descriptor(url)
+    fd = Utils.get_url_descriptor(url)
 
     if fd is None:
-        return API.show_not_found
+        return Utils.show_not_found
 
-    regex = API.regex_compile(pattern)
+    regex = Utils.regex_compile(pattern)
 
     count = 1
     for line in fd.iter_lines():
@@ -44,12 +44,12 @@ def poll(title):
             name = info.group('name')
             episode = info.group('episode')
             season = int(info.group('season'))
-            name = API.regex_sub('<.*?>', '', name).strip()
+            name = Utils.regex_sub('<.*?>', '', name).strip()
 
             if name == "TBA":
                 continue
 
-            episodes.append( Episode(name, episode, season, count) )
+            episodes.append(Episode(name, episode, season, count))
             count += 1
 
     return episodes

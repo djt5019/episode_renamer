@@ -7,10 +7,11 @@ import logging.config
 import logging.handlers
 import atexit
 
-from os.path import join, abspath
+from os.path import join
 from datetime import datetime
+from cStringIO import StringIO
 
-from Constants import RESOURCE_PATH
+from Constants import RESOURCE_PATH, DEFAULT_LOGGING_CONFIG
 from Settings import Settings
 
 _logger = None
@@ -21,7 +22,7 @@ def get_logger():
     global _logger
 
     if _logger is None:
-        logging.config.fileConfig(abspath(join(RESOURCE_PATH, Settings['log_config'])))
+        logging.config.fileConfig(StringIO(DEFAULT_LOGGING_CONFIG))
         _logger = logging.getLogger()
 
         logPath = join(RESOURCE_PATH, Settings['log_file'])

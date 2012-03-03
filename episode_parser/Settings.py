@@ -22,70 +22,49 @@ class _SettingsDict(dict):
             return val
 
     def load_config(self):
-        with open(os.path.join(Constants.RESOURCE_PATH, 'settings.conf')) as f:
-            for number, line in enumerate(f):
-                line = line.strip()
+        '''
+        Load the default settings file
+        '''
+        config_loc = os.path.join(Constants.RESOURCE_PATH, 'settings.conf')
 
-                if line.startswith('#') or line.startswith('//'):  # A comment in our config file
-                    continue
+        ## If the settings aren't found use the default string in the constants
+        ## module instead of exploding
+        if not os.path.exists(config_loc):
+            from cStringIO import StringIO
+            from contextlib import closing
+            config_loc = closing(StringIO(Constants.DEFAULT_SETTINGS_STRING))
+        else:
+            config_loc = open(config_loc, 'r')
 
-                if '#' in line:
-                    line = line.split('#')[0]
+        with config_loc as f:
+            self._read_file(f)
 
-                if not line:  # We have read in a blank line from the config
-                    continue
+    def _read_file(self, config):
+        '''
+        Performs the actual reading of the config into the dictionary
+        '''
+        for number, line in enumerate(config):
+            line = line.strip()
 
-                options = [x.strip() for x in line.split('=')]
+            if line.startswith('#') or line.startswith('//'):  # A comment in our config file
+                continue
 
-                if len(options) != 2:  # possibly an additional equals sign in the config
-                    raise SettingsException("Line {} in the settings config contains an error".format(number))
+            if '#' in line:
+                line = line.split('#')[0]
 
-                opt, value = options
+            if not line:  # We have read in a blank line from the config
+                continue
 
-                if value:
-                    self[opt] = str(value)
-                else:
-                    self[opt] = None
+            options = [x.strip() for x in line.split('=')]
+
+            if len(options) != 2:  # possibly an additional equals sign in the config
+                raise SettingsException("Line {} in the settings config contains an error".format(number))
+
+            opt, value = options
+
+            if value:
+                self[opt] = str(value)
+            else:
+                self[opt] = None
 
 Settings = _SettingsDict()
-
-
-def generate_default_config():
-    from textwrap import dedent
-    config = dedent("""
-            ## Your TvDB api key, required to poll their website
-            tvdb_key = # your tvdb apikey
-
-
-            ## Program logger options
-            log_config = logger.conf
-            log_file = output.log
-
-            ## Database file for our episodes
-            db_name = episodes.db
-
-            ## Days to wait to update the show within the database
-            db_update = 7
-
-            ## Where to store the old filenames from the last rename operation
-            rename_backup = last_rename.dat
-
-            ## File to store the access times data
-            access_time_file = last_access.dat
-
-            ## Time in seconds between polling a website, reccomended is 2
-            poll_delay = 2
-
-            ## AniDB flat file with the ids of the shows visit link below for updated version from time to time
-            ## http://anidb.net/api/animetitles.dat.gz
-            anidb_db_file = animetitles.dat
-            anidb_db_url = http://anidb.net/api/animetitles.dat.gz
-
-            ## Tag options
-            tag_config = tags.cfg
-            tag_start = <
-            tag_end = >
-            """)
-
-    with open(os.path.join(Constants.RESOURCE_PATH, 'settings.conf'), 'w') as f:
-        f.write(config)

@@ -18,15 +18,14 @@ import argparse
 import os
 import sys
 
-import src.Utils as Utils
-import src.Episode as Episode
-import src.Utils	 as API
-import src.Constants as Constants
+from episode_parser import Utils
+from episode_parser import Episode
+from episode_parser import Constants
 
-from src.Parser import Parser
-from src.Cache import Cache
-from src.Logger import get_logger
-from src.Settings import Settings, generate_default_config
+from episode_parser.Logger import get_logger
+from episode_parser.Cache import Cache
+from episode_parser.Parser import Parser
+from episode_parser.Settings import Settings
 
 
 def main():
@@ -68,16 +67,22 @@ def main():
     cmd.add_argument('--update-db', action="store_true",
         help="Update the AniDB titles file, limit this to once a day since it's large")
 
-    cmd.add_argument('--generate-config', action="store_true",
+    cmd.add_argument('--generate-settings', action="store_true",
         help="Recreate the default config file to resources folder, settings.conf")
+
+    cmd.add_argument('--generate-tags', action="store_true",
+        help="Recreate the default tag settings for the formatter")
 
     cmd.add_argument('--verify', action="store_true",
         help="Verify the checksums in the filename if they are present")
 
     args = cmd.parse_args()
 
-    if args.generate_config:
+    if args.generate_settings:
         generate_default_config()
+
+    if args.generate_tags:
+        generate_default_tags()
 
     if args.delete_cache:
         try:
@@ -99,7 +104,7 @@ def main():
             handle.setLevel(NOTSET)
 
     if args.gui_enabled:
-        import src.gui.gui as gui
+        import episode_parser.gui.gui as gui
         exit(gui.main())
 
     if args.update_db:
@@ -201,16 +206,16 @@ def update_db():
         one_unix_day = 24 * 60 * 60
 
         def _download():
-            with API.open_file_in_resources(Settings['anidb_db_file'], 'w') as f:
+            with Utils.open_file_in_resources(Settings['anidb_db_file'], 'w') as f:
                 get_logger().info("Retrieving AniDB Database file")
-                url = API.get_url_descriptor(Settings['anidb_db_url'])
+                url = Utils.get_url_descriptor(Settings['anidb_db_url'])
 
                 f.write(url.content)
             get_logger().info("Successfully downloaded the new database")
 
-        if not API.file_exists_in_resources(Settings['anidb_db_file']):
+        if not Utils.file_exists_in_resources(Settings['anidb_db_file']):
             _download()
-        elif API.able_to_poll('db_download', one_unix_day):
+        elif Utils.able_to_poll('db_download', one_unix_day):
             _download()
         else:
             get_logger().error("Attempting to download the database file multiple times today")
@@ -256,6 +261,14 @@ def print_renamed_files(files):
         print
 
 
+def generate_default_config():
+    Utils.write_config(Constants.DEFAULT_SETTINGS_STRING, 'settings.conf')
+
+
+def generate_default_tags():
+    Utils.write_config(Constants.DEFAULT_TAG_STRING, Settings['tag_config'])
+
+
 def parse_range(range):
     if '-' in range:
         high, low = range.split('-')
@@ -274,4 +287,8 @@ def parse_range(range):
 
 
 if __name__ == '__main__':
+    if not Utils.file_exists_in_resources('settings.conf'):
+        get_logger().warning("Settings not found, creating a new one")
+        generate_default_config()
+
     main()

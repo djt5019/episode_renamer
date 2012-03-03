@@ -6,9 +6,9 @@ import difflib
 
 from string import punctuation as punct
 
-import src.Episode as Episode
-import src.Logger as Logger
-import src.Utils as API
+import episode_parser.Episode as Episode
+import episode_parser.Logger as Logger
+import episode_parser.Utils as API
 
 try:
     from BeautifulSoup import BeautifulStoneSoup as Soup

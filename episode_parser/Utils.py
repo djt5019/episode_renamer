@@ -44,6 +44,11 @@ def is_valid_file(filename):
     return os.path.isfile(filename) and ext in Constants.VIDEO_EXTENSIONS
 
 
+def write_config(config, name):
+    with open(os.path.join(Constants.RESOURCE_PATH, name), 'w') as f:
+        f.write(config)
+
+
 ##############################
 ## Renaming utility functions
 ##############################
