@@ -23,7 +23,7 @@ _REGEX_VARS = {
 'sep': r'[\-\~\.\_\s]',
 'sum': r'(.*[\[\(](?P<sum>[a-z0-9]{8})[\]\)])',
 'year': r'(:P<year>(19|20)?\d\d)',
-'episode': r'(e|ep|episode)?{sep}+?(?P<episode>\d+)(?:v\d)?',  # ex: e3v2
+'episode': r'(e|ep|episode)?{sep}*?(?P<episode>\d+)(?:v\d)?',  # ex: e3v2
 'season': r'(s|season)?{sep}*?(?P<season>\d+)',
 'series': r'(?P<series>.*)',
 'subgroup': r'(\[.*\])',
@@ -32,8 +32,7 @@ _REGEX_VARS = {
 
 for k, v in _REGEX_VARS.iteritems():
     try:
-        # Substitute any regex variables that may have been used within
-        # later dictionary entries kind of like how let* works in scheme.
+        # Substitute any regex variables that may have been used within later dictionary entries
         _REGEX_VARS[k] = v.format(**_REGEX_VARS)
     except IndexError as e:
         pass
@@ -50,8 +49,8 @@ REGEX = [
             r'^{series}{sep}+{season}X{episode}{sep}*{sum}?',
             r'^(?P<series>.*) - OVA (?P<special>\d+) - \w*',
             r'^{series}{sep}*{special}',
-            r'{series}{sep}*{episode}',  # More of a general catch-all regex, last resort
             r'{series}{sep}*(op|ed){sep}*(?P<junk>\d*){sep}*{sum}?',  # Show intro /outro music, just ignore them
+            r'.*{episode}',  # More of a general catch-all regex, last resort search for the first numbers in the filename
             ]
 
 ## Substitute the dictionary variables in to the unformated regexes (is the plural of regex, regexes?)

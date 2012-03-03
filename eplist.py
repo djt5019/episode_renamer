@@ -266,7 +266,7 @@ def generate_default_config():
 
 
 def generate_default_tags():
-    Utils.write_config(Constants.DEFAULT_TAG_STRING, Settings['tag_config'])
+    Utils.write_config(Constants.DEFUALT_TAG_CONFIG, Settings['tag_config'])
 
 
 def parse_range(range):
