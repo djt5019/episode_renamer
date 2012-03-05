@@ -355,7 +355,7 @@ def able_to_poll(site, delay=None):
     if not Settings['access_dict']:
         Settings['access_dict'] = load_last_access_times()
 
-    last_access = Settings['access_dict'] .get(site, -1)
+    last_access = Settings['access_dict'].get(site, -1)
     now = int(time.time())
 
     if last_access < 0:

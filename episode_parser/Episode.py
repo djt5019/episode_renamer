@@ -11,6 +11,7 @@ import string
 import Utils
 import Constants
 import Logger
+import Exceptions
 
 from Settings import Settings
 
@@ -71,24 +72,25 @@ class Show(object):
         """
         Returns a specific episode from a specific season or None
         """
-        if episode < 1 or episode > len(self.episodeList):
+        if not 0 < episode < len(self.episodeList) + 1:
             return None
+
+        # Adjust by one since episodes start count at 1 not 0
+        episode = episode - 1
 
         if season > 0:
             season = self.episodesBySeason.get(season, None)
             if season:
-                # Adjust by one since episodes start count at 1 not 0
-                return season[episode - 1]
+                return season[episode]
             else:
                 return None
         else:
-            return self.episodeList[episode - 1]
+            return self.episodeList[episode]
 
     def get_special(self, special_number):
         if 0 < special_number < len(self.specialsList) + 1:
             return self.specialsList[special_number - 1]
-        else:
-            return None
+        return None
 
 
 class Episode(object):
@@ -198,6 +200,7 @@ class EpisodeFormatter(object):
 
         if not os.path.exists(path):
             Logger.get_logger().warning("Tag config file was not found")
+            raise Exceptions.FormatterException("Tag config file was not found")
             return
 
         cfg = ConfigParser.ConfigParser()

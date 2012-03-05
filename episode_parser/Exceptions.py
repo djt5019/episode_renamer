@@ -16,3 +16,11 @@ class API_FloodException(API_Exception):
 
 class SettingsException(GeneralException):
     pass
+
+
+class FormatterException(GeneralException):
+    pass
+
+
+class ShowException(GeneralException):
+    pass
