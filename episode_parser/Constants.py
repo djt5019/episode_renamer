@@ -72,41 +72,6 @@ bracket_season_regex = re.compile(r'[\[\(]{season}X{episode}[\]\)]'.format(**_RE
 ## Strings to generate default config files
 ############
 
-DEFAULT_SETTINGS_STRING = """
-## Your TvDB api key, required to poll their website
-tvdb_key = # your tvdb apikey
-
-
-## Program logger options
-log_config = logger.conf
-log_file = output.log
-
-## Database file for our episodes
-db_name = episodes.db
-
-## Days to wait to update the show within the database
-db_update = 7
-
-## Where to store the old filenames from the last rename operation
-rename_backup = last_rename.dat
-
-## File to store the access times data
-access_time_file = last_access.dat
-
-## Time in seconds between polling a website, reccomended is 2
-poll_delay = 2
-
-## AniDB flat file with the ids of the shows visit link below for updated version from time to time
-## http://anidb.net/api/animetitles.dat.gz
-anidb_db_file = animetitles.dat
-anidb_db_url = http://anidb.net/api/animetitles.dat.gz
-
-## Tag options
-tag_config = tags.cfg
-tag_start = <
-tag_end = >
-"""
-
 DEFAULT_LOGGING_CONFIG = '''
 [loggers]
 keys=root

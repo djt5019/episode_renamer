@@ -123,7 +123,7 @@ class EpisodeFile(object):
     """
     Represents a TV show file.  Used for renaming purposes
     """
-    def __init__(self, path, **args):
+    def __init__(self, path, **kwargs):
         """
         A physical episode on disk
         """
@@ -132,8 +132,8 @@ class EpisodeFile(object):
         self.name = Utils.encode(os.path.split(self.path)[1])
         self.new_name = ""
         self.verified = False
-        self.__dict__.update(args)
-        self.is_ova = ('special_number' in args)
+        self.__dict__.update(kwargs)
+        self.is_ova = ('special_number' in kwargs)
         self.episode_number = self.__dict__.get('episode_number', -1)
 
     def crc32(self):

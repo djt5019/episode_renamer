@@ -2,16 +2,13 @@
 __author__ = 'Dan Tracy'
 __email__ = 'djt5019 at gmail dot com'
 
-import os
-import Constants
-
 from Exceptions import SettingsException
 
 
-class _SettingsDict(dict):
-    def __init__(self):
-        super(_SettingsDict, self).__init__()
-        self.load_config()
+class SettingsDict(dict):
+    def __init__(self, *args, **kwargs):
+        super(SettingsDict, self).__init__()
+        self.update(kwargs)
 
     def __getitem__(self, item):
         val = dict.get(self, item)
@@ -21,50 +18,40 @@ class _SettingsDict(dict):
         else:
             return val
 
-    def load_config(self):
-        '''
-        Load the default settings file
-        '''
-        config_loc = os.path.join(Constants.RESOURCE_PATH, 'settings.conf')
 
-        ## If the settings aren't found use the default string in the constants
-        ## module instead of exploding
-        if not os.path.exists(config_loc):
-            from cStringIO import StringIO
-            from contextlib import closing
-            config_loc = closing(StringIO(Constants.DEFAULT_SETTINGS_STRING))
-        else:
-            config_loc = open(config_loc, 'r')
+Settings = SettingsDict(
+    ## Your TvDB api key, required to poll their website
+    {
+    'tvdb_key': '',
 
-        with config_loc as f:
-            self._read_file(f)
+    # Logger config files
+    'log_config': 'logger.conf',
+    'log_file': 'output.log',
 
-    def _read_file(self, config):
-        '''
-        Performs the actual reading of the config into the dictionary
-        '''
-        for number, line in enumerate(config):
-            line = line.strip()
+    ## Database file for our episodes
+    'db_name': 'episodes.db',
 
-            if line.startswith('#') or line.startswith('//'):  # A comment in our config file
-                continue
+    ## Days to wait to update the show within the database
+    'db_update': '7',
 
-            if '#' in line:
-                line = line.split('#')[0]
+    ## Where to store the old filenames from the last rename operation
+    'rename_backup': 'last_rename.dat',
 
-            if not line:  # We have read in a blank line from the config
-                continue
+    ## File to store the access times data
+    'access_time_file': 'last_access.dat',
+    'access_dict': {},
 
-            options = [x.strip() for x in line.split('=')]
+    ## Time in seconds between polling a website, reccomended is 2
+    'poll_delay': '2',
 
-            if len(options) != 2:  # possibly an additional equals sign in the config
-                raise SettingsException("Line {} in the settings config contains an error".format(number))
+    ## AniDB flat file with the ids of the shows visit link below for updated version from time to time
+    ## http://anidb.net/api/animetitles.dat.gz
+    'anidb_db_file': 'animetitles.dat',
+    'anidb_db_url': 'http://anidb.net/api/animetitles.dat.gz',
 
-            opt, value = options
-
-            if value:
-                self[opt] = str(value)
-            else:
-                self[opt] = None
-
-Settings = _SettingsDict()
+    ## Tag options
+    'tag_config': 'tags.cfg',
+    'tag_start': '<',
+    'tag_end': '>',
+    }
+)

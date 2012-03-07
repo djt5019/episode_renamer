@@ -67,9 +67,6 @@ def main():
     cmd.add_argument('--update-db', action="store_true",
         help="Update the AniDB titles file, limit this to once a day since it's large")
 
-    cmd.add_argument('--generate-settings', action="store_true",
-        help="Recreate the default config file to resources folder, settings.conf")
-
     cmd.add_argument('--generate-tags', action="store_true",
         help="Recreate the default tag settings for the formatter")
 
@@ -77,9 +74,6 @@ def main():
         help="Verify the checksums in the filename if they are present")
 
     args = cmd.parse_args()
-
-    if args.generate_settings:
-        generate_default_config()
 
     if args.generate_tags:
         generate_default_tags()
@@ -259,10 +253,6 @@ def print_renamed_files(files):
         print (u"OLD: {0}".format(os.path.split(old)[1]).encode(sys.getdefaultencoding(), 'ignore'))
         print (u"NEW: {0}".format(os.path.split(new)[1]).encode(sys.getdefaultencoding(), 'ignore'))
         print
-
-
-def generate_default_config():
-    Utils.write_config(Constants.DEFAULT_SETTINGS_STRING, 'settings.conf')
 
 
 def generate_default_tags():
