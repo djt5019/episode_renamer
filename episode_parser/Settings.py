@@ -2,18 +2,20 @@
 __author__ = 'Dan Tracy'
 __email__ = 'djt5019 at gmail dot com'
 
+import logging
+
 from Exceptions import SettingsException
 
 
 class SettingsDict(dict):
     def __init__(self, *args, **kwargs):
-        super(SettingsDict, self).__init__()
-        self.update(kwargs)
+        super(SettingsDict, self).__init__(*args, **kwargs)
 
     def __getitem__(self, item):
         val = dict.get(self, item)
 
         if val is None:
+            logging.error("Setting {} not present in config file".format(item))
             raise SettingsException("Setting: {} not present in config file".format(item))
         else:
             return val
@@ -22,7 +24,7 @@ class SettingsDict(dict):
 Settings = SettingsDict(
     ## Your TvDB api key, required to poll their website
     {
-    'tvdb_key': '',
+    'tvdb_key': None,
 
     # Logger config files
     'log_config': 'logger.conf',
@@ -32,7 +34,7 @@ Settings = SettingsDict(
     'db_name': 'episodes.db',
 
     ## Days to wait to update the show within the database
-    'db_update': '7',
+    'db_update': 7,
 
     ## Where to store the old filenames from the last rename operation
     'rename_backup': 'last_rename.dat',
@@ -42,7 +44,7 @@ Settings = SettingsDict(
     'access_dict': {},
 
     ## Time in seconds between polling a website, reccomended is 2
-    'poll_delay': '2',
+    'poll_delay': 2,
 
     ## AniDB flat file with the ids of the shows visit link below for updated version from time to time
     ## http://anidb.net/api/animetitles.dat.gz

@@ -8,6 +8,7 @@ import time
 import pickle
 import requests
 import requests.exceptions
+import logging
 
 import Constants
 import Episode
@@ -15,7 +16,6 @@ import Exceptions
 
 from tempfile import TemporaryFile
 
-from Logger import get_logger
 from Settings import Settings
 
 
@@ -26,7 +26,7 @@ def get_url_descriptor(url):
     try:
         resp = requests.get(url)
     except requests.exceptions.ConnectionError:
-        get_logger().error("Error connecting to {}".format(url))
+        logging.error("Error connecting to {}".format(url))
         return None
 
     if resp.ok:
@@ -58,10 +58,10 @@ def extract_file_info(episode_filename):
     info_dict = {}
 
     if not result or 'junk' in result:
-        get_logger().info("Could not find file information for: {}".format(episode_filename))
+        logging.info("Could not find file information for: {}".format(episode_filename))
         return info_dict
 
-    get_logger().debug(result)
+    logging.debug(result)
 
     if 'special' in result:
         info_dict['special_number'] = int(result['special'])
@@ -88,7 +88,7 @@ def clean_filenames(path):
     files = filter(lambda x: is_valid_file(os.path.join(path, x)), files)
 
     if not files:
-        get_logger().error("No video files were found in {}".format(path))
+        logging.error("No video files were found in {}".format(path))
         return []
 
     cleanFiles = []
@@ -103,10 +103,10 @@ def clean_filenames(path):
         cleanFiles.append(Episode.EpisodeFile(os.path.join(path, f), **info))
 
     if not cleanFiles:
-        get_logger().error("The files could not be matched")
+        logging.error("The files could not be matched")
         return cleanFiles
 
-    get_logger().info("Successfully cleaned the file names")
+    logging.info("Successfully cleaned the file names")
 
     return cleanFiles
 
@@ -126,7 +126,7 @@ def regex_search(filename):
     for count, regex in enumerate(Constants.regexList):
         result = regex.search(filename)
         if result:
-            get_logger().info("Regex #{} matched {}".format(count, filename))
+            logging.info("Regex #{} matched {}".format(count, filename))
             break
 
     result = result.groupdict()
@@ -151,7 +151,7 @@ def prepare_filenames(path, show):
     files = clean_filenames(path)
     #Match the list of EpisodeFiles to the list of shows in the 'show' variable
     if not files:
-        get_logger().info("No files were able to be renamed")
+        logging.info("No files were able to be renamed")
         return
 
     for f in files:
@@ -163,7 +163,7 @@ def prepare_filenames(path, show):
             episode = show.get_episode(f.season, f.episode_number)
 
         if not episode:
-            get_logger().warning("Could not find an episode for {}".format(f.name))
+            logging.warning("Could not find an episode for {}".format(f.name))
             continue
 
         episode.episode_file = f
@@ -172,7 +172,7 @@ def prepare_filenames(path, show):
         newName = replace_invalid_path_chars(show.formatter.display(episode) + f.ext)
 
         if newName == fileName:
-            get_logger().info("File {} and Episode {} have same name".format(f.name, episode.title))
+            logging.info("File {} and Episode {} have same name".format(f.name, episode.title))
             sameCount += 1
             continue
 
@@ -180,7 +180,7 @@ def prepare_filenames(path, show):
 
         newName = os.path.join(path, newName)
         if len(newName) > 256:
-            get_logger().error('The filename "{}" may be too long to rename, truncating'.format(newName))
+            logging.error('The filename "{}" may be too long to rename, truncating'.format(newName))
             offset = 255 - len(f.ext)
             newName = newName[:offset] + f.ext
 
@@ -188,7 +188,7 @@ def prepare_filenames(path, show):
 
     if sameCount > 0:
         msg = "1 file" if sameCount == 1 else "{} files".format(sameCount)
-        get_logger().warning(
+        logging.warning(
             "{} in this directory would have been renamed to the same filename".format(msg))
 
     return cleanFiles
@@ -203,7 +203,7 @@ def rename(files, resp=""):
         resp = raw_input("\nDo you wish to rename these files [y|N]: ").lower()
 
     if not resp.startswith('y'):
-        get_logger().info("Changes were not committed to the files")
+        logging.info("Changes were not committed to the files")
         return errors
 
     old_order = []
@@ -219,9 +219,9 @@ def rename(files, resp=""):
 
     if errors:
         for e in errors:
-            get_logger().error("File {} could not be renamed: {}".format(os.path.split(e[0])[1], e[1]))
+            logging.error("File {} could not be renamed: {}".format(os.path.split(e[0])[1], e[1]))
     else:
-        get_logger().info("Files were successfully renamed")
+        logging.info("Files were successfully renamed")
 
     return errors
 
@@ -230,7 +230,7 @@ def save_renamed_file_info(old_order):
     """
     Save the previous names from the last renaming operation to disk
     """
-    get_logger().info("Backing up old filenames")
+    logging.info("Backing up old filenames")
     with open(os.path.join(Constants.RESOURCE_PATH, Settings['rename_backup']), 'w') as f:
         pickle.dump(old_order, f)
 
@@ -239,9 +239,9 @@ def load_last_renamed_files():
     """
     Restore the previous names from the last renaming operation
     """
-    get_logger().info("Loading up old filenames")
+    logging.info("Loading up old filenames")
     if not os.path.exists(os.path.join(Constants.RESOURCE_PATH, Settings['rename_backup'])):
-        get_logger().warn("There seems to be no files to be un-renamed")
+        logging.warn("There seems to be no files to be un-renamed")
         return []
 
     with open(os.path.join(Constants.RESOURCE_PATH, Settings['rename_backup'])) as f:
@@ -363,7 +363,7 @@ def able_to_poll(site, delay=None):
         Settings['access_dict'][site] = now
         return True
 
-    if now - last_access >= int(delay):
+    if now - last_access >= delay:
         Settings['access_dict'][site] = now
         return True
 

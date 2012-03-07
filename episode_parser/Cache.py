@@ -6,10 +6,10 @@ import os
 import datetime
 import sqlite3
 import atexit
+import logging
 
 from Episode import Episode, Special
 from Constants import RESOURCE_PATH
-from Logger import get_logger
 from Settings import Settings
 
 
@@ -53,12 +53,12 @@ class Cache(object):
         try:
             if not os.path.exists(dbName) and dbName != ':memory:':
                 self.connection = sqlite3.connect(dbName, detect_types=sqlite3.PARSE_DECLTYPES)
-                get_logger().debug("Creating database: {}".format(dbName))
+                logging.debug("Creating database: {}".format(dbName))
                 self.connection.executescript(_create_db_query)
             else:
                 self.connection = sqlite3.connect(dbName, detect_types=sqlite3.PARSE_DECLTYPES)
         except sqlite3.OperationalError as e:
-            get_logger().error("Error connecting to database: {}".format(e))
+            logging.error("Error connecting to database: {}".format(e))
             self.connection = None
 
         if self.connection:
@@ -68,7 +68,7 @@ class Cache(object):
             self.connection.text_factory = lambda x: unicode(x, 'utf-8')
             atexit.register(self.close)
         else:
-            get_logger().critical("Unable to open a connection to the database")
+            logging.critical("Unable to open a connection to the database")
             raise sqlite3.OperationalError
 
     def close(self):
@@ -76,7 +76,7 @@ class Cache(object):
         self.cursor.close()
         self.connection.commit()
         self.connection.close()
-        get_logger().info("Connections have been closed")
+        logging.info("Connections have been closed")
 
     def add_show(self, showTitle, episodes):
         """ If we find a show on the internet that is not in our database
@@ -114,13 +114,13 @@ class Cache(object):
 
         diffDays = (datetime.datetime.now() - result[0][-1])
 
-        get_logger().info("{} days old".format(diffDays.days))
+        logging.info("{} days old".format(diffDays.days))
 
-        update_days = abs(int(Settings['db_update']))
+        update_days = Settings['db_update']
 
         if diffDays.days >= update_days:
             #If the show is older than a week remove it then return not found
-            get_logger().warning("Show is older than a week, removing...")
+            logging.warning("Show is older than a week, removing...")
             sid = result[0][-2]
             self.remove_show(sid)
             return eps

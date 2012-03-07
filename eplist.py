@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+
+from __future__ import print_function
+
 __author__ = 'Dan Tracy'
 __email__ = 'djt5019 at gmail dot com'
 
@@ -17,12 +20,12 @@ __email__ = 'djt5019 at gmail dot com'
 import argparse
 import os
 import sys
+import logging
 
 from episode_parser import Utils
 from episode_parser import Episode
 from episode_parser import Constants
 
-from episode_parser.Logger import get_logger
 from episode_parser.Cache import Cache
 from episode_parser.Parser import Parser
 from episode_parser.Settings import Settings
@@ -82,20 +85,21 @@ def main():
         try:
             os.remove(os.path.join(Constants.RESOURCE_PATH, Settings['db_name']))
         except Exception as e:
-            get_logger().warning(e)
+            logging.warning(e)
             exit(1)
 
     if args.title in ('-', '.', 'pwd'):
         args.title = os.path.split(os.getcwd())[1]  # If a dash is entered use the current basename of the path
-        print "Searching for {}".format(args.title)
+        print ("Searching for {}".format(args.title))
 
     Settings['verbose'] = False
 
     if args.verbose:
         Settings['verbose'] = True
-        from logging import NOTSET
-        for handle in get_logger().handlers:
-            handle.setLevel(NOTSET)
+        l = logging.getLogger()
+        for handle in l.handlers:
+            handle.setLevel(logging.NOTSET)
+        l.setLevel(logging.NOTSET)
 
     if args.gui_enabled:
         import episode_parser.gui.gui as gui
@@ -109,7 +113,7 @@ def main():
         print_renamed_files(files)
         errors = Utils.rename(files)
         if not errors:
-            print "All files were successfully renamed"
+            print ("All files were successfully renamed")
         exit(0)
 
     Settings['path'] = args.pathname
@@ -140,7 +144,7 @@ def main():
         if seasonRange[-1] <= show.numSeasons:
             show.episodeList = [x for x in show.episodeList if x.season in seasonRange]
         else:
-            print "{} Season {} not found".format(args.title, args.season)
+            print ("{} Season {} not found".format(args.title, args.season))
             exit(1)
 
     if args.episode:
@@ -164,33 +168,33 @@ def main():
         print_renamed_files(files)
         errors = Utils.rename(files)
         if not errors:
-            print "All files were successfully renamed"
+            print ("All files were successfully renamed")
 
         exit(0)
 
     if args.display_header or args.verbose:
-        print "\nShow: {0}".format(args.title)
-        print "Number of episodes: {0}".format(len(show.episodeList))
-        print "Number of specials: {0}".format(len(show.specialsList))
-        print "Number of seasons: {0}".format(show.episodeList[-1].season)
-        print "-" * 30
+        print ("\nShow: {0}".format(args.title))
+        print ("Number of episodes: {0}".format(len(show.episodeList)))
+        print ("Number of specials: {0}".format(len(show.specialsList)))
+        print ("Number of seasons: {0}".format(show.episodeList[-1].season))
+        print ("-" * 30)
 
-    print ""
+    print ()
     curr_season = show.episodeList[0].season
     for eps in show.episodeList:
         if curr_season != eps.season and args.display_header:
-            print "\nSeason {0}".format(eps.season)
-            print "----------"
+            print ("\nSeason {0}".format(eps.season))
+            print ("----------")
 
-        print show.formatter.display(eps).encode(sys.getdefaultencoding(), 'ignore')
+        print (show.formatter.display(eps).encode(sys.getdefaultencoding(), 'ignore'))
         curr_season = eps.season
 
     if args.display_header:
-        print "\nSpecials"
-        print "---------"
+        print ("\nSpecials")
+        print ("---------")
 
     for eps in show.specialsList:
-        print show.formatter.display(eps).encode(sys.getdefaultencoding(), 'ignore')
+        print (show.formatter.display(eps).encode(sys.getdefaultencoding(), 'ignore'))
 
     if args.verify:
         verify_files(show)
@@ -201,23 +205,23 @@ def update_db():
 
         def _download():
             with Utils.open_file_in_resources(Settings['anidb_db_file'], 'w') as f:
-                get_logger().info("Retrieving AniDB Database file")
+                logging.info("Retrieving AniDB Database file")
                 url = Utils.get_url_descriptor(Settings['anidb_db_url'])
 
                 f.write(url.content)
-            get_logger().info("Successfully downloaded the new database")
+            logging.info("Successfully downloaded the new database")
 
         if not Utils.file_exists_in_resources(Settings['anidb_db_file']):
             _download()
         elif Utils.able_to_poll('db_download', one_unix_day):
             _download()
         else:
-            get_logger().error("Attempting to download the database file multiple times today")
+            logging.error("Attempting to download the database file multiple times today")
 
 
 def verify_files(show):
     if not show:
-        return
+        return()
 
     episode_files = show.episodeList
     path = Settings.get('path', os.getcwd())
@@ -231,7 +235,7 @@ def verify_files(show):
         ep_file = f.episode_file
 
         if ep_file.given_checksum < 0:
-            get_logger().warn("Episode {} dosen't have a checksum to compare to".format(ep_file.name))
+            logging.warn("Episode {} dosen't have a checksum to compare to".format(ep_file.name))
             continue
 
         if ep_file.verify_integrity():
@@ -242,17 +246,17 @@ def verify_files(show):
 
 def print_renamed_files(files):
     if not files:
-        print "Failed to find any files to rename"
+        print ("Failed to find any files to rename")
         exit(1)
 
     p = os.path.dirname(files[0][0])
-    print "PATH = {}".format(p)
-    print "-------" + '-' * len(p)
+    print ("PATH = {}".format(p))
+    print ("-------" + '-' * len(p))
 
     for old, new in files:
         print (u"OLD: {0}".format(os.path.split(old)[1]).encode(sys.getdefaultencoding(), 'ignore'))
         print (u"NEW: {0}".format(os.path.split(new)[1]).encode(sys.getdefaultencoding(), 'ignore'))
-        print
+        print ()
 
 
 def generate_default_tags():
@@ -277,8 +281,4 @@ def parse_range(range):
 
 
 if __name__ == '__main__':
-    if not Utils.file_exists_in_resources('settings.conf'):
-        get_logger().warning("Settings not found, creating a new one")
-        generate_default_config()
-
     main()

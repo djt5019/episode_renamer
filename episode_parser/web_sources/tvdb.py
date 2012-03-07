@@ -3,12 +3,12 @@ __author__ = 'Dan Tracy'
 __email__ = 'djt5019 at gmail dot com'
 
 import zipfile
+import logging
 
 from urllib import quote_plus
 
 import episode_parser.Utils as Utils
 
-from episode_parser.Logger import get_logger
 from episode_parser.Episode import Episode, Special
 from episode_parser.Settings import Settings
 from episode_parser.Exceptions import SettingsException
@@ -16,7 +16,7 @@ from episode_parser.Exceptions import SettingsException
 try:
     from BeautifulSoup import BeautifulStoneSoup as Soup
 except ImportError:
-    get_logger().critical(u"Error: BeautifulSoup was not found, unable to parse theTVdb")
+    logging.critical(u"Error: BeautifulSoup was not found, unable to parse theTVdb")
 
 priority = 1
 
@@ -25,8 +25,8 @@ def poll(title):
     try:
         API_KEY = Settings['tvdb_key']
     except SettingsException as e:
-        get_logger().warn("The TvDB Api key was not found, unable to poll the TvDB")
-        get_logger().warn(e)
+        logging.warn("The TvDB Api key was not found, unable to poll the TvDB")
+        logging.warn(e)
         return Utils.show_not_found
 
     try:
@@ -51,9 +51,9 @@ def poll(title):
         return Utils.show_not_found
 
     if len(seriesIds) > 1:
-        get_logger().warn("Conflict with series title ID on TVdB")
+        logging.warn("Conflict with series title ID on TVdB")
         for seriesName in seriesIdXml.findAll('seriesname'):
-            get_logger().info("Alternate series: {}".format(seriesName.getText()))
+            logging.info("Alternate series: {}".format(seriesName.getText()))
 
     seriesID = seriesIds[0].seriesid.getString()
     seriesIdXml.close()
@@ -70,7 +70,7 @@ def poll(title):
 
     with zipfile.ZipFile(tempZip) as z:
         if 'en.xml' not in z.namelist():
-            get_logger().error("English episode list was not found")
+            logging.error("English episode list was not found")
             return Utils.show_not_found
 
         with z.open('en.xml') as d:
@@ -86,7 +86,7 @@ def poll(title):
         num = int(data.episodenumber.getText())
 
         if name == "":
-            get_logger().info("The name pulled from TvDB appears to be empty")
+            logging.info("The name pulled from TvDB appears to be empty")
             continue
 
         if 'commentary' in name.lower():

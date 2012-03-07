@@ -7,10 +7,10 @@ import re
 import os
 import zlib
 import string
+import logging
 
 import Utils
 import Constants
-import Logger
 import Exceptions
 
 from Settings import Settings
@@ -58,7 +58,7 @@ class Show(object):
         """
         Sets the show's title to the value passed as well as prepares it for use
         """
-        Logger.get_logger().debug("Setting show title to: {}".format(val))
+        logging.debug("Setting show title to: {}".format(val))
         self.title = Utils.encode(val.capitalize())
         self.properTitle = Utils.prepare_title(val)
 
@@ -140,7 +140,7 @@ class EpisodeFile(object):
         """
         Calculate the CRC32 checksum for a file, painfully slow
         """
-        Logger.get_logger().info("calculating CRC for {}".format(os.path.split(self.path)[1]))
+        logging.info("calculating CRC for {}".format(os.path.split(self.path)[1]))
         with open(self.path, 'rb') as f:
             checksum = 0
             for line in f:
@@ -199,7 +199,7 @@ class EpisodeFormatter(object):
             path = os.path.join(Constants.RESOURCE_PATH, configFileName)
 
         if not os.path.exists(path):
-            Logger.get_logger().warning("Tag config file was not found")
+            logging.warning("Tag config file was not found")
             raise Exceptions.FormatterException("Tag config file was not found")
             return
 
@@ -212,7 +212,7 @@ class EpisodeFormatter(object):
             tokens = cfg.get(s, 'tags')
 
             if tokens == "":
-                Logger.get_logger().error("No tags for section [{}], using defaults".format(s))
+                logging.error("No tags for section [{}], using defaults".format(s))
                 continue
 
             if ',' in tokens:
@@ -222,7 +222,7 @@ class EpisodeFormatter(object):
 
             for f in tokens.intersection(allTokens):
                 #Look for duplicates
-                Logger.get_logger().error("In section [{}]: token '{}' redefined".format(s, f))
+                logging.error("In section [{}]: token '{}' redefined".format(s, f))
                 tokens.remove(f)
 
             allTokens = allTokens.union(tokens)

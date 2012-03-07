@@ -3,17 +3,17 @@ __author__ = 'Dan Tracy'
 __email__ = 'djt5019 at gmail dot com'
 
 import difflib
+import logging
 
 from string import punctuation as punct
 
 import episode_parser.Episode as Episode
-import episode_parser.Logger as Logger
 import episode_parser.Utils as API
 
 try:
     from BeautifulSoup import BeautifulStoneSoup as Soup
 except ImportError:
-    Logger.get_logger().critical(u"Error: BeautifulSoup was not found, unable to parse AniDB")
+    logging.critical(u"Error: BeautifulSoup was not found, unable to parse AniDB")
 
 priority = 3
 
@@ -23,7 +23,7 @@ def _parse_local(title):
     Try to find the anime ID (aid) in the dump file provided by AniDB
     """
     if not API.file_exists_in_resources('animetitles.dat'):
-        Logger.get_logger().warning("AniDB database file not found, unable to poll AniDB at this time")
+        logging.warning("AniDB database file not found, unable to poll AniDB at this time")
         return -1
 
     regex = API.regex_compile(r'(?P<aid>\d+)\|(?P<type>\d)\|(?P<lang>.+)\|(?P<title>.*)')
@@ -50,9 +50,9 @@ def _parse_local(title):
                 guesses.append((ratio, res.group('aid'), foundTitle))
 
     if guesses:
-        Logger.get_logger().info("{} possibilities".format(len(guesses)))
+        logging.info("{} possibilities".format(len(guesses)))
         _, aid, name = max(guesses)
-        Logger.get_logger().error("Closest show to '{}' is {} with id {}".format(title, name, aid))
+        logging.error("Closest show to '{}' is {} with id {}".format(title, name, aid))
 
     return -1
 
@@ -71,7 +71,7 @@ def _connect_HTTP(aid):
     soup = Soup(resp.content)
 
     if soup.find('error'):
-        Logger.get_logger().error("Temporally banned from AniDB, most likely due to flooding")
+        logging.error("Temporally banned from AniDB, most likely due to flooding")
         return []
 
     episodes = soup.findAll('episode')
@@ -111,7 +111,7 @@ def poll(title=""):
     if aid < 0:
         return API.show_not_found
 
-    Logger.get_logger().info("Found AID: {}".format(aid))
+    logging.info("Found AID: {}".format(aid))
 
     if API.able_to_poll('AniDB'):
         episodes = _connect_HTTP(aid)

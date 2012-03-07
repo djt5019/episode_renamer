@@ -72,31 +72,6 @@ bracket_season_regex = re.compile(r'[\[\(]{season}X{episode}[\]\)]'.format(**_RE
 ## Strings to generate default config files
 ############
 
-DEFAULT_LOGGING_CONFIG = '''
-[loggers]
-keys=root
-
-[logger_root]
-handlers=console
-qualname=root
-level=DEBUG
-
-[formatters]
-keys=consoleFormat
-
-[formatter_consoleFormat]
-format=%(levelname)s | "%(message)s"
-
-[handlers]
-keys=console
-
-[handler_console]
-class=logging.StreamHandler
-formatter=consoleFormat
-level=WARNING
-args=(sys.stdout,)
-'''
-
 DEFUALT_TAG_CONFIG = """
 [episode_name]
 tags=name, episode, title

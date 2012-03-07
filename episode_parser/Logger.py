@@ -5,43 +5,61 @@ __email__ = 'djt5019 at gmail dot com'
 import logging
 import logging.config
 import logging.handlers
-import atexit
 
 from os.path import join
 from datetime import datetime
 from cStringIO import StringIO
 
-from Constants import RESOURCE_PATH, DEFAULT_LOGGING_CONFIG
+from Constants import RESOURCE_PATH
 from Settings import Settings
 
-_logger = None
+
+def init_logging():
+    logging.config.fileConfig(StringIO(log_config))
+    logging.debug("APPLICATION START: {}".format(datetime.now()))
 
 
-def get_logger():
-    """Returns the global logger instance"""
-    global _logger
-
-    if _logger is None:
-        logging.config.fileConfig(StringIO(DEFAULT_LOGGING_CONFIG))
-        _logger = logging.getLogger()
-
-        logPath = join(RESOURCE_PATH, Settings['log_file'])
-
-        fileHandler = logging.handlers.RotatingFileHandler(logPath, maxBytes=2 ** 20, backupCount=3)
-        fileHandler.setFormatter(logging.Formatter('%(levelname)s | %(module)s.%(funcName)s - "%(message)s"'))
-        fileHandler.setLevel(logging.DEBUG)
-        _logger.addHandler(fileHandler)
-
-        _logger.debug("APPLICATION START: {}".format(datetime.now()))
-        atexit.register(_closeLogs)
-
-    return _logger
-
-
-def _closeLogs():
+def shutdown_logging():
     """
     Properly shutdown the loggers called upon program termination,
     registered to atexit in __init__.py
     """
-    _logger.debug("APPLICATION END: {}".format(datetime.now()))
+    logging.debug("APPLICATION END: {}".format(datetime.now()))
     logging.shutdown()
+
+
+log_config = '''
+[loggers]
+keys=root
+
+[logger_root]
+handlers=console, file
+qualname=root
+level=DEBUG
+
+[formatters]
+keys=consoleFormat, fileFormat
+
+[formatter_consoleFormat]
+format=%(levelname)s | "%(message)s"
+
+[formatter_fileFormat]
+format=%(levelname)s | %(module)s.%(funcName)s - "%(message)s"
+
+[handlers]
+keys=console, file
+
+[handler_console]
+class=logging.StreamHandler
+formatter=consoleFormat
+level=WARNING
+args=(sys.stdout,)
+
+[handler_file]
+class=logging.handlers.RotatingFileHandler
+formatter=fileFormat
+level=DEBUG
+backcount=3
+maxsize=2**20
+args=(r"{}", )
+'''.format(join(RESOURCE_PATH, Settings['log_file']))

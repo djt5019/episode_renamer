@@ -12,10 +12,10 @@ pattern = r"""
             ^		                # Start of the string
             (?:[\s]*?[\d]*\.?)	    # Number on list
             [\s]{2,}		        # Ignore whitespace
-            (?P<season>[\d]*)	    # Season number
+            (?P<season>\d+)  	    # Season number
             -			            # Separator
             [\s]*		            # Optional whitespace
-            (?P<episode>[\d]*)	    # Episode number
+            (?P<episode>\d+)	    # Episode number
             [\s]{2,}		        # Whitespace
             (?P<product>.+|)	    # Product number
             [\s]{1,}		        # Whitespace
@@ -45,6 +45,9 @@ def poll(title):
             episode = info.group('episode')
             season = int(info.group('season'))
             name = Utils.regex_sub('<.*?>', '', name).strip()
+
+            if '[Trailer]' in name:
+                name = name.replace('[Trailer]', '')
 
             if name == "TBA":
                 continue

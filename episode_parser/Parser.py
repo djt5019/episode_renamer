@@ -2,11 +2,12 @@
 __author__ = 'Dan Tracy'
 __email__ = 'djt5019 at gmail dot com'
 
+import logging
+
 import poll_sources
 import Utils
 
 from Episode import Show
-from Logger import get_logger
 
 
 class Parser(object):
@@ -41,23 +42,23 @@ class Parser(object):
 
         # The show was found in the database
         if self.show.episodeList:
-            get_logger().info("Show found in database")
+            logging.info("Show found in database")
             return self.show
 
         # The show was not in the database so now we try the website
-        get_logger().info("Show not found in database, polling web")
+        logging.info("Show not found in database, polling web")
         eps, specials = self._parseHTMLData()
         self.show.add_episodes(eps)
         self.show.add_specials(specials)
 
         if not self.show.episodeList:
-            get_logger().error("Show was not found, check spelling and try again")
+            logging.error("Show was not found, check spelling and try again")
             return self.show
 
         # If we successfully find the show from the internet then
         # we should add it to our database for later use
         if self.cache is not None:
-            get_logger().info("Adding show to the database")
+            logging.info("Adding show to the database")
             self.cache.add_show(self.show.properTitle, self.show.episodeList)
             self.cache.add_specials(self.show.properTitle, self.show.specialsList)
 
