@@ -44,10 +44,9 @@ REGEX = [
             r'^{series}{sep}+{special}',
             r'^{series}{sep}+{episode}',
             r'^{series}{sep}+{season}{sep}+{episode}',
-            r'^{series}{sep}*\[{season}X{episode}\]',
+            r'^{series}{sep}*',
             r'^{series}{sep}*{season}{sep}*{episode}{sep}*{sum}?',
             r'^{series}{sep}*{episode}',
-            r'^{series}{sep}+{season}X{episode}',
             r'^(?P<series>.*) - OVA (?P<special>\d+) - \w*',
             r'^{series}{sep}*{special}',
             r'{series}{sep}*(op|ed){sep}*(?P<junk>\d*)',  # Show intro /outro music, just ignore them
@@ -66,9 +65,8 @@ NUM_DICT = {'0': '', '1': 'one', '2': 'two', '3': 'three', '4': 'four', '5': 'fi
         '50': 'fifty', '60': 'sixty', '70': 'seventy', '80': 'eighty', '90': 'ninety'}
 
 checksum_regex = re.compile(r'[\[\(](?P<sum>[a-z0-9]{8})[\]\)]', re.I)
-encoding_regex = re.compile(r'\[H\.?.*?\]', re.I)
 remove_junk_regex = re.compile(r'[\[\(].*[\]\]]', re.I)
-
+bracket_season_regex = re.compile(r'[\[\(]{season}X{episode}[\]\)]'.format(**_REGEX_VARS), re.I)
 
 ############
 ## Strings to generate default config files

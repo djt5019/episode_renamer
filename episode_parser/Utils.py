@@ -115,9 +115,12 @@ def regex_search(filename):
     """
     Compare the filename to each of the regular expressions for a match
     """
-    filename = Constants.encoding_regex.sub("", filename)
+
+    # deal with anything in brackets ourselves, they tend to throw off the regexes
     checksum = Constants.checksum_regex.search(filename)
     filename = Constants.checksum_regex.sub("", filename)
+    season = Constants.bracket_season_regex.search(filename)
+
     filename = Constants.remove_junk_regex.sub("", filename)
 
     for count, regex in enumerate(Constants.regexList):
@@ -129,6 +132,10 @@ def regex_search(filename):
     result = result.groupdict()
     if checksum:
         result['sum'] = checksum.group('sum')
+
+    if season:
+        result['season'] = season.group('season')
+        result['episode'] = season.group('episode')
 
     return result
 
