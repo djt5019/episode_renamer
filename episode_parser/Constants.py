@@ -2,6 +2,7 @@
 __author__ = 'Dan Tracy'
 __email__ = 'djt5019 at gmail dot com'
 
+import re
 from os.path import split, join
 
 VIDEO_EXTENSIONS = ['.mkv', '.ogm', '.asf', '.asx', '.avi', '.flv', '.mov', '.mp4', '.mpg', '.rm', '.swf', '.vob',
@@ -40,27 +41,33 @@ for k, v in _REGEX_VARS.iteritems():
 REGEX = [
             r'^(?P<series>.*?) - Season (?P<season>\d+) - Episode (?P<episode>\d*) - .*',  # Also mine
             r'^(?P<series>.*?) - Episode (?P<episode>\d*) - .*',  # My usual format
-            r'^{subgroup}*{sep}+{series}{sep}+{special}{sep}+{sum}?',
-            r'^{subgroup}*{sep}+{series}{sep}+{episode}{sep}+{sum}?',
-            r'^{subgroup}*{sep}+{series}{sep}+{season}{sep}+{episode}{sep}+{sum}?',
-            r'^{series}{sep}*\[{season}X{episode}\]{sep}*{sum}?',
+            r'^{series}{sep}+{special}',
+            r'^{series}{sep}+{episode}',
+            r'^{series}{sep}+{season}{sep}+{episode}',
+            r'^{series}{sep}*\[{season}X{episode}\]',
             r'^{series}{sep}*{season}{sep}*{episode}{sep}*{sum}?',
-            r'^{series}{sep}*{episode}{sep}*{sum}?',
-            r'^{series}{sep}+{season}X{episode}{sep}*{sum}?',
+            r'^{series}{sep}*{episode}',
+            r'^{series}{sep}+{season}X{episode}',
             r'^(?P<series>.*) - OVA (?P<special>\d+) - \w*',
             r'^{series}{sep}*{special}',
-            r'{series}{sep}*(op|ed){sep}*(?P<junk>\d*){sep}*{sum}?',  # Show intro /outro music, just ignore them
+            r'{series}{sep}*(op|ed){sep}*(?P<junk>\d*)',  # Show intro /outro music, just ignore them
             r'.*{episode}',  # More of a general catch-all regex, last resort search for the first numbers in the filename
             ]
 
 ## Substitute the dictionary variables in to the unformated regexes (is the plural of regex, regexes?)
 REGEX = [r.format(**_REGEX_VARS) for r in REGEX]
 
+regexList = map(lambda x: re.compile(x, re.I), REGEX)
+
 NUM_DICT = {'0': '', '1': 'one', '2': 'two', '3': 'three', '4': 'four', '5': 'five', '6': 'six',
         '7': 'seven', '8': 'eight', '9': 'nine', '10': 'ten', '11': 'eleven', '12': 'twelve',
         '13': 'thirteen', '14': 'fourteen', '15': 'fifteen', '16': 'sixteen', '17': 'seventeen',
         '18': 'eighteen', '19': 'nineteen', '20': 'twenty', '30': 'thirty', '40': 'forty',
         '50': 'fifty', '60': 'sixty', '70': 'seventy', '80': 'eighty', '90': 'ninety'}
+
+checksum_regex = re.compile(r'[\[\(](?P<sum>[a-z0-9]{8})[\]\)]', re.I)
+encoding_regex = re.compile(r'\[H\.?.*?\]', re.I)
+remove_junk_regex = re.compile(r'[\[\(].*[\]\]]', re.I)
 
 
 ############

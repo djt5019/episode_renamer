@@ -334,11 +334,20 @@ class EpisodeFormatter(object):
             if not ep.episode_file:
                 return Settings['tag_start'] + tag + Settings['tag_end']
 
-            if hasattr(ep.episode_file, 'crc32'):
+            checksum = None
+
+            if ep.episode_file.checksum > 0:
+                checksum = hex(ep.episode_file.checksum)[2:10]
+
+            elif hasattr(ep.episode_file, 'crc32'):
                 # To remove the 0x from the hex string
-                checksum = hex(ep.episode_file.crc32())[2:]
-                if checksum.endswith('L'):
-                    checksum = checksum.replace('L', '')
+                checksum = hex(ep.episode_file.crc32())[2:10]
+
+            if caps:
+                return checksum.upper()
+            elif lower:
+                return checksum.lower()
+            else:
                 return checksum
 
         else:

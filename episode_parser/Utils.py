@@ -57,23 +57,21 @@ def extract_file_info(episode_filename):
     result = regex_search(episode_filename)
     info_dict = {}
 
-    if not result or 'junk' in result.groupdict():
+    if not result or 'junk' in result:
         get_logger().info("Could not find file information for: {}".format(episode_filename))
         return info_dict
 
-    res_dict = result.groupdict()
-    get_logger().debug(res_dict)
+    get_logger().debug(result)
 
-    if 'special' in result.groupdict():
-        info_dict['special_number'] = int(res_dict['special'])
-        info_dict['special_type'] = res_dict.get('type', 'OVA')
+    if 'special' in result:
+        info_dict['special_number'] = int(result['special'])
+        info_dict['special_type'] = result.get('type', 'OVA')
     else:
-        info_dict['episode_number'] = int(res_dict['episode'])
-        info_dict['season'] = int(res_dict.get('season', -1))
+        info_dict['episode_number'] = int(result['episode'])
+        info_dict['season'] = int(result.get('season', -1))
 
-    checksum = res_dict.get('sum', '0')
-    if checksum is None:
-        checksum = '0'
+    checksum = result.get('sum', '0')
+
     info_dict['checksum'] = int(checksum, base=16)
 
     return info_dict
@@ -93,7 +91,6 @@ def clean_filenames(path):
         get_logger().error("No video files were found in {}".format(path))
         return []
 
-    _compile_regexs()
     cleanFiles = []
     # We are going to store the episode number and path in a tuple then sort on the
     # episodes number.  Special episodes will be appended to the end of the clean list
@@ -114,27 +111,24 @@ def clean_filenames(path):
     return cleanFiles
 
 
-def _compile_regexs():
-    """
-    This function will only compile the regexs once.
-    """
-    if not Constants.regexList:
-        for r in Constants.REGEX:
-            Constants.regexList.append(re.compile(r, re.I))
-    return Constants.regexList
-
-
 def regex_search(filename):
     """
     Compare the filename to each of the regular expressions for a match
     """
-    filename = re.sub(r'\[H\..*?\]', "", filename)
-    result = None
-    for count, regex in enumerate(_compile_regexs()):
+    filename = Constants.encoding_regex.sub("", filename)
+    checksum = Constants.checksum_regex.search(filename)
+    filename = Constants.checksum_regex.sub("", filename)
+    filename = Constants.remove_junk_regex.sub("", filename)
+
+    for count, regex in enumerate(Constants.regexList):
         result = regex.search(filename)
         if result:
             get_logger().info("Regex #{} matched {}".format(count, filename))
             break
+
+    result = result.groupdict()
+    if checksum:
+        result['sum'] = checksum.group('sum')
 
     return result
 
