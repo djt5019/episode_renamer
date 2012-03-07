@@ -6,8 +6,6 @@ import os
 import re
 import time
 import pickle
-import requests
-import requests.exceptions
 import logging
 
 import Constants
@@ -17,6 +15,13 @@ import Exceptions
 from tempfile import TemporaryFile
 
 from Settings import Settings
+
+try:
+    import requests
+    import requests.exceptions
+except ImportError as e:
+    logging.critical("Unable to import the Requests module")
+    raise e
 
 
 def get_url_descriptor(url):

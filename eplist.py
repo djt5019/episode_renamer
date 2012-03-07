@@ -33,7 +33,7 @@ from episode_parser.Settings import Settings
 
 def main():
     cmd = argparse.ArgumentParser(description="Renames your TV shows",
-                                  prog='eplist', usage='%(prog)s [options] title')
+                                  prog='eplist', usage='%(prog)s --help [options] title')
 
     cmd.add_argument('title', default="", nargs='?',
         help="The title of the show")
@@ -86,13 +86,11 @@ def main():
             os.remove(os.path.join(Constants.RESOURCE_PATH, Settings['db_name']))
         except Exception as e:
             logging.warning(e)
-            exit(1)
+            sys.exit(1)
 
     if args.title in ('-', '.', 'pwd'):
         args.title = os.path.split(os.getcwd())[1]  # If a dash is entered use the current basename of the path
         print ("Searching for {}".format(args.title))
-
-    Settings['verbose'] = False
 
     if args.verbose:
         Settings['verbose'] = True
@@ -114,17 +112,17 @@ def main():
         errors = Utils.rename(files)
         if not errors:
             print ("All files were successfully renamed")
-        exit(0)
+        sys.exit(0)
 
     Settings['path'] = args.pathname
     rename = args.pathname is not None
 
     if rename and not os.path.exists(args.pathname):
-        exit("ERROR - Path provided does not exist")
+        sys.exit("ERROR - Path provided does not exist")
 
     if not args.title:
         cmd.print_usage()
-        exit(1)
+        sys.exit(1)
 
     cache = Cache(Settings['db_name'])
     episodeParser = Parser(args.title, cache)
@@ -135,7 +133,7 @@ def main():
     show.formatter = formatter
 
     if not show.episodeList:
-        exit(1)
+        sys.exit(1)
 
     # If the user specified a specific season we will filter our results
     # this also checks to make sure its a reasonable season number
@@ -145,7 +143,7 @@ def main():
             show.episodeList = [x for x in show.episodeList if x.season in seasonRange]
         else:
             print ("{} Season {} not found".format(args.title, args.season))
-            exit(1)
+            sys.exit(1)
 
     if args.episode:
         episodeRange = list(parse_range(args.episode))
@@ -170,7 +168,7 @@ def main():
         if not errors:
             print ("All files were successfully renamed")
 
-        exit(0)
+        sys.exit(0)
 
     if args.display_header or args.verbose:
         print ("\nShow: {0}".format(args.title))
@@ -247,7 +245,7 @@ def verify_files(show):
 def print_renamed_files(files):
     if not files:
         print ("Failed to find any files to rename")
-        exit(1)
+        sys.exit(1)
 
     p = os.path.dirname(files[0][0])
     print ("PATH = {}".format(p))

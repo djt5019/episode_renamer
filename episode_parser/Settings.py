@@ -26,8 +26,7 @@ Settings = SettingsDict(
     {
     'tvdb_key': None,
 
-    # Logger config files
-    'log_config': 'logger.conf',
+    # Logger output files
     'log_file': 'output.log',
 
     ## Database file for our episodes
@@ -50,6 +49,9 @@ Settings = SettingsDict(
     ## http://anidb.net/api/animetitles.dat.gz
     'anidb_db_file': 'animetitles.dat',
     'anidb_db_url': 'http://anidb.net/api/animetitles.dat.gz',
+
+    # Verbose output
+    'verbose': False,
 
     ## Tag options
     'tag_config': 'tags.cfg',

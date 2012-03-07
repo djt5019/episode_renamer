@@ -3,24 +3,28 @@ __author__ = 'Dan Tracy'
 __email__ = 'djt5019 at gmail dot com'
 
 import re
-from os.path import split, join
+from os.path import split, join, realpath
 
-VIDEO_EXTENSIONS = ['.mkv', '.ogm', '.asf', '.asx', '.avi', '.flv', '.mov', '.mp4', '.mpg', '.rm', '.swf', '.vob',
-                    '.wmv', '.mpeg']
+VIDEO_EXTENSIONS = set(['.mkv', '.ogm', '.asf', '.asx', '.avi', '.flv', '.mov', '.mp4', '.mpg', '.rm', '.swf', '.vob',
+                    '.wmv', '.mpeg'])
 
-PROJECT_SOURCE_PATH = split(__file__)[0]
+PROJECT_SOURCE_PATH = split(realpath(__file__))[0]
 PROJECT_PATH = split(PROJECT_SOURCE_PATH)[0]
 RESOURCE_PATH = join(PROJECT_PATH, 'resources')
 WEB_SOURCES_PATH = join(PROJECT_SOURCE_PATH, 'web_sources')
 
 SHOW_NOT_FOUND = []
+
 regexList = []
 
-## Common video naming formats, will be compiled if they are needed during episode renaming
-## in the _compile_regexs function, otherwise they will not be compiled for simple episode
-## information retrieval purposes
+NUM_DICT = {'0': '', '1': 'one', '2': 'two', '3': 'three', '4': 'four', '5': 'five', '6': 'six',
+        '7': 'seven', '8': 'eight', '9': 'nine', '10': 'ten', '11': 'eleven', '12': 'twelve',
+        '13': 'thirteen', '14': 'fourteen', '15': 'fifteen', '16': 'sixteen', '17': 'seventeen',
+        '18': 'eighteen', '19': 'nineteen', '20': 'twenty', '30': 'thirty', '40': 'forty',
+        '50': 'fifty', '60': 'sixty', '70': 'seventy', '80': 'eighty', '90': 'ninety'}
 
-_REGEX_VARS = {
+
+regex_vars = {
 'sep': r'[\-\~\.\_\s]',
 'sum': r'(.*[\[\(](?P<sum>[a-z0-9]{8})[\]\)])',
 'year': r'(:P<year>(19|20)?\d\d)',
@@ -31,14 +35,14 @@ _REGEX_VARS = {
 'special': r'(?P<type>ova|ona|extra|special|movie|dvd|bluray){sep}+(?P<special>\d+)',
 }
 
-for k, v in _REGEX_VARS.iteritems():
+for k, v in regex_vars.iteritems():
     try:
         # Substitute any regex variables that may have been used within later dictionary entries
-        _REGEX_VARS[k] = v.format(**_REGEX_VARS)
+        regex_vars[k] = v.format(**regex_vars)
     except IndexError as e:
         pass
 
-REGEX = [
+uncompiled_regex = [
             r'^(?P<series>.*?) - Season (?P<season>\d+) - Episode (?P<episode>\d*) - .*',  # Also mine
             r'^(?P<series>.*?) - Episode (?P<episode>\d*) - .*',  # My usual format
             r'^{series}{sep}+{special}',
@@ -54,19 +58,16 @@ REGEX = [
             ]
 
 ## Substitute the dictionary variables in to the unformated regexes (is the plural of regex, regexes?)
-REGEX = [r.format(**_REGEX_VARS) for r in REGEX]
+uncompiled_regex = [r.format(**regex_vars) for r in uncompiled_regex]
 
-regexList = map(lambda x: re.compile(x, re.I), REGEX)
-
-NUM_DICT = {'0': '', '1': 'one', '2': 'two', '3': 'three', '4': 'four', '5': 'five', '6': 'six',
-        '7': 'seven', '8': 'eight', '9': 'nine', '10': 'ten', '11': 'eleven', '12': 'twelve',
-        '13': 'thirteen', '14': 'fourteen', '15': 'fifteen', '16': 'sixteen', '17': 'seventeen',
-        '18': 'eighteen', '19': 'nineteen', '20': 'twenty', '30': 'thirty', '40': 'forty',
-        '50': 'fifty', '60': 'sixty', '70': 'seventy', '80': 'eighty', '90': 'ninety'}
+regexList = map(lambda x: re.compile(x, re.I), uncompiled_regex)
 
 checksum_regex = re.compile(r'[\[\(](?P<sum>[a-z0-9]{8})[\]\)]', re.I)
 remove_junk_regex = re.compile(r'[\[\(].*[\]\]]', re.I)
-bracket_season_regex = re.compile(r'[\[\(]{season}X{episode}[\]\)]'.format(**_REGEX_VARS), re.I)
+bracket_season_regex = re.compile(r'[\[\(]{season}X{episode}[\]\)]'.format(**regex_vars), re.I)
+
+del k, e, v, regex_vars, uncompiled_regex
+
 
 ############
 ## Strings to generate default config files
