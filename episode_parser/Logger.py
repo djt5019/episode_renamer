@@ -8,14 +8,13 @@ import logging.handlers
 
 from os.path import join
 from datetime import datetime
-from cStringIO import StringIO
 
 from Constants import RESOURCE_PATH
 from Settings import Settings
 
 
 def init_logging():
-    logging.config.fileConfig(StringIO(log_config))
+    logging.config.dictConfig(log_config)
     logging.debug("APPLICATION START: {}".format(datetime.now()))
 
 
@@ -28,38 +27,34 @@ def shutdown_logging():
     logging.shutdown()
 
 
-log_config = '''
-[loggers]
-keys=root
-
-[logger_root]
-handlers=console, file
-qualname=root
-level=DEBUG
-
-[formatters]
-keys=consoleFormat, fileFormat
-
-[formatter_consoleFormat]
-format=%(levelname)s | "%(message)s"
-
-[formatter_fileFormat]
-format=%(levelname)s | %(module)s.%(funcName)s - "%(message)s"
-
-[handlers]
-keys=console, file
-
-[handler_console]
-class=logging.StreamHandler
-formatter=consoleFormat
-level=WARNING
-args=(sys.stdout,)
-
-[handler_file]
-class=logging.handlers.RotatingFileHandler
-formatter=fileFormat
-level=DEBUG
-backcount=3
-maxsize=2**20
-args=(r"{}", )
-'''.format(join(RESOURCE_PATH, Settings['log_file']))
+log_config = {
+    'version': 1,
+    'formatters': {
+        'console_format': {
+            'format': '%(levelname)s | "%(message)s"'
+        },
+        'file_format': {
+            'format': '%(levelname)s | %(module)s.%(funcName)s - "%(message)s"'
+        }
+    },
+    'handlers': {
+        'file': {
+            'level': 'DEBUG',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'formatter': 'file_format',
+            'filename': r'{}'.format(join(RESOURCE_PATH, Settings['log_file'])),
+            'maxBytes': 2 ** 20,
+            'backupCount': 3
+        },
+        'console': {
+            'level': 'WARNING',
+            'class': 'logging.StreamHandler',
+            'formatter': 'console_format',
+        }
+    },
+    'root': {
+        'handlers': ['console', 'file'],
+        'qualname': 'root',
+        'level': 'DEBUG'
+    }
+}
