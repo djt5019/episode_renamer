@@ -16,12 +16,8 @@ from tempfile import TemporaryFile
 
 from Settings import Settings
 
-try:
-    import requests
-    import requests.exceptions
-except ImportError as e:
-    logging.critical("Unable to import the Requests module")
-    raise e
+import requests
+import requests.exceptions
 
 
 def get_url_descriptor(url):
@@ -133,7 +129,14 @@ def regex_search(filename):
             logging.info("Regex #{} matched {}".format(count, filename))
             break
 
-    result = result.groupdict()
+    if not result and not season:
+        raise Exceptions.RegexSearchFailed(filename)
+
+    if result:
+        result = result.groupdict()
+    else:
+        result = {}
+
     if checksum:
         result['sum'] = checksum.group('sum')
 
@@ -288,6 +291,10 @@ def prepare_title(title):
     """
     Remove any punctuation and whitespace from the title
     """
+
+    if not title:
+        return ""
+
     title = remove_punctuation(title).split()
 
     if not title:

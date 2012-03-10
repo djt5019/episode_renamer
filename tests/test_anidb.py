@@ -1,16 +1,14 @@
 # -*- coding: utf-8 -*-
-__author__='Dan Tracy'
-__email__='djt5019 at gmail dot com'
+__author__ = 'Dan Tracy'
+__email__ = 'djt5019 at gmail dot com'
 
-import EpParser.src.web_sources.anidb as anidb
+import unittest
 
-from EpParser.src.Utils import get_logger
+from episode_parser.web_sources import anidb
 
-def test_local_file():
-    assert( anidb._parse_local("FAKE SHOW") < 0 )
-    assert( anidb._parse_local("black lagoon") == anidb._parse_local("BLACK LAGOON") )
-    assert( anidb._parse_local("clannad") != anidb._parse_local("black lagoon") )
-    
-def test_poll_HTTP():
-    files = anidb.poll('dragonball')
-    assert( files != [] )
+
+class TestAniDB(unittest.TestCase):
+    def test_local_file(self):
+        assert(anidb._parse_local("FAKE SHOW") < 0)
+        assert(anidb._parse_local("black lagoon") == anidb._parse_local("BLACK LAGOON"))
+        assert(anidb._parse_local("clannad") != anidb._parse_local("black lagoon"))

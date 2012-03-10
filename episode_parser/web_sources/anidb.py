@@ -26,6 +26,8 @@ def _parse_local(title):
         logging.warning("AniDB database file not found, unable to poll AniDB at this time")
         return -1
 
+    title = title.lower()
+
     regex = API.regex_compile(r'(?P<aid>\d+)\|(?P<type>\d)\|(?P<lang>.+)\|(?P<title>.*)')
 
     sequence = difflib.SequenceMatcher(lambda x: x in punct, title.lower())

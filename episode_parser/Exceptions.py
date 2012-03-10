@@ -24,3 +24,7 @@ class FormatterException(GeneralException):
 
 class ShowException(GeneralException):
     pass
+
+
+class RegexSearchFailed(GeneralException):
+    pass

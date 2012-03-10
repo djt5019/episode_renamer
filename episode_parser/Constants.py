@@ -31,7 +31,7 @@ regex_vars = {
 'episode': r'(e|ep|episode)?{sep}*?(?P<episode>\d+)(?:v\d)?',  # ex: e3v2
 'season': r'(s|season)?{sep}*?(?P<season>\d+)',
 'series': r'(?P<series>.*)',
-'subgroup': r'(\[.*\])',
+'subgroup': r'(?P<group>\[.*\])',
 'special': r'(?P<type>ova|ona|extra|special|movie|dvd|bluray){sep}+(?P<special>\d+)',
 }
 
@@ -47,10 +47,9 @@ uncompiled_regex = [
             r'^(?P<series>.*?) - Episode (?P<episode>\d*) - .*',  # My usual format
             r'^{series}{sep}+{special}',
             r'^{series}{sep}+{episode}',
-            r'^{series}{sep}+{season}{sep}+{episode}',
-            r'^{series}{sep}*',
-            r'^{series}{sep}*{season}{sep}*{episode}{sep}*{sum}?',
-            r'^{series}{sep}*{episode}',
+            r'^{series}{sep}+{season}{sep}*{episode}',
+            r'^{series}{sep}+{season}{sep}*{episode}{sep}*{sum}?',
+            r'^{series}{sep}+{episode}',
             r'^(?P<series>.*) - OVA (?P<special>\d+) - \w*',
             r'^{series}{sep}*{special}',
             r'{series}{sep}*(op|ed){sep}*(?P<junk>\d*)',  # Show intro /outro music, just ignore them
@@ -63,7 +62,7 @@ uncompiled_regex = [r.format(**regex_vars) for r in uncompiled_regex]
 regexList = map(lambda x: re.compile(x, re.I), uncompiled_regex)
 
 checksum_regex = re.compile(r'[\[\(](?P<sum>[a-z0-9]{8})[\]\)]', re.I)
-remove_junk_regex = re.compile(r'[\[\(].*[\]\]]', re.I)
+remove_junk_regex = re.compile(r'[\[\(].*?[\]\]]', re.I)
 bracket_season_regex = re.compile(r'[\[\(]{season}X{episode}[\]\)]'.format(**regex_vars), re.I)
 
 del k, e, v, regex_vars, uncompiled_regex
