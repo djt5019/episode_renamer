@@ -170,6 +170,7 @@ def prepare_filenames(path, show):
             logging.warning("Could not find an episode for {}".format(f.name))
             continue
 
+        # attach the episode file to the corresponding episode entry
         episode.episode_file = f
 
         fileName = encode(f.name)
@@ -180,14 +181,9 @@ def prepare_filenames(path, show):
             sameCount += 1
             continue
 
+        newName = trim_long_filename(os.path.join(path, newName))
+
         episode.episode_file.new_name = newName
-
-        newName = os.path.join(path, newName)
-        if len(newName) > 256:
-            logging.error('The filename "{}" may be too long to rename, truncating'.format(newName))
-            offset = 255 - len(f.ext)
-            newName = newName[:offset] + f.ext
-
         cleanFiles.append((f.path, newName))
 
     if sameCount > 0:
@@ -259,6 +255,14 @@ def load_last_renamed_files():
 ########################
 ## Text based functions
 #######################
+
+def trim_long_filename(name):
+    if len(name) > 255:
+            ext = os.path.splitext(name)[1]
+            logging.error('The filename "{}" may be too long to rename, truncating'.format(name))
+            offset = 255 - len(ext)
+            name = name[:offset] + ext
+    return name
 
 
 def remove_punctuation(title):
