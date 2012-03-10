@@ -70,16 +70,10 @@ def main():
     cmd.add_argument('--update-db', action="store_true",
         help="Update the AniDB titles file, limit this to once a day since it's large")
 
-    cmd.add_argument('--generate-tags', action="store_true",
-        help="Recreate the default tag settings for the formatter")
-
     cmd.add_argument('--verify', action="store_true",
         help="Verify the checksums in the filename if they are present")
 
     args = cmd.parse_args()
-
-    if args.generate_tags:
-        generate_default_tags()
 
     if args.delete_cache:
         try:
@@ -255,10 +249,6 @@ def print_renamed_files(files):
         print (u"OLD: {0}".format(os.path.split(old)[1]).encode(sys.getdefaultencoding(), 'ignore'))
         print (u"NEW: {0}".format(os.path.split(new)[1]).encode(sys.getdefaultencoding(), 'ignore'))
         print ()
-
-
-def generate_default_tags():
-    Utils.write_config(Constants.DEFUALT_TAG_CONFIG, Settings['tag_config'])
 
 
 def parse_range(range):

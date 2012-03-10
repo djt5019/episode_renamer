@@ -92,7 +92,7 @@ def _connect_HTTP(aid):
 
         if ep_type == '1':
             epNum = int(e.epno.getText())
-            epList.append(Episode.Episode(API.encode(title), epNum, -1, epNum))
+            epList.append(Episode.Episode(API.encode(title), epNum, 1, epNum))
         else:
             epNum = int(e.epno.getText()[1:])
             epList.append(Episode.Special(API.encode(title), epNum, 'OVA'))
