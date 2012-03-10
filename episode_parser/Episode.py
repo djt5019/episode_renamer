@@ -207,6 +207,7 @@ class EpisodeFormatter(object):
         Displays the episode according to the users format
         """
         args = []
+        strip_whitespace = re.compile(r'[\s]+')
 
         for token in self.tokens:
             tags = self.re.split(token)
@@ -216,6 +217,7 @@ class EpisodeFormatter(object):
                 continue
 
             a = []
+            token = strip_whitespace.sub('', token)
             for tag in tags:
                 if self.re.match(tag):
                     #If it's a tag try to resolve it
@@ -229,7 +231,6 @@ class EpisodeFormatter(object):
 
     def _parse_modifiers(self, tag):
         caps = lower = pad = False
-
         # Tag modifiers such as number padding and caps
         if ':pad' in tag:
             tag = tag.replace(':pad', '').strip()
