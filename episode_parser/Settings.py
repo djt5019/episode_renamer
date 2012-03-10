@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+
 __author__ = 'Dan Tracy'
 __email__ = 'djt5019 at gmail dot com'
 
 import logging
+from os.path import realpath
 
 from Exceptions import SettingsException
 
@@ -22,8 +25,8 @@ class SettingsDict(dict):
 
 
 Settings = SettingsDict(
-    ## Your TvDB api key, required to poll their website
     {
+    ## Your TvDB api key, required to poll their website
     'tvdb_key': None,
 
     # Logger output files
@@ -50,12 +53,28 @@ Settings = SettingsDict(
     'anidb_db_file': 'animetitles.dat',
     'anidb_db_url': 'http://anidb.net/api/animetitles.dat.gz',
 
-    # Verbose output
+    ## Verbose output
     'verbose': False,
+
+    ## Default Format string
+    'format': "<series> - <type> <count:pad> - <title>",
 
     ## Tag options
     'tag_config': 'tags.cfg',
     'tag_start': '<',
     'tag_end': '>',
+    'tags': ['episode_name_tags', 'episode_number_tags', 'episode_count_tags', 'series_name_tags', 'season_number_tags', 'hash_tags', 'type_tags'],
+
+    'episode_name_tags': ['name', 'episode', 'title'],
+    'episode_number_tags': ['epnum', 'number', 'num'],
+    'episode_count_tags': ['count', 'ep'],
+    'series_name_tags': ['series', 'show'],
+    'season_number_tags': ['season', 'seasons'],
+    'hash_tags': ['hash', 'crc32', 'checksum'],
+    'type_tags': ['type', 'format'],
+
+    ## The current working directory
+    'path': realpath('.'),
+
     }
 )

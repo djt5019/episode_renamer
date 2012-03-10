@@ -106,6 +106,7 @@ class Episode(object):
         self.episodeNumber = int(episode_number)
         self.episodeCount = int(episode_count)
         self.episode_file = None
+        self.type = "Episode"
 
 
 class Special(object):
@@ -167,19 +168,12 @@ class EpisodeFormatter(object):
         """
         Allows printing of custom formatted episode information
         """
-        formatString = u"<series> - <type> <count> - <title>"
         self.show = show
-        self.formatString = Utils.encode(fmt) if fmt else formatString
+        self.formatString = Utils.encode(fmt) if fmt else Settings['format']
         self.tokens = self.formatString.split()
-        self.episodeTypeTokens = set(['type'])
-        self.episodeNumberTokens = set(["episode", "ep"])
-        self.seasonTokens = set(["season"])
-        self.episodeNameTokens = set(["title", "name", "epname"])
-        self.seriesNameTokens = set(["show", "series"])
-        self.episodeCounterTokens = set(["count", "number"])
-        self.hashTokens = set(["crc32", "hash", "sum", "checksum"])
         re_format = '(?P<tag>\{}.*?\{})'.format(Settings['tag_start'], Settings['tag_end'])
         self.re = re.compile(re_format, re.I)
+        del re_format
 
     def set_format(self, fmt=None):
         """
@@ -189,56 +183,24 @@ class EpisodeFormatter(object):
             self.formatString = Utils.encode(fmt)
             self.tokens = self.formatString.split()
 
-    def load_format_config(self, configFileName=None):
+    def load_format_config(self):
         """
         Load tokens from the format config file in RESOURCEPATH
         """
-        if not configFileName:
-            path = os.path.join(Constants.RESOURCE_PATH, Settings['tag_config'])
-        else:
-            path = os.path.join(Constants.RESOURCE_PATH, configFileName)
-
-        if not os.path.exists(path):
-            logging.warning("Tag config file was not found")
-            raise Exceptions.FormatterException("Tag config file was not found")
-            return
-
-        cfg = ConfigParser.ConfigParser()
-        cfg.read(path)
-
         allTokens = set()
 
-        for s in cfg.sections():
-            tokens = cfg.get(s, 'tags')
-
-            if tokens == "":
-                logging.error("No tags for section [{}], using defaults".format(s))
-                continue
-
-            if ',' in tokens:
-                tokens = set(t.strip() for t in tokens.split(','))
-            else:
-                tokens = set(tokens)
+        for s in Settings['tags']:
+            tokens = set(Settings[s])
 
             for f in tokens.intersection(allTokens):
                 #Look for duplicates
-                logging.error("In section [{}]: token '{}' redefined".format(s, f))
-                tokens.remove(f)
+                msg = "In section [{}]: token '{}' redefined".format(s, f)
+                logging.error(msg)
+                raise Exceptions.FormatterException(msg)
 
             allTokens = allTokens.union(tokens)
 
-            if s == 'episode_name':
-                self.episodeNameTokens = tokens
-            elif s == "episode_number":
-                self.episodeNumberTokens = tokens
-            elif s == "episode_count":
-                self.episodeCounterTokens = tokens
-            elif s == "series_name":
-                self.seriesNameTokens = tokens
-            elif s == "season_number":
-                self.seasonTokens = tokens
-            elif s == "hash":
-                self.hashTokens = tokens
+            self.__dict__[s] = tokens
 
     def display(self, ep):
         """
@@ -265,19 +227,8 @@ class EpisodeFormatter(object):
 
         return Utils.encode(' '.join(args))
 
-    def _parse(self, ep, tag):
-        if isinstance(ep, Special):
-            return self._parse_special(ep, tag)
-        else:
-            return self._parse_episode(ep, tag)
-
-    def _parse_episode(self, ep, tag):
-        """
-        Tokenize and substitute tags for their values using an episode
-        as well as the episode file for reference
-        """
+    def _parse_modifiers(self, tag):
         caps = lower = pad = False
-        tag = tag.lower()
 
         # Tag modifiers such as number padding and caps
         if ':pad' in tag:
@@ -295,129 +246,94 @@ class EpisodeFormatter(object):
         if ':' in tag:
             tag = tag.split(':', 2)[0]
 
-        if tag in self.episodeNumberTokens:
-            if pad:
-                #Obtain the number of digits in the highest numbered episode
-                pad = len(str(self.show.maxEpisodeNumber))
-            return str(ep.episodeNumber).zfill(pad)
+        return tag, caps, lower, pad
 
-        elif tag in self.episodeTypeTokens:
-            return "Episode"
+    def _parse(self, ep, tag):
+        """
+        Tokenize and substitute tags for their values using an episode
+        as well as the episode file for reference
+        """
+        tag = tag.lower()
+        tag, upper, lower, pad = self._parse_modifiers(tag)
 
-        elif tag in self.seasonTokens:
-            if pad:
-                #Number of digits in the highest numbered season
-                pad = len(str(self.show.numSeasons))
-            return str(ep.season).zfill(pad)
+        if tag in self.episode_number_tags:
+            return self._handle_episode_number(ep, tag, pad)
 
-        elif tag in self.episodeCounterTokens:
-            if pad:
-                #Total number of digits
-                pad = len(str(self.show.numEpisodes))
-            return str(ep.episodeCount).zfill(pad)
+        elif tag in self.type_tags:
+            if upper:
+                return ep.type.upper()
+            if lower:
+                return ep.type.lower()
+            return ep.type
 
-        elif tag in self.episodeNameTokens:
+        elif tag in self.season_number_tags:
+            return self._handle_season(ep, tag, pad)
+
+        elif tag in self.episode_count_tags:
+            return self._handle_episode_counter(ep, tag, pad)
+
+        elif tag in self.episode_name_tags:
             if lower:
                 return ep.title.lower()
-            elif caps:
+            elif upper:
                 return ep.title.upper()
             return ep.title
 
-        elif tag in self.seriesNameTokens:
+        elif tag in self.series_name_tags:
             if lower:
                 return self.show.title.lower()
-            elif caps:
+            elif upper:
                 return self.show.title.upper()
             return self.show.title
 
-        elif tag in self.hashTokens:
-            if not ep.episode_file:
-                return Settings['tag_start'] + tag + Settings['tag_end']
-
-            checksum = None
-
-            if ep.episode_file.checksum > 0:
-                checksum = hex(ep.episode_file.checksum)[2:10]
-
-            elif hasattr(ep.episode_file, 'crc32'):
-                # To remove the 0x from the hex string
-                checksum = hex(ep.episode_file.crc32())[2:10]
-
-            if caps:
-                return checksum.upper()
-            elif lower:
-                return checksum.lower()
-            else:
-                return checksum
+        elif tag in self.hash_tags:
+            hash_ = self._handle_hash(ep, tag).lower()
+            if lower:
+                return hash_.lower()
+            elif upper:
+                return hash_.upper()
+            return hash_
 
         else:
             # If it reaches this case it's most likely an invalid tag
             return Settings['tag_start'] + tag + Settings['tag_end']
 
-    def _parse_special(self, ep, tag):
-        """
-        Tokenize and substitute tags for their values using an episode
-        as well as the episode file for reference
-        """
-        caps = lower = pad = False
-        tag = tag.lower()
+    def _handle_season(self, ep, tag, pad=False):
+        if isinstance(ep, Special):
+            return tag
 
-        # Tag modifiers such as number padding and caps
-        if ':pad' in tag:
-            tag = tag.replace(':pad', '').strip()
-            pad = True
-        if ':caps' in tag:
-            tag = tag.replace(':caps', '').strip()
-            caps = True
-        if ':upper' in tag:
-            tag = tag.replace(':upper', '').strip()
-            caps = True
-        if ':lower' in tag:
-            tag = tag.replace(':lower', '').strip()
-            lower = True
-        if ':' in tag:
-            tag = tag.split(':', 2)[0]
+        if pad:
+            #Number of digits in the highest numbered season
+            pad = len(str(self.show.numSeasons))
+        return str(ep.season).zfill(pad)
 
-        if tag in self.episodeNumberTokens:
+    def _handle_episode_number(self, ep, tag, pad=False):
+        if isinstance(ep, Episode):
             if pad:
-                #Obtain the number of digits in the highest numbered episode
-                pad = len(str(self.show.specialList[-1].num))
-            return str(ep.num).zfill(pad)
-
-        elif tag in self.episodeTypeTokens:
-            return ep.type
-
-        elif tag in self.episodeCounterTokens:
+                pad = len(str(self.show.maxEpisodeNumber))
+            return str(ep.episodeNumber).zfill(pad)
+        else:
             if pad:
-                #Total number of digits
                 pad = len(str(self.show.specialsList[-1].num))
             return str(ep.num).zfill(pad)
 
-        elif tag in self.episodeNameTokens:
-            if lower:
-                return ep.title.lower()
-            elif caps:
-                return ep.title.upper()
-            return ep.title
+    def _handle_episode_counter(self, ep, tag, pad=False):
+        if isinstance(ep, Episode):
+            if pad:
+                pad = len(str(self.show.numEpisodes))
+            return str(ep.episodeCount).zfill(pad)
+        else:
+            if pad:
+                pad = len(str(self.show.specialsList[-1].num))
+            return str(ep.num).zfill(pad)
 
-        elif tag in self.seriesNameTokens:
-            if lower:
-                return self.show.title.lower()
-            elif caps:
-                return self.show.title.upper()
-            return self.show.title
+    def _handle_hash(self, ep, tag):
+        if not ep.episode_file:
+            return Settings['tag_start'] + tag + Settings['tag_end']
 
-        elif tag in self.hashTokens:
-            if not ep.episode_file:
-                return Settings['tag_start'] + tag + Settings['tag_end']
-
-            if hasattr(ep.episode_file, 'crc32'):
-                # To remove the 0x from the hex string
-                checksum = hex(ep.episode_file.crc32())[2:]
-                if checksum.endswith('L'):
-                    checksum = checksum.replace('L', '')
-                return checksum
+        if ep.episode_file.checksum > 0:
+            return hex(ep.episode_file.checksum)[2:10]
 
         else:
-            # If it reaches this case it's most likely an invalid tag
-            return Settings['tag_start'] + tag + Settings['tag_end']
+            # To remove the 0x from the hex string
+            return hex(ep.episode_file.crc32())[2:10]

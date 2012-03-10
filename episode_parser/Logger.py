@@ -4,7 +4,6 @@ __email__ = 'djt5019 at gmail dot com'
 
 import logging
 import logging.config
-import logging.handlers
 
 from os.path import join
 from datetime import datetime

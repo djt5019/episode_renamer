@@ -89,8 +89,12 @@ def clean_filenames(path):
     """
     # Filter out anything that doesnt have the correct extension and
     # filter out any directories
-    files = os.listdir(path)
-    files = filter(lambda x: is_valid_file(os.path.join(path, x)), files)
+    files = []
+    for f in os.listdir(path):
+        if is_valid_file(os.path.join(path, f)):
+            files.append(f)
+        else:
+            logging.info("Invalid file: {}".format(f))
 
     if not files:
         logging.error("No video files were found in {}".format(path))
