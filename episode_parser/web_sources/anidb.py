@@ -41,20 +41,25 @@ def _parse_local(title):
             if not res:
                 continue
 
-            foundTitle = API.remove_punctuation(API.encode(res.group('title')))
-            if title == foundTitle.lower():
+            original_title = API.encode(res.group('title').lower())
+            clean_title = API.remove_punctuation(API.encode(res.group('title'))).lower()
+            if title in (original_title, clean_title):
                 return res.group('aid')
 
-            sequence.set_seq2(foundTitle.lower())
+            sequence.set_seq2(clean_title.lower())
             ratio = sequence.ratio()
 
             if ratio > .80:
-                guesses.append((ratio, res.group('aid'), foundTitle))
+                guesses.append((ratio, res.group('aid'), original_title))
 
     if guesses:
         logging.info("{} possibilities".format(len(guesses)))
-        _, aid, name = max(guesses)
+        guesses = sorted(guesses, key=lambda x: x.ratio)
+        _, aid, name = guesses[0]
         logging.error("Closest show to '{}' is {} with id {}".format(title, name, aid))
+
+        for guess in guesses[1:]:
+            logging.info("Similar show {} [{}] also found".format(name, aid))
 
     return -1
 
