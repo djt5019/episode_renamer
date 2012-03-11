@@ -4,17 +4,23 @@ __author__ = 'Dan Tracy'
 __email__ = 'djt5019 at gmail dot com'
 
 import os
+import logging
+
 from PySide import QtGui, QtCore
 
-from src.Parser import Parser
-from src.Episode import Show, EpisodeFormatter
-from src.Cache import Cache
-from src.Logger import get_logger
-import src.Utils as Utils
+from episode_parser.Parser import Parser
+from episode_parser.Episode import Show, EpisodeFormatter
+from episode_parser.Cache import Cache
+
+from episode_parser import Utils
 
 cache = Cache()
 parser = Parser(cache=cache)
-logger = get_logger()
+
+
+class UpdateDisplaySignal(QtCore.QObject):
+    update_directory = QtCore.Signal()
+    update_episodes = QtCore.Signal()
 
 
 class Window(QtGui.QMainWindow):
@@ -72,6 +78,11 @@ class Form(QtGui.QWidget):
         self.fmtLine.editingFinished.connect(self.updateFormat)
         self.seasonBox.activated[str].connect(self.filterSeasons)
 
+        # Prepare the display update signals
+        self.updater = UpdateDisplaySignal()
+        self.updater.update_directory.connect(self.updateDirectoryListing)
+        self.updater.update_episodes.connect(self.updateEpisodeListing)
+
         #Set the left layout
         leftWidget = QtGui.QWidget()
         stackedWidget = QtGui.QWidget()
@@ -110,24 +121,40 @@ class Form(QtGui.QWidget):
         self.renameDir = ""
         self.episodes = []
         self.formatter = EpisodeFormatter(self.show)
-        self.formatter.load_format_config()
+        print "Loaded Config"
+
+    def updateDirectoryListing(self):
+        print "Updating Directory"
+        self.dirList.clear()
+        for ep in Utils.clean_filenames(self.renameDir):
+            self.dirList.addItem(ep.name)
+
+    def updateEpisodeListing(self):
+        print "Update Episodes"
+        if self.episodes == []:
+            InfoMessage(self, "Find Show", "Unable to find show, check spelling and try again")
+            return
+
+        self.epList.clear()
+        for ep in self.episodes:
+            self.epList.addItem(self.show.formatter.display(ep))
 
     def filterSeasons(self, text):
         if text == 'All':
-            self.displayShow()
+            self.updater.update_episodes.emit()
             return
 
         season = int(text)
         self.episodes = self.show.get_season(season)
 
-        self.displayShow()
+        self.updater.update_episodes.emit()
 
     def updateFormat(self):
         if self.fmtLine.text() != '':
             self.formatter.set_format(self.fmtLine.text())
 
         if self.show.title != "":
-            self.displayShow()
+            self.updater.update_episodes.emit()
 
     def findShow(self):
         showTitle = Utils.remove_punctuation(self.epLine.text().strip())
@@ -147,16 +174,7 @@ class Form(QtGui.QWidget):
             for s in xrange(self.show.numSeasons):
                 self.seasonBox.addItem(str(s + 1))
 
-        self.displayShow()
-
-    def displayShow(self):
-        if self.episodes == []:
-            InfoMessage(self, "Find Show", "Unable to find show, check spelling and try again")
-            return
-
-        self.epList.clear()
-        for ep in self.episodes:
-            self.epList.addItem(self.show.formatter.display(ep))
+        self.updater.update_episodes.emit()
 
     def displayDirDialog(self):
         newDir = QtGui.QFileDialog.getExistingDirectory(self, 'Choose Directory', r'G:\TV\Misc')
@@ -168,8 +186,7 @@ class Form(QtGui.QWidget):
         self.dirList.clear()
         self.epLine.setText(os.path.split(self.renameDir)[1])
 
-        for f in Utils.clean_filenames(self.renameDir):
-            self.dirList.addItem(f.name)
+        self.updater.update_directory.emit()
 
     def displayRenameDialog(self):
         if self.renameDir == "":
@@ -181,7 +198,11 @@ class Form(QtGui.QWidget):
             return
 
         files = Utils.prepare_filenames(self.renameDir, self.show)
-        RenameDialog(files, self)
+        dialog = RenameDialog(files, self)
+        dialog.finished.connect(self.updateDirectoryListing)
+        dialog.exec_()
+
+        self.updater.update_directory.emit()
 
 
 class InfoMessage(object):
@@ -231,13 +252,12 @@ class RenameDialog(QtGui.QDialog):
                 item.setCheckable(True)
                 item.rename_info = (old, new)
             except:
-                logger.critical("Unable to rename " + new)
+                logging.critical("Unable to rename " + new)
 
             if item.text():
                 self.model.appendRow(item)
 
         self.view.show()
-        self.show()
 
     def rename(self):
         files = []
@@ -255,10 +275,10 @@ class RenameDialog(QtGui.QDialog):
             self.model.appendRow(QtGui.QStandardItem("&The following files could not be renamed\n"))
             for e in errors:
                 self.model.appendRow(QtGui.QStandardItem(e[0]))
-                logger.error('Unable to rename: {}'.format(e))
+                logging.error('Unable to rename: {}'.format(e))
         else:
             self.model.appendRow(QtGui.QStandardItem("The files were renamed successfully"))
-            logger.info("Filenames renamed succesfully")
+            logging.info("Filenames renamed succesfully")
 
         self.buttonBox.accepted.connect(self.close)
         self.buttonBox.rejected.connect(self.close)

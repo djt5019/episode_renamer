@@ -1,11 +1,17 @@
 ## PyCharm Stuff
 .idea/
 
+## Sublime Text 2 stuff
+*.sublime-*
+
+## Coverage reports
+.coverage
+
 *.log
 *.log.*
 *.db
 *.bak
-*.log 
+*.log
 *.DS_Store
 *.pyc
 *.apikey
