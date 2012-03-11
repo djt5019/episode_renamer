@@ -2,7 +2,6 @@
 __author__ = 'Dan Tracy'
 __email__ = 'djt5019 at gmail dot com'
 
-import ConfigParser
 import re
 import os
 import zlib
@@ -10,7 +9,6 @@ import string
 import logging
 
 import Utils
-import Constants
 import Exceptions
 
 from Settings import Settings
@@ -174,6 +172,7 @@ class EpisodeFormatter(object):
         re_format = '(?P<tag>\{}.*?\{})'.format(Settings['tag_start'], Settings['tag_end'])
         self.re = re.compile(re_format, re.I)
         del re_format
+        self.load_format_config()
 
     def set_format(self, fmt=None):
         """
