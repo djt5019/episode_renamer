@@ -48,27 +48,47 @@ def is_valid_file(filename):
 ##############################
 ## Renaming utility functions
 ##############################
+def regex_search(filename):
+    """
+    Compare the filename to each of the regular expressions for a match
+    """
 
-def extract_file_info(episode_filename):
-    result = regex_search(episode_filename)
+    # deal with anything in brackets ourselves, they tend to throw off the regexes
+    checksum = Constants.checksum_regex.search(filename)
+    filename = Constants.checksum_regex.sub("", filename)
+    season = Constants.bracket_season_regex.search(filename)
+
+    filename = Constants.remove_junk_regex.sub("", filename)
+
+    for count, regex in enumerate(Constants.regexList):
+        result = regex.search(filename)
+        if result:
+            logging.info("Regex #{} matched {}".format(count, filename.encode(Settings['encoding'], 'ignore')))
+            break
+
+    if not result and not season:
+        logging.error("Unable to find information on: {}".format(filename))
+        raise Exceptions.RegexSearchFailed(filename)
+
+    # Work with the result dict rather than the annoying groupdicts
+    result = result.groupdict() if result else {}
+    result.update(**checksum.groupdict() if checksum else {})
+    result.update(**season.groupdict() if season else {})
     info_dict = {}
 
-    if not result or 'junk' in result:
-        logging.info("Could not find file information for: {}".format(episode_filename))
+    logging.info(result)
+
+    if 'junk' in result:
         return info_dict
 
-    logging.debug(result)
+    info_dict['checksum'] = int(result.get('sum', '0x0'), base=16)
 
     if 'special' in result:
         info_dict['special_number'] = int(result['special'])
         info_dict['special_type'] = result.get('type', 'OVA')
     else:
         info_dict['episode_number'] = int(result['episode'])
-        info_dict['season'] = int(result.get('season', -1))
-
-    checksum = result.get('sum', '0')
-
-    info_dict['checksum'] = int(checksum, base=16)
+        info_dict['season'] = int(result.get('season', '-1'))
 
     return info_dict
 
@@ -95,7 +115,7 @@ def clean_filenames(path):
     # We are going to store the episode number and path in a tuple then sort on the
     # episodes number.  Special episodes will be appended to the end of the clean list
     for f in files:
-        info = extract_file_info(f)
+        info = regex_search(f)
 
         if not info:
             continue
@@ -109,42 +129,6 @@ def clean_filenames(path):
     logging.info("Successfully cleaned the file names")
 
     return cleanFiles
-
-
-def regex_search(filename):
-    """
-    Compare the filename to each of the regular expressions for a match
-    """
-
-    # deal with anything in brackets ourselves, they tend to throw off the regexes
-    checksum = Constants.checksum_regex.search(filename)
-    filename = Constants.checksum_regex.sub("", filename)
-    season = Constants.bracket_season_regex.search(filename)
-
-    filename = Constants.remove_junk_regex.sub("", filename)
-
-    for count, regex in enumerate(Constants.regexList):
-        result = regex.search(filename)
-        if result:
-            logging.info("Regex #{} matched {}".format(count, filename))
-            break
-
-    if not result and not season:
-        raise Exceptions.RegexSearchFailed(filename)
-
-    if result:
-        result = result.groupdict()
-    else:
-        result = {}
-
-    if checksum:
-        result['sum'] = checksum.group('sum')
-
-    if season:
-        result['season'] = season.group('season')
-        result['episode'] = season.group('episode')
-
-    return result
 
 
 def prepare_filenames(path, show):
@@ -374,15 +358,13 @@ def able_to_poll(site, delay=None):
     last_access = Settings['access_dict'].get(site, -1)
     now = int(time.time())
 
-    if last_access < 0:
+    if (last_access < 0) or (now - last_access >= delay):
         Settings['access_dict'][site] = now
-        return True
+    else:
+        logging.warn('Possible flooding of "{}" detected: waiting for {} seconds'.format(site, delay))
+        time.sleep(2)
 
-    if now - last_access >= delay:
-        Settings['access_dict'][site] = now
-        return True
-
-    return False
+    return True
 
 
 def open_file_in_resources(name, mode='r'):
