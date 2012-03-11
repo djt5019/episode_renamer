@@ -178,7 +178,7 @@ def main():
             print ("\nSeason {0}".format(eps.season))
             print ("----------")
 
-        print (show.formatter.display(eps).encode(sys.getdefaultencoding(), 'ignore'))
+        print (show.formatter.display(eps).encode(Settings['encoding'], 'ignore'))
         curr_season = eps.season
 
     if args.display_header:
@@ -186,7 +186,7 @@ def main():
         print ("---------")
 
     for eps in show.specialsList:
-        print (show.formatter.display(eps).encode(sys.getdefaultencoding(), 'ignore'))
+        print (show.formatter.display(eps).encode(Settings['encoding'], 'ignore'))
 
     if args.verify:
         verify_files(show)
@@ -246,8 +246,8 @@ def print_renamed_files(files):
     print ("-------" + '-' * len(p))
 
     for old, new in files:
-        print (u"OLD: {0}".format(os.path.split(old)[1]).encode(sys.getdefaultencoding(), 'ignore'))
-        print (u"NEW: {0}".format(os.path.split(new)[1]).encode(sys.getdefaultencoding(), 'ignore'))
+        print (u"OLD: {0}".format(os.path.split(old)[1]).encode(Settings['encoding'], 'ignore'))
+        print (u"NEW: {0}".format(os.path.split(new)[1]).encode(Settings['encoding'], 'ignore'))
         print ()
 
 
