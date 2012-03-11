@@ -168,10 +168,9 @@ class EpisodeFormatter(object):
         """
         self.show = show
         self.formatString = Utils.encode(fmt) if fmt else Settings['format']
-        self.tokens = self.formatString.split()
         re_format = '(?P<tag>\{}.*?\{})'.format(Settings['tag_start'], Settings['tag_end'])
         self.re = re.compile(re_format, re.I)
-        del re_format
+        self.tokens = self.re.split(self.formatString)
         self.load_format_config()
 
     def set_format(self, fmt=None):
@@ -191,9 +190,10 @@ class EpisodeFormatter(object):
         for s in Settings['tags']:
             tokens = set(Settings[s])
 
-            for f in tokens.intersection(allTokens):
+            redefined = tokens.intersection(allTokens)
+            if redefined:
                 #Look for duplicates
-                msg = "In section [{}]: token '{}' redefined".format(s, f)
+                msg = "In section [{}]: tokens '{}' redefined".format(s, map(str, redefined))
                 logging.error(msg)
                 raise Exceptions.FormatterException(msg)
 
@@ -209,24 +209,14 @@ class EpisodeFormatter(object):
         strip_whitespace = re.compile(r'[\s]+')
 
         for token in self.tokens:
-            tags = self.re.split(token)
-
-            if not tags:
+            if self.re.match(token):
+                #If it's a tag try to resolve it
+                token = strip_whitespace.sub("", token)
+                args.append(self._parse(ep, token[1:-1]))
+            else:
                 args.append(token)
-                continue
 
-            a = []
-            token = strip_whitespace.sub('', token)
-            for tag in tags:
-                if self.re.match(tag):
-                    #If it's a tag try to resolve it
-                    a.append(self._parse(ep, tag[1:-1]))
-                else:
-                    a.append(tag)
-
-            args.append(''.join(a))
-
-        return Utils.encode(' '.join(args))
+        return Utils.encode(''.join(args))
 
     def _parse_modifiers(self, tag):
         caps = lower = pad = False
