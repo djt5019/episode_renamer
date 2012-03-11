@@ -5,6 +5,8 @@ __author__ = 'Dan Tracy'
 __email__ = 'djt5019 at gmail dot com'
 
 import logging
+import sys
+
 from os.path import realpath
 
 from Exceptions import SettingsException
@@ -55,6 +57,9 @@ Settings = SettingsDict(
 
     ## Verbose output
     'verbose': False,
+
+    ## System encoding, windows command line can't handle utf-8
+    'encoding': sys.getdefaultencoding(),
 
     ## Default Format string
     'format': "<series> - <type> <count:pad> - <title>",
