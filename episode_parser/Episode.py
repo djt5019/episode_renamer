@@ -11,6 +11,8 @@ import logging
 import Utils
 import Exceptions
 
+from collections import defaultdict
+
 from Settings import Settings
 
 
@@ -22,30 +24,45 @@ class Show(object):
     def __init__(self, seriesTitle):
         self.title = Utils.encode(string.capwords(seriesTitle))
         self.properTitle = Utils.prepare_title(seriesTitle.lower())
-        self.episodeList = []
-        self.episodesBySeason = {}
-        self.specialsList = []
-        self.formatter = EpisodeFormatter(self)
+        self._episodeList = []
+        self._episodesBySeason = defaultdict(list)
+        self.specials = []
+        self._formatter = None
         self.numSeasons = 0
         self.maxEpisodeNumber = 0
 
-    def add_episodes(self, eps):
+    @property
+    def episodes(self):
+        return self._episodeList
+
+    @episodes.setter
+    def episodes(self, eps):
         """
         Add episodes to the shows episode list
         """
         if eps:
-            self.episodeList = eps
+            self._episodeList = eps
             self.numSeasons = eps[-1].season
             self.maxEpisodeNumber = max(x.episodeNumber for x in eps)
             self.numEpisodes = len(eps)
 
-            for s in xrange(self.numSeasons + 1):
-                # Split each seasons episodes into it's own separate list and index it
-                # by the season number.  Very easy for looking up individual episodes
-                self.episodesBySeason[s] = filter(lambda x: x.season == s, self.episodeList)
+            for ep in self._episodeList:
+                self._episodesBySeason[ep.season].append(ep)
 
-    def add_specials(self, specials):
-            self.specialsList = specials
+    @property
+    def formatter(self):
+        if self._formatter:
+            return self._formatter
+        else:
+            raise Exceptions.ShowException("Formatter not attached to this show '{}'".format(self.show_title))
+
+    @formatter.setter
+    def formatter(self, fmt=None):
+        if not fmt or not isinstance(fmt, EpisodeFormatter):
+            raise ValueError("Expected a formatter but got {}".format(type(fmt)))
+
+        self._formatter = fmt
+        self._formatter.show = self
 
     @property
     def show_title(self):
@@ -54,7 +71,7 @@ class Show(object):
     @show_title.setter
     def show_title(self, val):
         """
-        Sets the show's title to the value passed as well as prepares it for use
+        Sets the shows title to the value passed as well as prepares it for use
         """
         logging.debug("Setting show title to: {}".format(val))
         self.title = Utils.encode(val.capitalize())
@@ -64,30 +81,30 @@ class Show(object):
         """
         Returns a list of episodes within the season or an empty list
         """
-        return self.episodesBySeason.get(season, [])
+        return self._episodesBySeasonSeason.get(season, [])
 
-    def get_episode(self, season, episode):
+    def get_episode(self, episode, season=0):
         """
         Returns a specific episode from a specific season or None
         """
-        if not 0 < episode < len(self.episodeList) + 1:
+        if not 0 < episode < len(self.episodes) + 1:
             return None
 
         # Adjust by one since episodes start count at 1 not 0
-        episode = episode - 1
+        episode -= 1
 
         if season > 0:
-            season = self.episodesBySeason.get(season, None)
+            season = self._episodesBySeasonSeason.get(season, None)
             if season:
                 return season[episode]
             else:
                 return None
         else:
-            return self.episodeList[episode]
+            return self.episodes[episode]
 
     def get_special(self, special_number):
-        if 0 < special_number < len(self.specialsList) + 1:
-            return self.specialsList[special_number - 1]
+        if 0 < special_number < len(self.specials) + 1:
+            return self.specials[special_number - 1]
         return None
 
 
@@ -166,28 +183,60 @@ class EpisodeFormatter(object):
         """
         Allows printing of custom formatted episode information
         """
-        self.show = show
-        self.formatString = Utils.encode(fmt) if fmt else Settings['format']
-        re_format = '(?P<tag>\{}.*?\{})'.format(Settings['tag_start'], Settings['tag_end'])
+        self.show_ = show
+        self._format_string = Utils.encode(fmt) if fmt else Settings['format']
+
+        ## Use negative lookahead assertion to ensure that the tag had not been escaped
+        re_format = r'(?<!\\)(?P<tag>\{start}.*?\{end})'
+        re_format = re_format.format(start=Settings['tag_start'], end=Settings['tag_end'])
+
         self.re = re.compile(re_format, re.I)
-        self.tokens = self.re.split(self.formatString)
+        self.tokens = self.re.split(self._format_string)
+        self.strip_whitespace_regex = re.compile(r'[\s]+')
+
+        self.episode_number_tags = None
+        self.type_tags = None
+        self.season_number_tags = None
+        self.episode_count_tags = None
+        self.episode_name_tags = None
+        self.hash_tags = None
+        self.series_name_tags = None
+        self.tags = filter(lambda x: x.endswith('tags'), dir(self))
+        self.settings = dict(upper=False, lower=False, pad=False, proper=False)
         self.load_format_config()
 
-    def set_format(self, fmt=None):
+    @property
+    def show(self):
+        return self.show_
+
+    @show.setter
+    def show(self, show=None):
+        if not show:
+            raise Exceptions.FormatterException("Expected a Show object but got {}".format(type(show)))
+        logging.debug("Setting show to {}".format(show.title))
+        self.show_ = show
+
+    @property
+    def format_string(self):
+        return self._format_string
+
+    @format_string.setter
+    def format_string(self, fmt=None):
         """
         Set the format string for the formatter
         """
         if fmt is not None:
-            self.formatString = Utils.encode(fmt)
-            self.tokens = self.formatString.split()
+            self._format_string = Utils.encode(fmt)
+            self.tokens = self.re.split(fmt)
+
+        raise Exceptions.FormatterException("Empty format string set")
 
     def load_format_config(self):
         """
         Load tokens from the format config file in RESOURCEPATH
         """
         allTokens = set()
-
-        for s in Settings['tags']:
+        for s in self.tags:
             tokens = set(Settings[s])
 
             redefined = tokens.intersection(allTokens)
@@ -206,12 +255,13 @@ class EpisodeFormatter(object):
         Displays the episode according to the users format
         """
         args = []
-        strip_whitespace = re.compile(r'[\s]+')
-
+        escaped_token = "\\{}".format(Settings['tag_start'])
         for token in self.tokens:
-            if self.re.match(token):
+            if escaped_token in token:
+                args.append(token.replace(escaped_token, Settings['tag_start']))
+            elif self.re.match(token):
                 #If it's a tag try to resolve it
-                token = strip_whitespace.sub("", token)
+                token = self.strip_whitespace_regex.sub("", token)
                 args.append(self._parse(ep, token[1:-1]))
             else:
                 args.append(token)
@@ -219,111 +269,112 @@ class EpisodeFormatter(object):
         return Utils.encode(''.join(args))
 
     def _parse_modifiers(self, tag):
-        caps = lower = pad = False
         # Tag modifiers such as number padding and caps
-        if ':pad' in tag:
-            tag = tag.replace(':pad', '').strip()
-            pad = True
-        if ':caps' in tag:
-            tag = tag.replace(':caps', '').strip()
-            caps = True
-        if ':upper' in tag:
-            tag = tag.replace(':upper', '').strip()
-            caps = True
-        if ':lower' in tag:
-            tag = tag.replace(':lower', '').strip()
-            lower = True
         if ':' in tag:
-            tag = tag.split(':', 2)[0]
+            tag, modifiers = tag.split(':', 1)
+        else:
+            return tag
 
-        return tag, caps, lower, pad
+        if ':pad' in modifiers:
+            self.settings['pad'] = True
+
+        if ':caps' in modifiers or ':upper' in modifiers:
+            self.settings['upper'] = True
+        elif ':lower' in modifiers:
+            self.settings['lower'] = True
+        elif ':proper' in modifiers:
+            self.settings['proper'] = True
+
+        return tag
 
     def _parse(self, ep, tag):
         """
         Tokenize and substitute tags for their values using an episode
         as well as the episode file for reference
         """
-        tag = tag.lower()
-        tag, upper, lower, pad = self._parse_modifiers(tag)
+        self.settings['proper'] = False
+        self.settings['upper'] = False
+        self.settings['lower'] = False
+        self.settings['pad'] = False
+
+        tag = self._parse_modifiers(tag.lower())
 
         if tag in self.episode_number_tags:
-            return self._handle_episode_number(ep, tag, pad)
+            return self._handle_episode_number(ep)
 
         elif tag in self.type_tags:
-            if upper:
-                return ep.type.upper()
-            if lower:
-                return ep.type.lower()
-            return ep.type
+            return self._handle_string(ep.type)
 
         elif tag in self.season_number_tags:
-            return self._handle_season(ep, tag, pad)
+            return self._handle_season(ep)
 
         elif tag in self.episode_count_tags:
-            return self._handle_episode_counter(ep, tag, pad)
+            return self._handle_episode_counter(ep)
 
         elif tag in self.episode_name_tags:
-            if lower:
-                return ep.title.lower()
-            elif upper:
-                return ep.title.upper()
-            return ep.title
+            return self._handle_string(ep.title)
 
         elif tag in self.series_name_tags:
-            if lower:
-                return self.show.title.lower()
-            elif upper:
-                return self.show.title.upper()
-            return self.show.title
+            return self._handle_string(self.show.title)
 
         elif tag in self.hash_tags:
-            hash_ = self._handle_hash(ep, tag).lower()
-            if lower:
-                return hash_.lower()
-            elif upper:
-                return hash_.upper()
-            return hash_
+            return self._handle_hash(ep, tag)
 
         else:
             # If it reaches this case it's most likely an invalid tag
             return Settings['tag_start'] + tag + Settings['tag_end']
 
-    def _handle_season(self, ep, tag, pad=False):
+    def _handle_string(self, string_):
+        if self.settings['lower']:
+            return string_.lower()
+        elif self.settings['upper']:
+            return string_.upper()
+        elif self.settings['proper']:
+            return string.capwords(string_)
+        else:
+            return string_
+
+    def _handle_number(self, number, pad_length):
+        if self.settings['pad']:
+            return str(number).zfill(pad_length)
+        else:
+            return str(number)
+
+    def _handle_season(self, ep):
         if isinstance(ep, Special):
-            return tag
+            # Going on the basis that specials don't have seasons
+            return ""
 
-        if pad:
-            #Number of digits in the highest numbered season
-            pad = len(str(self.show.numSeasons))
-        return str(ep.season).zfill(pad)
+        pad = len(str(self.show.numSeasons))
+        return self._handle_number(ep.season, pad)
 
-    def _handle_episode_number(self, ep, tag, pad=False):
+    def _handle_episode_number(self, ep):
         if isinstance(ep, Episode):
-            if pad:
-                pad = len(str(self.show.maxEpisodeNumber))
-            return str(ep.episodeNumber).zfill(pad)
+            number = ep.episodeNumber
+            pad = len(str(self.show.maxEpisodeNumber))
         else:
-            if pad:
-                pad = len(str(self.show.specialsList[-1].num))
-            return str(ep.num).zfill(pad)
+            number = ep.num
+            pad = len(str(self.show.specials[-1].num))
 
-    def _handle_episode_counter(self, ep, tag, pad=False):
+        return self._handle_number(number, pad)
+
+    def _handle_episode_counter(self, ep):
         if isinstance(ep, Episode):
-            if pad:
-                pad = len(str(self.show.numEpisodes))
-            return str(ep.episodeCount).zfill(pad)
+            number = ep.episodeCount
+            pad = len(str(self.show.numEpisodes))
         else:
-            if pad:
-                pad = len(str(self.show.specialsList[-1].num))
-            return str(ep.num).zfill(pad)
+            number = ep.num
+            pad = len(str(self.show.specials[-1].num))
+
+        return self._handle_number(number, pad)
 
     def _handle_hash(self, ep, tag):
         if not ep.episode_file:
-            return Settings['tag_start'] + tag + Settings['tag_end']
+            return "00000000"
 
         if ep.episode_file.checksum > 0:
-            return hex(ep.episode_file.checksum)[2:10]
+            return self._handle_string(hex(ep.episode_file.checksum))
 
         else:
             # To remove the 0x from the hex string
-            return hex(ep.episode_file.crc32())[2:10]
+            return self._handle_string(hex(ep.episode_file.crc32())[2:10])
