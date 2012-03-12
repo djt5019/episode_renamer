@@ -73,7 +73,13 @@ def main():
     cmd.add_argument('--verify', action="store_true",
         help="Verify the checksums in the filename if they are present")
 
+    cmd.add_argument('--filter', choices=['episodes', 'specials', 'both'],
+        help="Choose which types of episodes to show by setting the filter (default=both)")
+
     args = cmd.parse_args()
+
+    if args.filter:
+        Settings['filter'] = args.filter
 
     if args.delete_cache:
         try:
@@ -123,10 +129,9 @@ def main():
 
     show = episodeParser.getShow()
     formatter = Episode.EpisodeFormatter(show, args.format)
-    formatter.load_format_config()
     show.formatter = formatter
 
-    if not show.episodeList:
+    if not show.episodes:
         sys.exit(1)
 
     # If the user specified a specific season we will filter our results
@@ -134,7 +139,7 @@ def main():
     if args.season:
         seasonRange = list(parse_range(args.season))
         if seasonRange[-1] <= show.numSeasons:
-            show.episodeList = [x for x in show.episodeList if x.season in seasonRange]
+            show.episodes = [x for x in show.episodes if x.season in seasonRange]
         else:
             print ("{} Season {} not found".format(args.title, args.season))
             sys.exit(1)
@@ -143,15 +148,16 @@ def main():
         episodeRange = list(parse_range(args.episode))
 
         if not args.season:
-            show.episodeList = [x for x in show.episodeList if x.episodeCount in episodeRange]
+            show.episodes = [x for x in show.episodes if x.episodeCount in episodeRange]
         else:
-            show.episodeList = show.episodeList[episodeRange[0] - 1:episodeRange[-1]]
+            show.episodes = show.episodes[episodeRange[0] - 1:episodeRange[-1]]
 
+    ## Renaming functionality
     if  rename:
         path = args.pathname if args.pathname != '.' else os.getcwd()
         Utils.prepare_filenames(path, show)
         files = []
-        for e in show.episodeList + show.specialsList:
+        for e in show.episodes + show.specials:
             if e.episode_file and e.episode_file.new_name:
                 old = os.path.join(path, e.episode_file.name)
                 new = os.path.join(path, e.episode_file.new_name)
@@ -164,32 +170,43 @@ def main():
 
         sys.exit(0)
 
-    if args.display_header or args.verbose:
-        print ("\nShow: {0}".format(args.title))
-        print ("Number of episodes: {0}".format(len(show.episodeList)))
-        print ("Number of specials: {0}".format(len(show.specialsList)))
-        print ("Number of seasons: {0}".format(show.episodeList[-1].season))
+    print ()
+
+    if Settings['filter'] in ('both', 'episodes'):
+        display_episodes(show, args.display_header)
+
+    if Settings['filter'] in ('specials', 'both'):
+        display_specials(show, args.display_header)
+
+    if args.verify:
+        verify_files(show)
+
+
+def display_episodes(show, header=False):
+    if header:
+        print ("\nShow: {0}".format(show.title))
+        print ("Number of episodes: {0}".format(len(show.episodes)))
+        print ("Number of specials: {0}".format(len(show.specials)))
+        print ("Number of seasons: {0}".format(show.episodes[-1].season))
         print ("-" * 30)
 
-    print ()
-    curr_season = show.episodeList[0].season
-    for eps in show.episodeList:
-        if curr_season != eps.season and args.display_header:
+    curr_season = show.episodes[0].season
+    for eps in show.episodes:
+        if curr_season != eps.season and header:
             print ("\nSeason {0}".format(eps.season))
             print ("----------")
 
         print (show.formatter.display(eps).encode(Settings['encoding'], 'ignore'))
         curr_season = eps.season
 
-    if args.display_header:
+
+def display_specials(show, header=False):
+    if header:
         print ("\nSpecials")
         print ("---------")
 
-    for eps in show.specialsList:
+    for eps in show.specials:
         print (show.formatter.display(eps).encode(Settings['encoding'], 'ignore'))
-
-    if args.verify:
-        verify_files(show)
 
 
 def update_db():
@@ -215,7 +232,7 @@ def verify_files(show):
     if not show:
         return()
 
-    episode_files = show.episodeList
+    episode_files = show.episodes
     path = Settings.get('path', os.getcwd())
     if not all([e.episode_file for e in episode_files]):
         Utils.prepare_filenames(path, show)
