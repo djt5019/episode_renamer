@@ -60,6 +60,7 @@ def regex_search(filename):
 
     filename = Constants.remove_junk_regex.sub("", filename)
 
+    result = None
     for count, regex in enumerate(Constants.regexList):
         result = regex.search(filename)
         if result:
@@ -151,7 +152,7 @@ def prepare_filenames(path, show):
         elif f.episode_number > show.maxEpisodeNumber:
             episode = show.get_special(f.episode_number - show.maxEpisodeNumber)
         else:
-            episode = show.get_episode(f.season, f.episode_number)
+            episode = show.get_episode(season=f.season, episode=f.episode_number)
 
         if not episode:
             logging.warning("Could not find an episode for {}".format(f.name))
