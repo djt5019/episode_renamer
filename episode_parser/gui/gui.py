@@ -117,21 +117,20 @@ class Form(QtGui.QWidget):
 
         self.setLayout(displayBox)
         self.show = Show("")
-        self.fmtLine.setText(self.show.formatter.formatString)
         self.renameDir = ""
         self.episodes = []
         self.formatter = EpisodeFormatter(self.show)
+        self.show.formatter = self.formatter
+        self.fmtLine.setText(self.show.formatter.formatString)
         print "Loaded Config"
 
     def updateDirectoryListing(self):
-        print "Updating Directory"
         self.dirList.clear()
         for ep in Utils.clean_filenames(self.renameDir):
             self.dirList.addItem(ep.name)
 
     def updateEpisodeListing(self):
-        print "Update Episodes"
-        if self.episodes == []:
+        if not self.episodes:
             InfoMessage(self, "Find Show", "Unable to find show, check spelling and try again")
             return
 
@@ -170,7 +169,7 @@ class Form(QtGui.QWidget):
         self.episodes = self.show.episodeList
         self.seasonBox.clear()
         self.seasonBox.addItem("All")
-        if self.episodes != []:
+        if self.episodes:
             for s in xrange(self.show.numSeasons):
                 self.seasonBox.addItem(str(s + 1))
 
@@ -210,7 +209,7 @@ class InfoMessage(object):
         QtGui.QMessageBox.information(parent, windowTitle, msg)
 
 
-class RenameDialog(QtGui.QDialog):
+class RenameDialog(QtGui.QDialog, object):
     def __init__(self, files, parent=None):
         super(RenameDialog, self).__init__(parent)
         self.setGeometry(100, 100, 750, 500)
@@ -251,7 +250,7 @@ class RenameDialog(QtGui.QDialog):
                 item.setCheckState(QtCore.Qt.Checked)
                 item.setCheckable(True)
                 item.rename_info = (old, new)
-            except:
+            except OSError:
                 logging.critical("Unable to rename " + new)
 
             if item.text():
