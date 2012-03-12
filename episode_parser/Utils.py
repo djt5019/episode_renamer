@@ -200,7 +200,7 @@ def rename(files, resp=""):
         try:
             os.rename(old, new)
             old_order.append((new, old))
-        except Exception as e:
+        except OSError as e:
             errors.append((old, e))
 
     save_renamed_file_info(old_order)
