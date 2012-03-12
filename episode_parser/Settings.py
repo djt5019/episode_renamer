@@ -28,6 +28,9 @@ class SettingsDict(dict):
 
 Settings = SettingsDict(
     {
+    ## Filter to output episodes, specials, or both (both is default)
+    'filter': 'episodes',
+
     ## Your TvDB api key, required to poll their website
     'tvdb_key': None,
 
@@ -47,7 +50,7 @@ Settings = SettingsDict(
     'access_time_file': 'last_access.dat',
     'access_dict': {},
 
-    ## Time in seconds between polling a website, reccomended is 2
+    ## Time in seconds between polling a website, recommended is 2
     'poll_delay': 2,
 
     ## AniDB flat file with the ids of the shows visit link below for updated version from time to time
