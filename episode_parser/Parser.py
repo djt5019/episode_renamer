@@ -36,12 +36,12 @@ class Parser(object):
             return None
 
         if self.cache:
-            (eps, specials) = self._parseCacheData()
-            self.show.add_episodes(eps)
-            self.show.add_specials(specials)
+            (episodes, specials) = self._parseCacheData()
+            self.show.episodes = episodes
+            self.show.specials = specials
 
         # The show was found in the database
-        if self.show.episodeList:
+        if self.show.episodes:
             logging.info("Show found in database")
             return self.show
 
@@ -51,7 +51,7 @@ class Parser(object):
         self.show.add_episodes(eps)
         self.show.add_specials(specials)
 
-        if not self.show.episodeList:
+        if not self.show.episodes:
             logging.error("Show was not found, check spelling and try again")
             return self.show
 
@@ -59,8 +59,8 @@ class Parser(object):
         # we should add it to our database for later use
         if self.cache is not None:
             logging.info("Adding show to the database")
-            self.cache.add_show(self.show.properTitle, self.show.episodeList)
-            self.cache.add_specials(self.show.properTitle, self.show.specialsList)
+            self.cache.add_show(self.show.properTitle, self.show.episodes)
+            self.cache.add_specials(self.show.properTitle, self.show.episodes)
 
         return self.show
 
