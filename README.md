@@ -6,21 +6,13 @@ you to easily rename your files with custom formatting, generate checksums, and
 verify file integrity.  Extracts information by making use of the AniDB api,
 TheTvDb api, and by scraping epguides.
 
-Options
--------
-* **-h/--help**:             Display the help message and exit the program
-* **-d/--display-header**:  Display some descriptive information about the show
-* **-v/--verbose**:      Enables extra output to see whats going on
-* **-s/--season**:      Filters the episodes that are in the season range passed
-* **-e/--episodes**:      Filters the episodes that are in the range range passed
-* **-f/--format**:       Uses the format string passed to present the show titles
-* **-g/--gui-enabled**:     Uses a PySide gui rather than a CLI, currently unstable
-* **-r/--rename**:         Attempts to rename the episodes in the directory passed
-* **-u/--undo-rename**:      Will attempt to undo the last renaming operation in the current directory
-* **--delete-cache**:        Destroys and then recreates the episode database
-* **--update-db**:          Downloads an updated listing from AniDB
-* **--verify**:              Will try to verify the integrity of the episodes by checking the crc32 sum (if present)
-* **--filter**:              Filters the episodes show by type (episodes, specials, or both)
+Logs, databases, renamed file information, and a config file are all saved in the
+resources folder.  To edit the default settings open up the config.py file and poke
+around.
+
+If your environment does not support UTF-8, which is necessary for properly displaying
+some show title, you can make use of the simple gui.  PySide is required in order to
+make use of the gui.
 
 Usage
 -----
@@ -40,10 +32,31 @@ Renames the first five episodes of the show "Baccano" in the current directory
     eplist pwd --verify
 Verifys the integrity of the episode by comparing it to the checksum in the filename (if one is not present it is skipped)
 
+    eplist --gui-enabled
+Uses the graphical user interface rather than the command line to rename your shows, allows proper display of utf-8 if your environments console dosent (Windows)
+
+
+Options
+-------
+* **-h/--help**:             Display the help message and exit the program
+* **-d/--display-header**:  Display some descriptive information about the show
+* **-v/--verbose**:      Enables extra output to see whats going on
+* **-s/--season**:      Filters the episodes that are in the season range passed
+* **-e/--episodes**:      Filters the episodes that are in the range range passed
+* **-f/--format**:       Uses the format string passed to present the show titles
+* **-g/--gui-enabled**:     Uses a PySide gui rather than a CLI, currently unstable
+* **-r/--rename**:         Attempts to rename the episodes in the directory passed
+* **-u/--undo-rename**:      Will attempt to undo the last renaming operation in the current directory
+* **--delete-cache**:        Destroys and then recreates the episode database
+* **--update-db**:          Downloads an updated listing from AniDB
+* **--verify**:              Will try to verify the integrity of the episodes by checking the crc32 sum (if present)
+* **--filter**:              Filters the episodes show by type (episodes, specials, or both)
+
+
 Formatting
 ----------
 This program allows you to use custom formatting to rename your episode files.
-The tags can be changed by editing the dictionary in the Settings.py file.
+The tags can be changed by editing the dictionary in the config.py file in the resources folder.
 
 -   **episode_name_tags**: Will replace the tag with the episodes name
 -   **episode_number_tags**: Replaces the tag with the episodes number in the season
