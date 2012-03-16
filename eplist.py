@@ -78,6 +78,12 @@ def main():
 
     args = cmd.parse_args()
 
+    Settings['path'] = os.path.realpath(args.pathname) or os.path.realpath(os.getcwd())
+
+    # If we are acting on files then load the old names into memory
+    if args.pathname or args.undo_rename:
+        Utils.load_renamed_file()
+
     if args.filter:
         Settings['filter'] = args.filter
 
@@ -107,14 +113,14 @@ def main():
         update_db()
 
     if args.undo_rename:
-        files = Utils.load_last_renamed_files()
+        file_dict = Utils.find_old_filenames(Settings['path'])
+        files = file_dict['file_list']
         print_renamed_files(files)
         errors = Utils.rename(files)
         if not errors:
             print ("All files were successfully renamed")
         sys.exit(0)
 
-    Settings['path'] = args.pathname
     rename = args.pathname is not None
 
     if rename and not os.path.exists(args.pathname):
