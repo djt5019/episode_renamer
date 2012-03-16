@@ -33,7 +33,7 @@ Renames the first five episodes of the show "Baccano" in the current directory
 Verifys the integrity of the episode by comparing it to the checksum in the filename (if one is not present it is skipped)
 
     eplist --gui-enabled
-Uses the graphical user interface rather than the command line to rename your shows, allows proper display of utf-8 if your environments console dosent (Windows)
+Uses the graphical user interface rather than the command line to rename your shows, allows proper display of utf-8 if your environment dosen't (Windows)
 
 
 Options
