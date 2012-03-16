@@ -3,11 +3,12 @@
 
 from __future__ import unicode_literals
 
+__author__ = 'Dan Tracy'
+__email__ = 'djt5019 at gmail dot com'
+
 from os.path import realpath
 from sys import getdefaultencoding
 
-__author__ = 'Dan Tracy'
-__email__ = 'djt5019 at gmail dot com'
 
 config = {
     ## Filter to output episodes, specials, or both (both is default)
