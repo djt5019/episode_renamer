@@ -61,7 +61,7 @@ uncompiled_regex = [r.format(**regex_vars) for r in uncompiled_regex]
 
 regexList = map(lambda x: re.compile(x, re.I), uncompiled_regex)
 
-checksum_regex = re.compile(r'[\[\(](?P<sum>[a-z0-9]{8})[\]\)]', re.I)
+checksum_regex = re.compile(r'[\[\(](?P<sum>[a-f0-9]{8})[\]\)]', re.I)
 remove_junk_regex = re.compile(r'[\[\(].*?[\]\]]', re.I)
 bracket_season_regex = re.compile(r'[\[\(]{season}X{episode}[\]\)]'.format(**regex_vars), re.I)
 
