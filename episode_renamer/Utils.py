@@ -218,10 +218,12 @@ def rename(files, resp=""):
 #############################
 ## data format, save as json:
 ## { path_name_str_1: {
+##      show_name: string,
 ##      num_files: int,
 ##      file_list: [ (new_name, old_name)]
 ##      },
 ##  path_name_str_2: {
+##      show_name: string,
 ##      num_files: int,
 ##      file_list: [ (new_name, old_name)]
 ##      }, ...
@@ -234,8 +236,9 @@ def save_renamed_file_info(old_order):
     Save the previous names from the last renaming operation to disk
     """
     logging.info("Backing up old filenames")
-    path = Settings['path']
-    fmt = dict(num_files=len(old_order), file_list=old_order)
+    path = os.path.split(old_order[0][0])[0]
+    print path
+    fmt = dict(num_files=len(old_order), file_list=old_order, name=os.path.split(path)[1])
     Settings['backup_list'][path] = fmt
 
     with open_file_in_resources(Settings['rename_backup'], 'w') as f:
@@ -250,7 +253,7 @@ def find_old_filenames(path):
     if 'backup_list' not in Settings:
         raise Exceptions.API_Exception("Old filenames were not loaded beforehand")
 
-    return Settings['backup_list'].get(path, dict(file_list=[], num_files=0))
+    return Settings['backup_list'].get(path, dict(name="", file_list=[], num_files=0))
 
 
 def load_renamed_file():
