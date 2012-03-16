@@ -157,7 +157,7 @@ def main():
         if not args.season:
             filtered_episodes = [x for x in show.episodes if x.episode_count in episodeRange]
         else:
-            filtered_episodes = show.episodes[episodeRange[0] - 1:episodeRange[-1]]
+            filtered_episodes = filtered_episodes[episodeRange[0] - 1:episodeRange[-1]]
 
     ## Renaming functionality
     if  rename:
