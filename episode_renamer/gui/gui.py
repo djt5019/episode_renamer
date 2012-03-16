@@ -16,6 +16,15 @@ from episode_renamer import Utils
 
 cache = Cache()
 parser = Parser(cache=cache)
+Utils.load_renamed_file()
+
+## Snuff the console output for the gui
+log = logging.getLogger()
+for handler in log.handlers:
+    if isinstance(handler, logging.StreamHandler):
+        handler.setLevel(logging.CRITICAL)
+        del log
+        break
 
 
 class UpdateDisplaySignal(QtCore.QObject):
@@ -121,7 +130,7 @@ class Form(QtGui.QWidget):
         self.episodes = []
         self.formatter = EpisodeFormatter(self.show)
         self.show.formatter = self.formatter
-        self.fmtLine.setText(self.show.formatter.formatString)
+        self.fmtLine.setText(self.show.formatter.format_string)
         print "Loaded Config"
 
     def updateDirectoryListing(self):
@@ -150,7 +159,7 @@ class Form(QtGui.QWidget):
 
     def updateFormat(self):
         if self.fmtLine.text() != '':
-            self.formatter.set_format(self.fmtLine.text())
+            self.formatter.format_string = self.fmtLine.text()
 
         if self.show.title != "":
             self.updater.update_episodes.emit()
@@ -166,11 +175,11 @@ class Form(QtGui.QWidget):
         self.show = parser.getShow()
         self.formatter.show = self.show
         self.show.formatter = self.formatter
-        self.episodes = self.show.episodeList
+        self.episodes = self.show.episodes
         self.seasonBox.clear()
         self.seasonBox.addItem("All")
         if self.episodes:
-            for s in xrange(self.show.numSeasons):
+            for s in xrange(self.show.num_seasons):
                 self.seasonBox.addItem(str(s + 1))
 
         self.updater.update_episodes.emit()
