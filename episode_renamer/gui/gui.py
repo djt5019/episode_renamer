@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 #!/usr/bin/env python
+
+from __future__ import unicode_literals
+
 __author__ = 'Dan Tracy'
 __email__ = 'djt5019 at gmail dot com'
 
@@ -11,6 +14,7 @@ from PySide import QtGui, QtCore
 from episode_renamer.Parser import Parser
 from episode_renamer.Episode import Show, EpisodeFormatter
 from episode_renamer.Cache import Cache
+from episode_renamer.Settings import Settings
 
 from episode_renamer import Utils
 
@@ -44,6 +48,10 @@ class Window(QtGui.QMainWindow):
         exitAction.setStatusTip("&Exit the application")
         exitAction.triggered.connect(self.close)
 
+        undoRenameAction = QtGui.QAction("&Undo Rename", self)
+        undoRenameAction.setStatusTip("&Show the undo rename dialog")
+        undoRenameAction.triggered.connect(self.form.displayUndoRenameDialog)
+
         helpAction = QtGui.QAction('&Info', self)
         helpAction.setShortcut('F1')
         helpAction.setStatusTip("Show help menu")
@@ -53,6 +61,7 @@ class Window(QtGui.QMainWindow):
         fileMenu = menubar.addMenu('&File')
         helpMenu = menubar.addMenu('&Help')
 
+        fileMenu.addAction(undoRenameAction)
         fileMenu.addAction(exitAction)
         helpMenu.addAction(helpAction)
 
@@ -74,7 +83,6 @@ class Form(QtGui.QWidget):
 
         self.seasonBox.addItem("All")
 
-        self.currentDirLine = QtGui.QLineEdit()
         self.findDirBtn = QtGui.QPushButton("&Find Dir")
         self.dirList = QtGui.QListWidget()
         self.renameBtn = QtGui.QPushButton("&Rename")
@@ -134,6 +142,8 @@ class Form(QtGui.QWidget):
         print "Loaded Config"
 
     def updateDirectoryListing(self):
+        self.epLine.setText(os.path.split(self.renameDir)[1])
+        self.currentDirLabel.setText(os.path.abspath(self.renameDir))
         self.dirList.clear()
         for ep in Utils.clean_filenames(self.renameDir):
             self.dirList.addItem(ep.name)
@@ -189,10 +199,8 @@ class Form(QtGui.QWidget):
         if newDir == '':
             return
 
-        self.currentDirLabel.setText(os.path.abspath(newDir))
         self.renameDir = newDir
         self.dirList.clear()
-        self.epLine.setText(os.path.split(self.renameDir)[1])
 
         self.updater.update_directory.emit()
 
@@ -207,6 +215,31 @@ class Form(QtGui.QWidget):
 
         files = Utils.prepare_filenames(self.renameDir, self.show)
         dialog = RenameDialog(files, self)
+        dialog.finished.connect(self.updateDirectoryListing)
+        dialog.exec_()
+
+        self.updater.update_directory.emit()
+
+    def displayUndoRenameDialog(self):
+        items = []
+
+        for d in Settings['backup_list']:
+            items.append(Settings['backup_list'][d]['name'])
+
+        text, ok = QtGui.QInputDialog.getItem(self, "Select show", "", items, editable=False)
+
+        if not ok or not text:
+            return
+
+        items = []
+        for d in Settings['backup_list']:
+            renamed_entry = Settings['backup_list'][d]
+            if text == renamed_entry['name']:
+                self.renameDir = d
+                items = renamed_entry['file_list']
+                break
+
+        dialog = RenameDialog(items, self)
         dialog.finished.connect(self.updateDirectoryListing)
         dialog.exec_()
 
@@ -228,7 +261,6 @@ class RenameDialog(QtGui.QDialog, object):
 
         self.buttonBox = QtGui.QDialogButtonBox(QtCore.Qt.Vertical)
         self.buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Cancel | QtGui.QDialogButtonBox.Ok)
-        self.buttonBox.accepted.connect(self.rename)
         self.buttonBox.rejected.connect(self.close)
 
         self.model = QtGui.QStandardItemModel()
@@ -244,14 +276,13 @@ class RenameDialog(QtGui.QDialog, object):
 
         if not self.files:
             self.model.appendRow(QtGui.QStandardItem("No files need to be renamed"))
-            self.view.show()
-            self.show()
-            return
+            self.buttonBox.accepted.connect(self.close)
+            self.buttonBox.accepted.connect(self.close)
+        else:
+            self.buttonBox.accepted.connect(self.rename)
+            for old, new in self.files:
+                item = QtGui.QStandardItem()
 
-        for old, new in self.files:
-            item = QtGui.QStandardItem()
-
-            try:
                 old_name = Utils.encode(os.path.split(old)[1])
                 new_name = Utils.encode(os.path.split(new)[1])
                 string = Utils.encode("OLD: {}\nNEW: {}\n".format(old_name, new_name))
@@ -259,13 +290,12 @@ class RenameDialog(QtGui.QDialog, object):
                 item.setCheckState(QtCore.Qt.Checked)
                 item.setCheckable(True)
                 item.rename_info = (old, new)
-            except OSError:
-                logging.critical("Unable to rename " + new)
 
-            if item.text():
-                self.model.appendRow(item)
+                if item.text():
+                    self.model.appendRow(item)
 
         self.view.show()
+        self.show()
 
     def rename(self):
         files = []
