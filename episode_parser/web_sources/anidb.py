@@ -25,6 +25,7 @@ def _parse_local(title):
     """
     if not Utils.file_exists_in_resources('animetitles.dat'):
         logging.warning("AniDB database file not found, unable to poll AniDB at this time")
+        logging.warning("Try using the --update-db option to download an copy of it")
         return -1
 
     title = title.lower()
