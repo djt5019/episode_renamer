@@ -48,8 +48,8 @@ class Parser(object):
         # The show was not in the database so now we try the website
         logging.info("Show not found in database, polling web")
         eps, specials = self._parseHTMLData()
-        self.show.add_episodes(eps)
-        self.show.add_specials(specials)
+        self.show.episodes = eps
+        self.show.specials = specials
 
         if not self.show.episodes:
             logging.error("Show was not found, check spelling and try again")
@@ -60,7 +60,7 @@ class Parser(object):
         if self.cache is not None:
             logging.info("Adding show to the database")
             self.cache.add_show(self.show.properTitle, self.show.episodes)
-            self.cache.add_specials(self.show.properTitle, self.show.episodes)
+            self.cache.add_specials(self.show.properTitle, self.show.specials)
 
         return self.show
 
