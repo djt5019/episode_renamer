@@ -44,10 +44,10 @@ Settings = SettingsDict(
     'db_update': 7,
 
     ## Where to store the old filenames from the last rename operation
-    'rename_backup': 'last_rename.dat',
+    'rename_backup': 'last_rename.json',
 
     ## File to store the access times data
-    'access_time_file': 'last_access.dat',
+    'access_time_file': 'last_access.json',
     'access_dict': {},
 
     ## Time in seconds between polling a website, recommended is 2
