@@ -85,6 +85,7 @@ class TestUtils(unittest.TestCase):
 
             assert g is not None
 
+            print f, g
             if 'sum' in g:
                 assert g['sum'] == "DEADBEEF"
 
@@ -167,3 +168,4 @@ class TestUtils(unittest.TestCase):
         assert Utils.able_to_poll("http://www.google.com") == False
         time.sleep(2)
         assert Utils.able_to_poll("http://www.google.com") == True
+        assert Utils.able_to_poll("http://www.google.com", wait=True) == True
