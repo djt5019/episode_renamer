@@ -50,6 +50,7 @@ def poll(title):
     if not seriesIds:
         return Utils.show_not_found
 
+    ## TODO: Handle the series conflicts in a sane manner
     if len(seriesIds) > 1:
         logging.warn("Conflict with series title ID on TVdB")
         for seriesName in seriesIdXml.findAll('seriesname'):

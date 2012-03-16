@@ -145,7 +145,7 @@ def main():
     filtered_episodes = []
     if args.season:
         seasonRange = list(parse_range(args.season))
-        if seasonRange[-1] <= show.numSeasons:
+        if seasonRange[-1] <= show.num_seasons:
             filtered_episodes = [x for x in show.episodes if x.season in seasonRange]
         else:
             print ("{} Season {} not found".format(args.title, args.season))
@@ -155,7 +155,7 @@ def main():
         episodeRange = list(parse_range(args.episode))
 
         if not args.season:
-            filtered_episodes = [x for x in show.episodes if x.episodeCount in episodeRange]
+            filtered_episodes = [x for x in show.episodes if x.episode_count in episodeRange]
         else:
             filtered_episodes = show.episodes[episodeRange[0] - 1:episodeRange[-1]]
 

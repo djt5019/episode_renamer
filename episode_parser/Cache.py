@@ -89,7 +89,7 @@ class Cache(object):
         showId = self.cursor.lastrowid
 
         for eps in episodes:
-            show = (showId, eps.title, eps.season, eps.episodeNumber,)
+            show = (showId, eps.title, eps.season, eps.episode_number,)
             self.cursor.execute(
                 "INSERT INTO episodes values (NULL, ?, ?, ?, ?)", show)
 

@@ -68,7 +68,7 @@ def locate_show(title):
         else:
             eps.append(e)
 
-    eps = sorted(ifilter(lambda x: x.episodeNumber > 0, eps), key=lambda z: z.episodeCount)
+    eps = sorted(ifilter(lambda x: x.episode_number > 0, eps), key=lambda z: z.episode_count)
     specials = sorted(ifilter(lambda x: x.num > 0, specials), key=lambda z: z.num)
 
     return (eps, specials)

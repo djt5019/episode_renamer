@@ -7,8 +7,9 @@ import logging
 
 from string import punctuation as punct
 
-import episode_parser.Episode as Episode
-import episode_parser.Utils as API
+from episode_parser import Utils
+
+from episode_parser.Episode import Episode, Special
 
 try:
     from BeautifulSoup import BeautifulStoneSoup as Soup
@@ -22,27 +23,27 @@ def _parse_local(title):
     """
     Try to find the anime ID (aid) in the dump file provided by AniDB
     """
-    if not API.file_exists_in_resources('animetitles.dat'):
+    if not Utils.file_exists_in_resources('animetitles.dat'):
         logging.warning("AniDB database file not found, unable to poll AniDB at this time")
         return -1
 
     title = title.lower()
 
-    regex = API.regex_compile(r'(?P<aid>\d+)\|(?P<type>\d)\|(?P<lang>.+)\|(?P<title>.*)')
+    regex = Utils.regex_compile(r'(?P<aid>\d+)\|(?P<type>\d)\|(?P<lang>.+)\|(?P<title>.*)')
 
     sequence = difflib.SequenceMatcher(lambda x: x in punct, title.lower())
 
     guesses = []
 
-    with API.open_file_in_resources('animetitles.dat') as f:
+    with Utils.open_file_in_resources('animetitles.dat') as f:
         for line in f:
             res = regex.search(line)
 
             if not res:
                 continue
 
-            original_title = API.encode(res.group('title').lower())
-            clean_title = API.remove_punctuation(API.encode(res.group('title'))).lower()
+            original_title = Utils.encode(res.group('title').lower())
+            clean_title = Utils.remove_punctuation(Utils.encode(res.group('title'))).lower()
             if title in (original_title, clean_title):
                 return res.group('aid')
 
@@ -70,7 +71,7 @@ def _connect_HTTP(aid):
     """
     url = r'http://api.anidb.net:9001/httpapi?request=anime&client=eprenamer&clientver=1&protover=1&aid={}'.format(aid)
 
-    resp = API.get_url_descriptor(url)
+    resp = Utils.get_url_descriptor(url)
 
     if resp is None:
         return []
@@ -99,10 +100,10 @@ def _connect_HTTP(aid):
 
         if ep_type == '1':
             epNum = int(e.epno.getText())
-            epList.append(Episode.Episode(API.encode(title), epNum, 1, epNum))
+            epList.append(Episode(Utils.encode(title), epNum, 1, epNum))
         else:
             epNum = int(e.epno.getText()[1:])
-            epList.append(Episode.Special(API.encode(title), epNum, 'OVA'))
+            epList.append(Special(Utils.encode(title), epNum, 'OVA'))
 
     return epList
 
@@ -111,18 +112,18 @@ def poll(title=""):
     try:
         Soup
     except NameError:
-        return API.show_not_found
+        return Utils.show_not_found
 
     aid = _parse_local(title.lower())
 
     if aid < 0:
-        return API.show_not_found
+        return Utils.show_not_found
 
     logging.info("Found AID: {}".format(aid))
 
-    if API.able_to_poll('AniDB'):
+    if Utils.able_to_poll('AniDB'):
         episodes = _connect_HTTP(aid)
         if episodes:
             return episodes
 
-    return API.show_not_found
+    return Utils.show_not_found

@@ -12,24 +12,9 @@ from os.path import realpath
 from Exceptions import SettingsException
 
 
-class SettingsDict(dict):
-    def __init__(self, *args, **kwargs):
-        super(SettingsDict, self).__init__(*args, **kwargs)
-
-    def __getitem__(self, item):
-        val = dict.get(self, item)
-
-        if val is None:
-            logging.error("Setting {} not present in config file".format(item))
-            raise SettingsException("Setting: {} not present in config file".format(item))
-        else:
-            return val
-
-
-Settings = SettingsDict(
-    {
+Settings = {
     ## Filter to output episodes, specials, or both (both is default)
-    'filter': 'episodes',
+    'filter': 'both',
 
     ## Your TvDB api key, required to poll their website
     'tvdb_key': None,
@@ -57,6 +42,8 @@ Settings = SettingsDict(
     ## http://anidb.net/api/animetitles.dat.gz
     'anidb_db_file': 'animetitles.dat',
     'anidb_db_url': 'http://anidb.net/api/animetitles.dat.gz',
+    'anidb_username': None,
+    'anidb_password': None,
 
     ## Verbose output
     'verbose': False,
@@ -85,4 +72,19 @@ Settings = SettingsDict(
     'path': realpath('.'),
 
     }
-)
+
+
+class SettingsDict(dict):
+    def __init__(self, *args, **kwargs):
+        super(SettingsDict, self).__init__(*args, **kwargs)
+
+    def __getitem__(self, item):
+        val = dict.get(self, item)
+
+        if val is None:
+            logging.error("Setting {} not present in config file".format(item))
+            raise SettingsException("Setting: {} not present in config file".format(item))
+        else:
+            return val
+
+Settings = SettingsDict(Settings)

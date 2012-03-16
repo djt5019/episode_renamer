@@ -24,7 +24,7 @@ class Parser(object):
         """Sets a new show to search for, the old show will be removed """
         if showTitle:
             self.show = Show(showTitle)
-            self.show.properTitle = Utils.prepare_title(showTitle.lower())
+            self.show.proper_title = Utils.prepare_title(showTitle.lower())
             self.show.title = showTitle
 
     def getShow(self):
@@ -59,16 +59,16 @@ class Parser(object):
         # we should add it to our database for later use
         if self.cache is not None:
             logging.info("Adding show to the database")
-            self.cache.add_show(self.show.properTitle, self.show.episodes)
-            self.cache.add_specials(self.show.properTitle, self.show.specials)
+            self.cache.add_show(self.show.proper_title, self.show.episodes)
+            self.cache.add_specials(self.show.proper_title, self.show.specials)
 
         return self.show
 
     def _parseCacheData(self):
         """The query should return a positive show id otherwise
         it's not in the database"""
-        eps = self.cache.get_episodes(self.show.properTitle)
-        spc = self.cache.get_specials(self.show.properTitle)
+        eps = self.cache.get_episodes(self.show.proper_title)
+        spc = self.cache.get_specials(self.show.proper_title)
         return (eps, spc)
 
     def _parseHTMLData(self):

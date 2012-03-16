@@ -25,13 +25,13 @@ class Show(object):
     """
     def __init__(self, seriesTitle):
         self.title = Utils.encode(string.capwords(seriesTitle))
-        self.properTitle = Utils.prepare_title(seriesTitle.lower())
+        self.proper_title = Utils.prepare_title(seriesTitle.lower())
         self._episodeList = []
-        self._episodesBySeason = defaultdict(list)
+        self._episodes_by_season = defaultdict(list)
         self.specials = []
         self._formatter = None
-        self.numSeasons = 0
-        self.maxEpisodeNumber = 0
+        self.num_seasons = 0
+        self.max_episode_number = 0
 
     @property
     def episodes(self):
@@ -44,12 +44,12 @@ class Show(object):
         """
         if eps:
             self._episodeList = eps
-            self.numSeasons = eps[-1].season
-            self.maxEpisodeNumber = max(x.episodeNumber for x in eps)
-            self.numEpisodes = len(eps)
+            self.num_seasons = eps[-1].season
+            self.max_episode_number = max(x.episode_number for x in eps)
+            self.num_episodes = len(eps)
 
             for ep in self._episodeList:
-                self._episodesBySeason[ep.season].append(ep)
+                self._episodes_by_season[ep.season].append(ep)
 
     @property
     def formatter(self):
@@ -77,13 +77,13 @@ class Show(object):
         """
         logging.debug("Setting show title to: {}".format(val))
         self.title = Utils.encode(val.capitalize())
-        self.properTitle = Utils.prepare_title(val)
+        self.proper_title = Utils.prepare_title(val)
 
     def get_season(self, season):
         """
         Returns a list of episodes within the season or an empty list
         """
-        return self._episodesBySeasonSeason.get(season, [])
+        return self._episodes_by_seasonSeason.get(season, [])
 
     def get_episode(self, episode, season=0):
         """
@@ -96,7 +96,7 @@ class Show(object):
         episode -= 1
 
         if season > 0:
-            season = self._episodesBySeasonSeason.get(season, None)
+            season = self._episodes_by_seasonSeason.get(season, None)
             if season:
                 return season[episode]
             else:
@@ -120,8 +120,8 @@ class Episode(object):
         """
         self.title = Utils.encode(episode_title)
         self.season = int(season)
-        self.episodeNumber = int(episode_number)
-        self.episodeCount = int(episode_count)
+        self.episode_number = int(episode_number)
+        self.episode_count = int(episode_count)
         self.episode_file = None
         self.type = "Episode"
 
@@ -238,7 +238,7 @@ class EpisodeFormatter(object):
 
     def load_format_config(self):
         """
-        Load tokens from the format config file in RESOURCEPATH
+        Load tokens from the format setting in Settings.py
         """
         allTokens = set()
         for s in self.tags:
@@ -260,7 +260,7 @@ class EpisodeFormatter(object):
         Displays the episode according to the users format
         """
         args = []
-        escaped_token = "\\{}".format(Settings['tag_start'])
+        escaped_token = "\{}".format(Settings['tag_start'])
         for token in self.tokens:
             if escaped_token in token:
                 args.append(token.replace(escaped_token, Settings['tag_start']))
@@ -352,13 +352,13 @@ class EpisodeFormatter(object):
             # Going on the basis that specials don't have seasons
             return ""
 
-        pad = len(str(self.show.numSeasons))
+        pad = len(str(self.show.num_seasons))
         return self._handle_number(ep.season, pad)
 
     def _handle_episode_number(self, ep):
         if isinstance(ep, Episode):
-            number = ep.episodeNumber
-            pad = len(str(self.show.maxEpisodeNumber))
+            number = ep.episode_number
+            pad = len(str(self.show.max_episode_number))
         else:
             number = ep.num
             pad = len(str(self.show.specials[-1].num))
@@ -367,8 +367,8 @@ class EpisodeFormatter(object):
 
     def _handle_episode_counter(self, ep):
         if isinstance(ep, Episode):
-            number = ep.episodeCount
-            pad = len(str(self.show.numEpisodes))
+            number = ep.episode_count
+            pad = len(str(self.show.num_episodes))
         else:
             number = ep.num
             pad = len(str(self.show.specials[-1].num))
