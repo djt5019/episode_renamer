@@ -271,18 +271,20 @@ class EpisodeFormatter(object):
     def _parse_modifiers(self, tag):
         # Tag modifiers such as number padding and caps
         if ':' in tag:
-            tag, modifiers = tag.split(':', 1)
+            res = re.split(':', tag)
+            tag = res[0]
+            modifiers = res[1:]
         else:
             return tag
 
-        if ':pad' in modifiers:
+        if 'pad' in modifiers:
             self.settings['pad'] = True
 
-        if ':caps' in modifiers or ':upper' in modifiers:
+        if 'caps' in modifiers or 'upper' in modifiers:
             self.settings['upper'] = True
-        elif ':lower' in modifiers:
+        elif 'lower' in modifiers:
             self.settings['lower'] = True
-        elif ':proper' in modifiers:
+        elif 'proper' in modifiers:
             self.settings['proper'] = True
 
         return tag
@@ -318,7 +320,7 @@ class EpisodeFormatter(object):
             return self._handle_string(self.show.title)
 
         elif tag in self.hash_tags:
-            return self._handle_hash(ep, tag)
+            return self._handle_hash(ep)
 
         else:
             # If it reaches this case it's most likely an invalid tag
@@ -368,7 +370,7 @@ class EpisodeFormatter(object):
 
         return self._handle_number(number, pad)
 
-    def _handle_hash(self, ep, tag):
+    def _handle_hash(self, ep):
         if not ep.episode_file:
             return "00000000"
 
