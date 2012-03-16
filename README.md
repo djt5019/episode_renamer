@@ -26,13 +26,16 @@ Usage
 -----
 
     eplist "Cheers" --season 3 --episode 2
-    performs a search for the show "Cheers", then returns the second episode from the third season
+performs a search for the show "Cheers", then returns the second episode from the third season
 
     eplist pwd --season 1 --rename .
-    uses the current folders name to search for the show, the attempts to rename the episodes from the first season
+uses the current folders name to search for the show, the attempts to rename the episodes from the first season
 
     eplist "Cheers" -r . --format "<series:proper> - <type> <episode:pad> - <title> [<hash>]"
-    renames the episodes in the current directory using show information from cheers using a custom format
+renames the episodes in the current directory using show information from cheers using a custom format
+
+    eplist "Baccano" -r . -e 1-5
+Renames the first five episodes of the show "Baccano" in the current directory
 
 Formatting
 ----------
@@ -49,7 +52,7 @@ The tags can be changed by editing the dictionary in the Settings.py file.
 
 
 in addition to the formatting, this program allows you to modify the results of the tags with some
-basic text modifiers.  You modify the tag by using <tagname:mod1:mod2:...:modN>
+basic text modifiers.  You modify the tag by using \<tagname:mod1:mod2:...:modN\>
 
 -   pad: If the output is an integer it will automatically pad zeros
 -   upper: Capitalize the resulting string
