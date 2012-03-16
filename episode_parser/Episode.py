@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+
 __author__ = 'Dan Tracy'
 __email__ = 'djt5019 at gmail dot com'
 
@@ -122,6 +124,9 @@ class Episode(object):
         self.episodeCount = int(episode_count)
         self.episode_file = None
         self.type = "Episode"
+
+    def __repr__(self):
+        return "{} - {}".format(self.title, self.episode)
 
 
 class Special(object):

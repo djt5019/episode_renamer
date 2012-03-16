@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from __future__ import print_function
+from __future__ import unicode_literals
 
 __author__ = 'Dan Tracy'
 __email__ = 'djt5019 at gmail dot com'
@@ -142,10 +142,11 @@ def main():
 
     # If the user specified a specific season we will filter our results
     # this also checks to make sure its a reasonable season number
+    filtered_episodes = []
     if args.season:
         seasonRange = list(parse_range(args.season))
         if seasonRange[-1] <= show.numSeasons:
-            show.episodes = [x for x in show.episodes if x.season in seasonRange]
+            filtered_episodes = [x for x in show.episodes if x.season in seasonRange]
         else:
             print ("{} Season {} not found".format(args.title, args.season))
             sys.exit(1)
@@ -154,16 +155,24 @@ def main():
         episodeRange = list(parse_range(args.episode))
 
         if not args.season:
-            show.episodes = [x for x in show.episodes if x.episodeCount in episodeRange]
+            filtered_episodes = [x for x in show.episodes if x.episodeCount in episodeRange]
         else:
-            show.episodes = show.episodes[episodeRange[0] - 1:episodeRange[-1]]
+            filtered_episodes = show.episodes[episodeRange[0] - 1:episodeRange[-1]]
 
     ## Renaming functionality
     if  rename:
         path = args.pathname if args.pathname != '.' else os.getcwd()
         Utils.prepare_filenames(path, show)
         files = []
-        for e in show.episodes + show.specials:
+
+        if filtered_episodes:
+            episodes = filtered_episodes
+        else:
+            episodes = show.episodes
+
+        episodes += show.specials if Settings['filter'] in ('both', 'specials') else []
+
+        for e in episodes:
             if e.episode_file and e.episode_file.new_name:
                 old = os.path.join(path, e.episode_file.name)
                 new = os.path.join(path, e.episode_file.new_name)
@@ -176,10 +185,13 @@ def main():
 
         sys.exit(0)
 
-    print ()
+    print
 
     if Settings['filter'] in ('both', 'episodes'):
-        display_episodes(show, args.display_header)
+        if filtered_episodes:
+            display_episodes(show, filtered_episodes, args.display_header)
+        else:
+            display_episodes(show, show.episodes, args.display_header)
 
     if Settings['filter'] in ('specials', 'both'):
         display_specials(show, args.display_header)
@@ -188,7 +200,7 @@ def main():
         verify_files(show)
 
 
-def display_episodes(show, header=False):
+def display_episodes(show, episodes, header=False):
     if header:
         print ("\nShow: {0}".format(show.title))
         print ("Number of episodes: {0}".format(len(show.episodes)))
@@ -196,8 +208,8 @@ def display_episodes(show, header=False):
         print ("Number of seasons: {0}".format(show.episodes[-1].season))
         print ("-" * 30)
 
-    curr_season = show.episodes[0].season
-    for eps in show.episodes:
+    curr_season = episodes[0].season
+    for eps in episodes:
         if curr_season != eps.season and header:
             print ("\nSeason {0}".format(eps.season))
             print ("----------")
@@ -271,7 +283,7 @@ def print_renamed_files(files):
     for old, new in files:
         print (u"OLD: {0}".format(os.path.split(old)[1]).encode(Settings['encoding'], 'ignore'))
         print (u"NEW: {0}".format(os.path.split(new)[1]).encode(Settings['encoding'], 'ignore'))
-        print ()
+        print
 
 
 def parse_range(range):
