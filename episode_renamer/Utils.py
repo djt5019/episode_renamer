@@ -1,3 +1,4 @@
+
 # -*- coding: utf-8 -*-
 __author__ = 'Dan Tracy'
 __email__ = 'djt5019 at gmail dot com'
@@ -237,7 +238,6 @@ def save_renamed_file_info(old_order):
     """
     logging.info("Backing up old filenames")
     path = os.path.split(old_order[0][0])[0]
-    print path
     fmt = dict(num_files=len(old_order), file_list=old_order, name=os.path.split(path)[1])
     Settings['backup_list'][path] = fmt
 

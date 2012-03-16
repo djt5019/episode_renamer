@@ -237,7 +237,8 @@ def update_db():
                 url = Utils.get_url_descriptor(Settings['anidb_db_url'])
 
                 f.write(url.content)
-            logging.info("Successfully downloaded the new database")
+            print("Successfully downloaded the new database")
+            logging.info("Successfully updated anidb_db_file")
 
         if not Utils.file_exists_in_resources(Settings['anidb_db_file']):
             _download()

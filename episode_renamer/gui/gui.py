@@ -139,12 +139,12 @@ class Form(QtGui.QWidget):
         self.formatter = EpisodeFormatter(self.show)
         self.show.formatter = self.formatter
         self.fmtLine.setText(self.show.formatter.format_string)
-        print "Loaded Config"
 
     def updateDirectoryListing(self):
         self.epLine.setText(os.path.split(self.renameDir)[1])
         self.currentDirLabel.setText(os.path.abspath(self.renameDir))
         self.dirList.clear()
+        self.epList.clear()
         for ep in Utils.clean_filenames(self.renameDir):
             self.dirList.addItem(ep.name)
 
@@ -235,6 +235,7 @@ class Form(QtGui.QWidget):
         for d in Settings['backup_list']:
             renamed_entry = Settings['backup_list'][d]
             if text == renamed_entry['name']:
+                print d
                 self.renameDir = d
                 items = renamed_entry['file_list']
                 break
