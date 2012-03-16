@@ -22,13 +22,13 @@ import os
 import sys
 import logging
 
-from episode_parser import Utils
-from episode_parser import Episode
-from episode_parser import Constants
+from episode_renamer import Utils
+from episode_renamer import Episode
+from episode_renamer import Constants
 
-from episode_parser.Cache import Cache
-from episode_parser.Parser import Parser
-from episode_parser.Settings import Settings
+from episode_renamer.Cache import Cache
+from episode_renamer.Parser import Parser
+from episode_renamer.Settings import Settings
 
 
 def main():
@@ -106,7 +106,7 @@ def main():
         l.setLevel(logging.NOTSET)
 
     if args.gui_enabled:
-        import episode_parser.gui.gui as gui
+        import episode_renamer.gui.gui as gui
         exit(gui.main())
 
     if args.update_db:
@@ -187,6 +187,10 @@ def main():
 
     print
 
+    if args.verify:
+        verify_files(show)
+        exit(1)
+
     if Settings['filter'] in ('both', 'episodes'):
         if filtered_episodes:
             display_episodes(show, filtered_episodes, args.display_header)
@@ -195,9 +199,6 @@ def main():
 
     if Settings['filter'] in ('specials', 'both'):
         display_specials(show, args.display_header)
-
-    if args.verify:
-        verify_files(show)
 
 
 def display_episodes(show, episodes, header=False):
@@ -261,8 +262,8 @@ def verify_files(show):
 
         ep_file = f.episode_file
 
-        if ep_file.given_checksum < 0:
-            logging.warn("Episode {} dosen't have a checksum to compare to".format(ep_file.name))
+        if ep_file.given_checksum <= 0:
+            print("Episode {} dosen't have a checksum to compare to".format(ep_file.name))
             continue
 
         if ep_file.verify_integrity():

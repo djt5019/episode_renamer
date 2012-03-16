@@ -126,7 +126,7 @@ class Episode(object):
         self.type = "Episode"
 
     def __repr__(self):
-        return "{} - {}".format(self.title, self.episode)
+        return "{} - {}".format(self.title, self.episode_number)
 
 
 class Special(object):
@@ -155,6 +155,7 @@ class EpisodeFile(object):
         self.verified = False
         self.__dict__.update(kwargs)
         self.is_ova = ('special_number' in kwargs)
+        self.given_checksum = kwargs.get('checksum', 0)
         self.episode_number = self.__dict__.get('episode_number', -1)
 
     def crc32(self):

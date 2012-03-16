@@ -8,11 +8,11 @@ import logging
 
 from PySide import QtGui, QtCore
 
-from episode_parser.Parser import Parser
-from episode_parser.Episode import Show, EpisodeFormatter
-from episode_parser.Cache import Cache
+from episode_renamer.Parser import Parser
+from episode_renamer.Episode import Show, EpisodeFormatter
+from episode_renamer.Cache import Cache
 
-from episode_parser import Utils
+from episode_renamer import Utils
 
 cache = Cache()
 parser = Parser(cache=cache)

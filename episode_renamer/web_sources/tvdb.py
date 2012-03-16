@@ -7,11 +7,11 @@ import logging
 
 from urllib import quote_plus
 
-import episode_parser.Utils as Utils
+import episode_renamer.Utils as Utils
 
-from episode_parser.Episode import Episode, Special
-from episode_parser.Settings import Settings
-from episode_parser.Exceptions import SettingsException
+from episode_renamer.Episode import Episode, Special
+from episode_renamer.Settings import Settings
+from episode_renamer.Exceptions import SettingsException
 
 try:
     from BeautifulSoup import BeautifulStoneSoup as Soup

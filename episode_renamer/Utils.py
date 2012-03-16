@@ -149,8 +149,8 @@ def prepare_filenames(path, show):
     for f in files:
         if f.is_ova:
             episode = show.get_special(f.special_number)
-        elif f.episode_number > show.maxEpisodeNumber:
-            episode = show.get_special(f.episode_number - show.maxEpisodeNumber)
+        elif f.episode_number > show.max_episode_number:
+            episode = show.get_special(f.episode_number - show.max_episode_number)
         else:
             episode = show.get_episode(season=f.season, episode=f.episode_number)
 
