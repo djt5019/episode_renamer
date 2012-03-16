@@ -5,7 +5,7 @@ __email__ = 'djt5019 at gmail dot com'
 import os
 import re
 import time
-import pickle
+import json
 import logging
 
 import Constants
@@ -213,31 +213,60 @@ def rename(files, resp=""):
 
     return errors
 
+#############################
+## Undo rename functionality
+#############################
+## data format, save as json:
+## { path_name_str_1: {
+##      num_files: int,
+##      file_list: [ (new_name, old_name)]
+##      },
+##  path_name_str_2: {
+##      num_files: int,
+##      file_list: [ (new_name, old_name)]
+##      }, ...
+## }
+#############################
+
 
 def save_renamed_file_info(old_order):
     """
     Save the previous names from the last renaming operation to disk
     """
     logging.info("Backing up old filenames")
-    with open(os.path.join(Constants.RESOURCE_PATH, Settings['rename_backup']), 'w') as f:
-        pickle.dump(old_order, f)
+    path = Settings['path']
+    fmt = dict(num_files=len(old_order), file_list=old_order)
+    Settings['backup_list'][path] = fmt
+
+    with open_file_in_resources(Settings['rename_backup'], 'w') as f:
+        json.dump(Settings['backup_list'], f)
 
 
-def load_last_renamed_files():
+def find_old_filenames(path):
     """
-    Restore the previous names from the last renaming operation
+    Returns a dict with the filenames and the number of files
     """
     logging.info("Loading up old filenames")
-    if not os.path.exists(os.path.join(Constants.RESOURCE_PATH, Settings['rename_backup'])):
-        logging.warn("There seems to be no files to be un-renamed")
-        return []
+    if 'backup_list' not in Settings:
+        raise Exceptions.API_Exception("Old filenames were not loaded beforehand")
 
-    with open(os.path.join(Constants.RESOURCE_PATH, Settings['rename_backup'])) as f:
-        data = f.readlines()
+    return Settings['backup_list'].get(path, dict(file_list=[], num_files=0))
 
-    # Data will be in the form of a list of tuples
-    # [ (new1, old1), ..., (newN, oldN) ]
-    return pickle.loads(''.join(data))
+
+def load_renamed_file():
+    """
+    Loads the json file of renamed shows into Settings['backup_list']
+    """
+    logging.info("Loading the renamed episode json file")
+    if not file_exists_in_resources(Settings['rename_backup']):
+        raise Exceptions.API_FileNotFoundException("Json file [{}] with old information could not be found".format(Settings['rename_backup']))
+
+    with open_file_in_resources(Settings['rename_backup']) as f:
+        try:
+            Settings['backup_list'] = json.load(f)
+        except ValueError:
+            logging.warning("The json file is empty")
+            Settings['backup_list'] = {}
 
 
 ########################
@@ -246,10 +275,10 @@ def load_last_renamed_files():
 
 def trim_long_filename(name):
     if len(name) > 255:
-            ext = os.path.splitext(name)[1]
-            logging.error('The filename "{}" may be too long to rename, truncating'.format(name))
-            offset = 255 - len(ext)
-            name = name[:offset] + ext
+        ext = os.path.splitext(name)[1]
+        logging.error('The filename "{}" may be too long to rename, truncating'.format(name))
+        offset = 255 - len(ext)
+        name = name[:offset] + ext
     return name
 
 
@@ -346,7 +375,7 @@ def encode(text, encoding='utf-8'):
 show_not_found = Constants.SHOW_NOT_FOUND
 
 
-def able_to_poll(site, delay=None):
+def able_to_poll(site, delay=None, wait=False):
     """
     Prevents flooding by waiting two seconds from the last poll
     """
@@ -359,13 +388,20 @@ def able_to_poll(site, delay=None):
     last_access = Settings['access_dict'].get(site, -1)
     now = int(time.time())
 
+    flooding = True
+
     if (last_access < 0) or (now - last_access >= delay):
         Settings['access_dict'][site] = now
-    else:
-        logging.warn('Possible flooding of "{}" detected: waiting for {} seconds'.format(site, delay))
-        time.sleep(2)
+        flooding = False
 
-    return True
+    if flooding and wait:
+        logging.warn('Possible flooding of "{}" detected: waiting for {} seconds'.format(site, delay))
+        time.sleep(int(delay))
+        flooding = False
+    elif flooding:
+        logging.warn('Possible flooding of "{}" detected'.format(site, delay))
+
+    return not flooding
 
 
 def open_file_in_resources(name, mode='r'):
@@ -421,8 +457,8 @@ def save_last_access_times():
     if not Settings['access_dict']:
         return False
 
-    with open(os.path.join(Constants.RESOURCE_PATH, Settings['access_time_file']), 'w') as p:
-        pickle.dump(Settings['access_dict'], p)
+    with open_file_in_resources(Settings['access_time_file'], 'w') as p:
+        json.dump(Settings['access_dict'], p)
 
     return True
 
@@ -431,11 +467,8 @@ def load_last_access_times():
     """
     Load the access times dictionary from the file in resource path
     """
-    name = os.path.join(Constants.RESOURCE_PATH, Settings['access_time_file'])
-    if os.path.exists(name):
-        with open(name, 'r') as p:
-            data = p.readlines()
-
-        return pickle.loads(''.join(data))
-    else:
+    if not file_exists_in_resources(Settings['access_time_file']):
         return {}
+
+    with open_file_in_resources(Settings['access_time_file']) as f:
+        return json.load(f)
