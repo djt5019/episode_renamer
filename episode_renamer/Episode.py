@@ -83,7 +83,7 @@ class Show(object):
         """
         Returns a list of episodes within the season or an empty list
         """
-        return self._episodes_by_seasonSeason.get(season, [])
+        return self._episodes_by_season.get(season, [])
 
     def get_episode(self, episode, season=0):
         """
@@ -234,8 +234,8 @@ class EpisodeFormatter(object):
         if fmt is not None:
             self._format_string = Utils.encode(fmt)
             self.tokens = self.re.split(fmt)
-
-        raise Exceptions.FormatterException("Empty format string set")
+        else:
+            raise Exceptions.FormatterException("Empty format string set")
 
     def load_format_config(self):
         """
