@@ -6,7 +6,7 @@ setup(
     name='eplist',
     version='0.1.1',
     description='Simple episode renaming program',
-    long_description=open('README.md').read(),
+    long_description=open('README.rst').read(),
     author='Dan Tracy',
     author_email='djt5019@gmail.com',
     url='https://github.com/djt5019/episode_renamer',
