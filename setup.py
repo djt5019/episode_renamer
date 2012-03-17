@@ -13,12 +13,16 @@ setup(
     packages=find_packages(),
     license="MIT",
     classifiers=[
-    "Programming Language :: Python :: 2.7",
-    "Topic :: Multimedia :: Video",
-    "Topic :: Utilities",
-    "Environment :: Console",
-    "Environment :: X11 Applications :: Qt"
+        "Programming Language :: Python :: 2.7",
+        "Topic :: Multimedia :: Video",
+        "Topic :: Utilities",
+        "Environment :: Console",
+        "Environment :: X11 Applications :: Qt"
     ],
     platforms=['Cross-platform'],
     scripts=['eplist'],
+    requires=[
+        "BeautifulSoup (>=3.2.0)",
+        "requests (>=0.9.1)",
+    ]
 )

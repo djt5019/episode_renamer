@@ -238,7 +238,15 @@ def save_renamed_file_info(old_order):
     """
     logging.info("Backing up old filenames")
     path = os.path.split(old_order[0][0])[0]
-    fmt = dict(num_files=len(old_order), file_list=old_order, name=os.path.split(path)[1])
+
+    # If we have a title provided by the comand line, use that otherwise fall
+    # fall back on the folder name (at least it's something)
+    if 'title' in Settings:
+        name = Settings['title']
+    else:
+        name = os.path.split(path)[1]
+
+    fmt = dict(num_files=len(old_order), file_list=old_order, name=name)
     Settings['backup_list'][path] = fmt
 
     with open_file_in_resources(Settings['rename_backup'], 'w') as f:
@@ -261,7 +269,6 @@ def find_old_filenames(path, show_title=None):
     except:
         for d in Settings['backup_list']:
             info = Settings['backup_list'][d]
-            print info['name']
             if info['name'] == show_title:
                 return info
     raise Exceptions.API_Exception("Unable to find rename information based on the current path or the show title")

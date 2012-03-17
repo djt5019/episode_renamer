@@ -1,16 +1,19 @@
 # -*- coding: utf-8 -*-
+
+from __future__ import unicode_literals
+
 __author__ = 'Dan Tracy'
 __email__ = 'djt5019 at gmail dot com'
 
 import re
-from os.path import split, join, realpath
+
+from os.path import join, split, realpath
 
 VIDEO_EXTENSIONS = set(['.mkv', '.ogm', '.asf', '.asx', '.avi', '.flv', '.mov', '.mp4', '.mpg', '.rm', '.swf', '.vob',
                     '.wmv', '.mpeg'])
 
 PROJECT_SOURCE_PATH = split(realpath(__file__))[0]
 PROJECT_PATH = split(PROJECT_SOURCE_PATH)[0]
-RESOURCE_PATH = join(PROJECT_PATH, 'resources')
 WEB_SOURCES_PATH = join(PROJECT_SOURCE_PATH, 'web_sources')
 
 SHOW_NOT_FOUND = []
@@ -66,25 +69,3 @@ remove_junk_regex = re.compile(r'[\[\(].*?[\]\]]', re.I)
 bracket_season_regex = re.compile(r'[\[\(]{season}X{episode}[\]\)]'.format(**regex_vars), re.I)
 
 del k, e, v, regex_vars, uncompiled_regex
-
-
-############
-## Strings to generate default config files
-############
-
-DEFUALT_TAG_CONFIG = """
-[episode_name]
-tags=name, episode, title
-
-[episode_number]
-tags=epnum, number, num
-
-[episode_count]
-tags=count, ep
-
-[series_name]
-tags=series, show
-
-[season_number]
-tags=season, seasons
-"""
