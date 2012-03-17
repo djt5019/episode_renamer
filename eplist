@@ -116,7 +116,7 @@ def main():
         exit(gui.main())
 
     if args.update_db:
-        update_db()
+        Utils.update_db()
 
     if args.undo_rename:
         file_dict = Utils.find_old_filenames(Settings['path'], args.title)
@@ -192,7 +192,7 @@ def main():
 
         sys.exit(0)
 
-    print
+    print ""
 
     if args.verify:
         verify_files(show)
@@ -233,26 +233,6 @@ def display_specials(show, header=False):
 
     for eps in show.specials:
         print (show.formatter.display(eps).encode(Settings['encoding'], 'ignore'))
-
-
-def update_db():
-        one_unix_day = 24 * 60 * 60
-
-        def _download():
-            with Utils.open_file_in_resources(Settings['anidb_db_file'], 'w') as f:
-                logging.info("Retrieving AniDB Database file")
-                url = Utils.get_url_descriptor(Settings['anidb_db_url'])
-
-                f.write(url.content)
-            print("Successfully downloaded the new database")
-            logging.info("Successfully updated anidb_db_file")
-
-        if not Utils.file_exists_in_resources(Settings['anidb_db_file']):
-            _download()
-        elif Utils.able_to_poll('db_download', one_unix_day):
-            _download()
-        else:
-            logging.error("Attempting to download the database file multiple times today")
 
 
 def verify_files(show):

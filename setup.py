@@ -4,7 +4,7 @@ from setuptools import find_packages
 
 setup(
     name='eplist',
-    version='0.1.0',
+    version='0.1.1',
     description='Simple episode renaming program',
     long_description=open('README.md').read(),
     author='Dan Tracy',

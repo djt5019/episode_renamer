@@ -494,3 +494,22 @@ def load_last_access_times():
 
     with open_file_in_resources(Settings['access_time_file']) as f:
         return json.load(f)
+
+
+def update_db():
+    one_unix_day = 24 * 60 * 60
+
+    def _download():
+        with open_file_in_resources(Settings['anidb_db_file'], 'w') as f:
+            logging.info("Retrieving AniDB Database file")
+            url = get_url_descriptor(Settings['anidb_db_url'])
+
+            f.write(url.content)
+        logging.info("Successfully updated anidb_db_file")
+
+    if not file_exists_in_resources(Settings['anidb_db_file']):
+        _download()
+    elif able_to_poll('db_download', one_unix_day):
+        _download()
+    else:
+        logging.error("Attempting to download the database file multiple times today")

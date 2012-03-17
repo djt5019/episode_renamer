@@ -7,7 +7,6 @@ import sys
 import atexit
 
 import Utils
-import Logger
 
 RESOURCE_PATH = os.path.join("eplist", "resources")
 
@@ -25,11 +24,23 @@ else:  # *nix / solaris
     RESOURCE_PATH = os.path.expanduser(os.path.join("~", "." + RESOURCE_PATH))
 
 if not os.path.exists(RESOURCE_PATH):
+    new_creation = True
     os.makedirs(RESOURCE_PATH, 0755)
 
+
+import Constants
+Constants.RESOURCE_PATH = RESOURCE_PATH
+
+import Logger
 Logger.init_logging()
 atexit.register(Utils.save_last_access_times)
 atexit.register(Logger.shutdown_logging)
 
-import Constants
-Constants.RESOURCE_PATH = RESOURCE_PATH
+try:
+    new_creation
+except NameError:
+    pass
+else:
+    ## First run so grab the anidb database file
+    import Utils
+    Utils.update_db()
