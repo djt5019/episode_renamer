@@ -245,7 +245,7 @@ def save_renamed_file_info(old_order):
         json.dump(Settings['backup_list'], f)
 
 
-def find_old_filenames(path):
+def find_old_filenames(path, show_title=None):
     """
     Returns a dict with the filenames and the number of files
     """
@@ -253,7 +253,18 @@ def find_old_filenames(path):
     if 'backup_list' not in Settings:
         raise Exceptions.API_Exception("Old filenames were not loaded beforehand")
 
-    return Settings['backup_list'].get(path, dict(name="", file_list=[], num_files=0))
+    if not show_title:
+        return Settings['backup_list'].get(path, dict(name="", file_list=[], num_files=0))
+
+    try:
+        return Settings['backup_list']['path']
+    except:
+        for d in Settings['backup_list']:
+            info = Settings['backup_list'][d]
+            print info['name']
+            if info['name'] == show_title:
+                return info
+    raise Exceptions.API_Exception("Unable to find rename information based on the current path or the show title")
 
 
 def load_renamed_file():
@@ -262,14 +273,15 @@ def load_renamed_file():
     """
     logging.info("Loading the renamed episode json file")
     if not file_exists_in_resources(Settings['rename_backup']):
-        raise Exceptions.API_FileNotFoundException("Json file [{}] with old information could not be found".format(Settings['rename_backup']))
-
-    with open_file_in_resources(Settings['rename_backup']) as f:
-        try:
-            Settings['backup_list'] = json.load(f)
-        except ValueError:
-            logging.warning("The json file is empty")
-            Settings['backup_list'] = {}
+        logging.warn("Json file [{}] with old information could not be found".format(Settings['rename_backup']))
+        Settings['backup_list'] = {}
+    else:
+        with open_file_in_resources(Settings['rename_backup']) as f:
+            try:
+                Settings['backup_list'] = json.load(f)
+            except ValueError:
+                logging.warning("The json file is empty")
+                Settings['backup_list'] = {}
 
 
 ########################

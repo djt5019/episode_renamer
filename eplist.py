@@ -78,7 +78,10 @@ def main():
 
     args = cmd.parse_args()
 
-    Settings['path'] = os.path.realpath(args.pathname) or os.path.realpath(os.getcwd())
+    if args.pathname:
+        Settings['path'] = os.path.realpath(args.pathname)
+    else:
+        Settings['path'] = os.path.realpath(os.getcwd())
 
     # If we are acting on files then load the old names into memory
     if args.pathname or args.undo_rename:
@@ -113,7 +116,8 @@ def main():
         update_db()
 
     if args.undo_rename:
-        file_dict = Utils.find_old_filenames(Settings['path'])
+        file_dict = Utils.find_old_filenames(Settings['path'], args.title)
+        print file_dict.keys()
         files = file_dict['file_list']
         print_renamed_files(files)
         errors = Utils.rename(files)
