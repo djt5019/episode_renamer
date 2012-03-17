@@ -9,8 +9,7 @@ import tempfile
 import os
 import time
 
-from episode_parser import Utils
-
+from episode_renamer import Utils
 
 temp_dir = None
 
@@ -31,141 +30,149 @@ def teardown():
         temp_dir = None
 
 
-class TestUtils(unittest.TestCase):
-    filenames = [
-                "[group] series - 01[DEADBEEF].mkv",
-                "[group]_series_-_02.mkv",
-                "[group] series - S01E03.mkv",
-                "[group] series - [01x04].mkv",
-                "[group] series - episode 05.mkv",
-                "[group] series - ep 06.mkv",
-                "[group] series with spaces in title - 07.mkv",
-                "[group] series with 1 in title - 08.mkv",
-                "[group]   series with - 09 [DEADBEEF].mkv",
-                "[group]series - 10 [h.264][720p][DEADBEEF].mkv",
-                "series - season 1 - episode 11.mkv",
-                "[group] series - DVD 12.mkv",
-            ]
+filenames = [
+        "[group] series - 01[DEADBEEF].mkv",
+        "[group]_series_-_02.mkv",
+        "[group] series - S01E03.mkv",
+        "[group] series - [01x04].mkv",
+        "[group] series - episode 05.mkv",
+        "[group] series - ep 06.mkv",
+        "[group] series with spaces in title - 07.mkv",
+        "[group] series with 1 in title - 08.mkv",
+        "[group]   series with - 09 [DEADBEEF].mkv",
+        "[group]series - 10 [h.264][720p][DEADBEEF].mkv",
+        "series - season 1 - episode 11.mkv",
+        "[group] series - DVD 12.mkv",
+]
 
-    def test_get_url_descriptor(self):
-        good_site = Utils.get_url_descriptor("http://www.google.com")
-        assert good_site != None
-        assert good_site.ok == True
 
-        bad_site = Utils.get_url_descriptor("http://www.google.com/does_not_exist")
-        assert bad_site == None
+def test_get_url_descriptor():
+    good_site = Utils.get_url_descriptor("http://www.google.com")
+    assert good_site != None
+    assert good_site.ok == True
 
-    def test_is_valid_file(self):
-        fake_files = [
-        "C:\\Users\\SomeUser\\Files\\file1.mkv",
-        "C:\\Users\\SomeUser\\Files\\file2.mov",
-        "C:\\Users\\SomeUser\\Files\\file3.dvi",
-        "/home/user/files/file3.avi",
-        "/home/user/files/file4.mpeg"
-        ]
+    bad_site = Utils.get_url_descriptor("http://www.google.com/does_not_exist")
+    assert bad_site == None
 
-        assert not all([Utils.is_valid_file(f) for f in fake_files])
 
-        temp_files = [
-            Utils.temporary_file(suffix=".mkv"),
-            Utils.temporary_file(suffix=".mov"),
-            Utils.temporary_file(suffix=".flv"),
-            Utils.temporary_file(suffix=".avi"),
-            Utils.temporary_file(suffix=".mpeg"),
-        ]
+def test_is_valid_file():
+    fake_files = [
+    "C:\\Users\\SomeUser\\Files\\file1.mkv",
+    "C:\\Users\\SomeUser\\Files\\file2.mov",
+    "C:\\Users\\SomeUser\\Files\\file3.dvi",
+    "/home/user/files/file3.avi",
+    "/home/user/files/file4.mpeg"
+    ]
 
-        for f in temp_files:
-            assert Utils.is_valid_file(f.name)
+    assert not all([Utils.is_valid_file(f) for f in fake_files])
 
-        [f.close() for f in temp_files]
+    temp_files = [
+        Utils.temporary_file(suffix=".mkv"),
+        Utils.temporary_file(suffix=".mov"),
+        Utils.temporary_file(suffix=".flv"),
+        Utils.temporary_file(suffix=".avi"),
+        Utils.temporary_file(suffix=".mpeg"),
+    ]
 
-    def test_regex_search(self):
-        for episode, f in enumerate(TestUtils.filenames, 1):
-            g = Utils.regex_search(f)
+    for f in temp_files:
+        assert Utils.is_valid_file(f.name)
 
-            assert g is not None
+    [f.close() for f in temp_files]
 
-            print f, g
-            if 'sum' in g:
-                assert g['sum'] == "DEADBEEF"
 
-            if 'episode' in g:
-                assert episode == int(g['episode'])
+def test_regex_search():
+    for episode, f in enumerate(filenames, 1):
+        g = Utils.regex_search(f)
 
-            if 'season' in g:
-                assert int(g['season']) == 1
+        assert g is not None
 
-            if 'special' in g:
-                assert g['special'] == "12"
-                assert g['type'] == 'DVD'
+        print f, g
+        if 'sum' in g:
+            assert g['sum'] == "DEADBEEF"
 
-    def test_clean_filenames(self):
-        create_temp_files(TestUtils.filenames)
+        if 'episode' in g:
+            assert episode == int(g['episode'])
 
-        clean_files = Utils.clean_filenames(temp_dir)
+        if 'season' in g:
+            assert int(g['season']) == 1
 
-        assert clean_files is not None
+        if 'special' in g:
+            assert g['special'] == "12"
+            assert g['type'] == 'DVD'
 
-    def test_rename(self):
-        global temp_dir
+test_regex_search.tags = ['regex', 'a']
 
-        create_temp_files(TestUtils.filenames)
 
-        files = []
-        for index, f in enumerate(os.listdir(temp_dir)):
-            old = os.path.join(temp_dir, f)
-            new = os.path.join(temp_dir, "{:02}.avi".format(index))
-            files.append((old, new))
+def test_clean_filenames():
+    create_temp_files(filenames)
 
-        assert Utils.rename(files, 'y') == []
+    clean_files = Utils.clean_filenames(temp_dir)
 
-        for index, f in enumerate(os.listdir(temp_dir)):
-            assert f == "{:02}.avi".format(index)
+    assert clean_files is not None
 
-        files = Utils.load_last_renamed_files()
 
-        assert Utils.rename(files, 'y') == []
+def test_rename():
+    create_temp_files(filenames)
 
-        for new in os.listdir(temp_dir):
-            assert new in TestUtils.filenames
+    files = []
+    for index, f in enumerate(os.listdir(temp_dir)):
+        old = os.path.join(temp_dir, f)
+        new = os.path.join(temp_dir, "{:02}.avi".format(index))
+        files.append((old, new))
 
-        teardown()
+    assert Utils.rename(files, 'y') == []
 
-    def test_remove_punctuation(self):
-        string = "This-is_a/test\\string!@#$%$*&*(%)-=+_`~"
-        expected = "Thisisateststring"
+    for index, f in enumerate(os.listdir(temp_dir)):
+        assert f == "{:02}.avi".format(index)
 
-        assert Utils.remove_punctuation(string) == expected
+    files = Utils.find_old_filenames(temp_dir)['file_list']
 
-        string = "this is a test string"
-        expected = "this is a test string"
+    assert Utils.rename(files, 'y') == []
 
-        assert Utils.remove_punctuation(string) == expected
+    for new in os.listdir(temp_dir):
+        assert new in filenames
 
-    def test_replace_invalid_path_chars(self):
-        string = "file\\name?_<1>.exe"
-        expected = "file-name-_-1-.exe"
+    teardown()
 
-        assert Utils.replace_invalid_path_chars(string) == expected
 
-        string = "file\\name?_<1>.exe"
-        expected = "file=name=_=1=.exe"
+def test_remove_punctuation():
+    string = "This-is_a/test\\string!@#$%$*&*(%)-=+_`~"
+    expected = "Thisisateststring"
 
-        assert Utils.replace_invalid_path_chars(string, replacement='=') == expected
+    assert Utils.remove_punctuation(string) == expected
 
-    def test_preapare_title(self):
-        assert Utils.prepare_title(None) == ""
-        assert Utils.prepare_title("Hawaii Five-O") == "HawaiiFiveO"
-        assert Utils.prepare_title("Breaking Bad") == "BreakingBad"
-        assert Utils.prepare_title("The Office!@#$%^&*()>_") == "Office"
-        assert Utils.prepare_title("The Big 10") == "Bigten"
-        assert Utils.prepare_title("The !!! 352") == "three_hundred_fifty_two"
+    string = "this is a test string"
+    expected = "this is a test string"
 
-    def test_able_to_poll(self):
-        assert Utils.able_to_poll("http://www.google.com") == True
-        ## It hasn't been at least two seconds since the last poll
-        ## so it should fail
-        assert Utils.able_to_poll("http://www.google.com") == False
-        time.sleep(2)
-        assert Utils.able_to_poll("http://www.google.com") == True
-        assert Utils.able_to_poll("http://www.google.com", wait=True) == True
+    assert Utils.remove_punctuation(string) == expected
+
+
+def test_replace_invalid_path_chars():
+    string = "file\\name?_<1>.exe"
+    expected = "file-name-_-1-.exe"
+
+    assert Utils.replace_invalid_path_chars(string) == expected
+
+    string = "file\\name?_<1>.exe"
+    expected = "file=name=_=1=.exe"
+
+    assert Utils.replace_invalid_path_chars(string, replacement='=') == expected
+
+
+def test_preapare_title():
+    assert Utils.prepare_title(None) == ""
+    assert Utils.prepare_title("Hawaii Five-O") == "HawaiiFiveO"
+    assert Utils.prepare_title("Breaking Bad") == "BreakingBad"
+    assert Utils.prepare_title("The Office!@#$%^&*()>_") == "Office"
+    assert Utils.prepare_title("The Big 10") == "Bigten"
+    assert Utils.prepare_title("The !!! 352") == "three_hundred_fifty_two"
+
+
+def test_able_to_poll():
+    assert Utils.able_to_poll("http://www.google.com") == True
+    ## It hasn't been at least two seconds since the last poll
+    ## so it should fail
+    assert Utils.able_to_poll("http://www.google.com") == False
+    time.sleep(2)
+    assert Utils.able_to_poll("http://www.google.com") == True
+    assert Utils.able_to_poll("http://www.google.com", wait=True) == True

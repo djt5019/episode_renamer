@@ -3,7 +3,7 @@ __author__ = 'Dan Tracy'
 __email__ = 'djt5019 at gmail dot com'
 
 import unittest
-from episode_parser import Parser
+from episode_renamer import Parser
 
 
 class testParser(unittest.TestCase):

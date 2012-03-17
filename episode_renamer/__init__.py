@@ -36,11 +36,14 @@ Logger.init_logging()
 atexit.register(Utils.save_last_access_times)
 atexit.register(Logger.shutdown_logging)
 
+
+import Utils
 try:
     new_creation
 except NameError:
     pass
 else:
     ## First run so grab the anidb database file
-    import Utils
     Utils.update_db()
+
+Utils.load_renamed_file()

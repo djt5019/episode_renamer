@@ -4,7 +4,7 @@ __email__ = 'djt5019 at gmail dot com'
 
 import unittest
 
-from episode_parser import poll_sources
+from episode_renamer import poll_sources
 
 
 class TestPollSources(unittest.TestCase):
