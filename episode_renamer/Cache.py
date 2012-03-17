@@ -16,6 +16,10 @@ from Settings import Settings
 _create_db_query = """
 PRAGMA foreign_keys = ON;
 
+DROP TABLE IF EXISTS shows;
+DROP TABLE IF EXISTS episodes;
+DROP TABLE IF EXISTS specials;
+
 CREATE TABLE shows (
     sid INTEGER PRIMARY KEY,
     title TEXT NOT NULL,
@@ -47,11 +51,14 @@ class Cache(object):
     """ Our database logic class"""
     def __init__(self, dbName=u"episodes.db"):
         """Establish a connection to the show database"""
+        if not dbName or not isinstance(dbName, basestring):
+            raise ValueError("Empty database name passed to cache")
+
         if dbName != ':memory:':
             dbName = os.path.join(RESOURCE_PATH, dbName)
 
         try:
-            if not os.path.exists(dbName) and dbName != ':memory:':
+            if not os.path.exists(dbName):
                 self.connection = sqlite3.connect(dbName, detect_types=sqlite3.PARSE_DECLTYPES)
                 logging.debug("Creating database: {}".format(dbName))
                 self.connection.executescript(_create_db_query)
@@ -66,7 +73,7 @@ class Cache(object):
 
             #Make sure everything is utf-8
             self.connection.text_factory = lambda x: unicode(x, 'utf-8')
-            atexit.register(self.close)
+            #atexit.register(self.close)
         else:
             logging.critical("Unable to open a connection to the database")
             raise sqlite3.OperationalError
@@ -81,6 +88,12 @@ class Cache(object):
     def add_show(self, showTitle, episodes):
         """ If we find a show on the internet that is not in our database
         we can use this function to add it into our database for the future"""
+        if not (showTitle and episodes):
+            raise ValueError("Empty show title or specials list passed to add_specials")
+
+        if not (isinstance(showTitle, basestring) and isinstance(episodes, list)):
+            raise ValueError("add_show expects a string and a list")
+
         title = showTitle
         time = datetime.datetime.now()
 
@@ -95,11 +108,18 @@ class Cache(object):
 
     def remove_show(self, sid):
         """Removes show and episodes matching the show id """
-        self.cursor.execute("DELETE from SHOWS where sid=?", (sid,))
-        self.cursor.execute("DELETE from EPISODES where sid=?", (sid,))
+        if not isinstance(sid, int):
+            raise ValueError("remove_show expects an integer primary key")
+
+        self.cursor.execute("DELETE FROM episodes where sid=?", (sid,))
+        self.cursor.execute("DELETE FROM specials where sid=?", (sid,))
+        self.cursor.execute("DELETE FROM shows where sid=?", (sid,))
 
     def get_episodes(self, showTitle):
         """Returns the episodes associated with the show id"""
+        if not showTitle:
+            raise ValueError("get_episodes expects a string")
+
         title = (showTitle, )
         self.cursor.execute(
             """SELECT e.eptitle, e.showNumber,e.season, s.sid, s.time
@@ -132,6 +152,9 @@ class Cache(object):
 
     def get_specials(self, showTitle):
         """ Returns a list of Special episode objects """
+        if not showTitle:
+            raise ValueError("Show title was not an acceptable type: requires string")
+
         title = (showTitle, )
         self.cursor.execute(
             """SELECT sp.title, sp.showNumber, sp.type
@@ -154,6 +177,15 @@ class Cache(object):
         WHERE shows.title=?
         """
 
+        if not (showTitle and episodes):
+            raise ValueError("Empty show title or specials list passed to add_specials")
+
+        if not (isinstance(showTitle, basestring) and isinstance(episodes, list)):
+            raise ValueError("add_specials expects a string and a list")
+
         for eps in episodes:
             show = (eps.title, eps.num, eps.type, showTitle)
             self.cursor.execute(query, show)
+
+    def recreate_cache(self):
+        self.cursor.executescript(_create_db_query)
