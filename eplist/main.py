@@ -26,7 +26,7 @@ import utils
 import episode
 
 from cache import Cache
-from parser import Parser
+from show_finder import Parser
 from settings import Settings
 
 
