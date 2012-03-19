@@ -8,9 +8,9 @@ import logging
 from os import listdir
 from itertools import ifilter
 
-import Constants
+import constants
 
-from Episode import Special
+from episode import Special
 
 
 def locate_show(title):
@@ -19,12 +19,12 @@ def locate_show(title):
     eps = []
     specials = []
 
-    sys.path.append(Constants.WEB_SOURCES_PATH)
+    sys.path.append(constants.WEB_SOURCES_PATH)
     # This will import all the modules within the web_sources directory so that
     # we can easily plug in new sources for finding episode information so long
     # as they define a poll function
 
-    for m in listdir(Constants.WEB_SOURCES_PATH):
+    for m in listdir(constants.WEB_SOURCES_PATH):
         if m.endswith('.py') and not m.startswith('__'):
             logging.info("Importing web resource {}".format(m[:-3]))
 
@@ -45,7 +45,7 @@ def locate_show(title):
 
     logging.info("Searching for {}".format(title))
 
-    episodes = Constants.SHOW_NOT_FOUND
+    episodes = constants.SHOW_NOT_FOUND
 
     for source in modules:
         logging.info("Polling {0}".format(source.__name__))

@@ -22,6 +22,8 @@ cache = Cache()
 parser = Parser(cache=cache)
 Utils.load_renamed_file()
 
+Settings['title'] = ""
+
 ## Snuff the console output for the gui
 log = logging.getLogger()
 for handler in log.handlers:
@@ -181,6 +183,8 @@ class Form(QtGui.QWidget):
             InfoMessage(self, "Find Show", "No show specified")
             return
 
+        Settings['title'] = showTitle
+
         parser.setShow(showTitle)
         self.show = parser.getShow()
         self.formatter.show = self.show
@@ -306,9 +310,11 @@ class RenameDialog(QtGui.QDialog, object):
             if item.checkState() == QtCore.Qt.Checked:
                 files.append(item.rename_info)
 
-        errors = Utils.rename(files, 'yes')
+        old_order, errors = Utils.rename(files, 'yes')
         self.model.clear()
         self.buttonBox.accepted.disconnect()
+
+        Utils.save_renamed_file_info(old_order, Settings['title'])
 
         if errors:
             self.model.appendRow(QtGui.QStandardItem("&The following files could not be renamed\n"))

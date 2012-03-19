@@ -8,9 +8,9 @@ import sqlite3
 import atexit
 import logging
 
-from Episode import Episode, Special
-from Constants import RESOURCE_PATH
-from Settings import Settings
+from episode import Episode, Special
+from constants import RESOURCE_PATH
+from settings import Settings
 
 
 _create_db_query = """
@@ -73,7 +73,7 @@ class Cache(object):
 
             #Make sure everything is utf-8
             self.connection.text_factory = lambda x: unicode(x, 'utf-8')
-            #atexit.register(self.close)
+            atexit.register(self.close)
         else:
             logging.critical("Unable to open a connection to the database")
             raise sqlite3.OperationalError
@@ -178,7 +178,7 @@ class Cache(object):
         """
 
         if not (showTitle and episodes):
-            raise ValueError("Empty show title or specials list passed to add_specials")
+            return
 
         if not (isinstance(showTitle, basestring) and isinstance(episodes, list)):
             raise ValueError("add_specials expects a string and a list")

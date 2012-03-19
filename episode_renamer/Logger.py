@@ -8,8 +8,8 @@ import logging.config
 from os.path import join
 from datetime import datetime
 
-from Constants import RESOURCE_PATH
-from Settings import Settings
+from constants import RESOURCE_PATH
+from settings import Settings
 
 
 def init_logging():

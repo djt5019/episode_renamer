@@ -6,7 +6,7 @@ import os
 import sys
 import atexit
 
-import Utils
+import utils
 
 RESOURCE_PATH = os.path.join("eplist", "resources")
 
@@ -28,22 +28,22 @@ if not os.path.exists(RESOURCE_PATH):
     os.makedirs(RESOURCE_PATH, 0755)
 
 
-import Constants
-Constants.RESOURCE_PATH = RESOURCE_PATH
+import constants
+constants.RESOURCE_PATH = RESOURCE_PATH
 
-import Logger
-Logger.init_logging()
-atexit.register(Utils.save_last_access_times)
-atexit.register(Logger.shutdown_logging)
+import logger
+logger.init_logging()
+atexit.register(utils.save_last_access_times)
+atexit.register(logger.shutdown_logging)
 
 
-import Utils
+import utils
 try:
     new_creation
 except NameError:
     pass
 else:
     ## First run so grab the anidb database file
-    Utils.update_db()
+    utils.update_db()
 
-Utils.load_renamed_file()
+utils.load_renamed_file()

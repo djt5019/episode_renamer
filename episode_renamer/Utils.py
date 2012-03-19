@@ -4,18 +4,17 @@ __author__ = 'Dan Tracy'
 __email__ = 'djt5019 at gmail dot com'
 
 import os
+import sys
 import re
 import time
 import json
 import logging
 
-import Constants
-import Episode
-import Exceptions
-
+import constants
+import episode
 from tempfile import TemporaryFile
 
-from Settings import Settings
+from settings import Settings
 
 import requests
 import requests.exceptions
@@ -43,7 +42,7 @@ def is_valid_file(filename):
     """
     ext = os.path.splitext(filename)[1].lower()
 
-    return os.path.isfile(filename) and ext in Constants.VIDEO_EXTENSIONS
+    return os.path.isfile(filename) and ext in constants.VIDEO_EXTENSIONS
 
 
 ##############################
@@ -55,28 +54,29 @@ def regex_search(filename):
     """
 
     # deal with anything in brackets ourselves, they tend to throw off the regexes
-    checksum = Constants.checksum_regex.search(filename)
-    filename = Constants.checksum_regex.sub("", filename)
-    season = Constants.bracket_season_regex.search(filename)
+    info_dict = {}
+    checksum = constants.checksum_regex.search(filename)
+    filename = constants.checksum_regex.sub("", filename)
+    season = constants.bracket_season_regex.search(filename)
 
-    filename = Constants.remove_junk_regex.sub("", filename)
+    filename = constants.remove_junk_regex.sub("", filename)
 
     result = None
-    for count, regex in enumerate(Constants.regexList):
+    for count, regex in enumerate(constants.regexList):
         result = regex.search(filename)
         if result:
             logging.info("Regex #{} matched {}".format(count, filename.encode(Settings['encoding'], 'ignore')))
             break
 
     if not result and not season:
-        logging.error("Unable to find information on: {}".format(filename))
-        raise Exceptions.RegexSearchFailed(filename)
+        msg = "Unable to find information on: {}".format(filename)
+        logging.error(msg)
+        raise Exception(msg)
 
     # Work with the result dict rather than the annoying groupdicts
     result = result.groupdict() if result else {}
     result.update(**checksum.groupdict() if checksum else {})
     result.update(**season.groupdict() if season else {})
-    info_dict = {}
 
     logging.info(result)
 
@@ -119,10 +119,8 @@ def clean_filenames(path):
     for f in files:
         info = regex_search(f)
 
-        if not info:
-            continue
-
-        cleanFiles.append(Episode.EpisodeFile(os.path.join(path, f), **info))
+        if info:
+            cleanFiles.append(episode.EpisodeFile(os.path.join(path, f), **info))
 
     if not cleanFiles:
         logging.error("The files could not be matched")
@@ -185,7 +183,9 @@ def prepare_filenames(path, show):
 
 def rename(files, resp=""):
     """
-    Performs the actual renaming of the files, returns a list of file that weren't able to be renamed
+    Performs the actual renaming of the files
+    returns a tuple:
+    (list of tuples with old info, list of file that cold not be renamed)
     """
     errors = []
     if resp == '':
@@ -204,15 +204,7 @@ def rename(files, resp=""):
         except OSError as e:
             errors.append((old, e))
 
-    save_renamed_file_info(old_order)
-
-    if errors:
-        for e in errors:
-            logging.error("File {} could not be renamed: {}".format(os.path.split(e[0])[1], e[1]))
-    else:
-        logging.info("Files were successfully renamed")
-
-    return errors
+    return old_order, errors
 
 #############################
 ## Undo rename functionality
@@ -232,7 +224,7 @@ def rename(files, resp=""):
 #############################
 
 
-def save_renamed_file_info(old_order):
+def save_renamed_file_info(old_order, show_title=None):
     """
     Save the previous names from the last renaming operation to disk
     """
@@ -241,8 +233,8 @@ def save_renamed_file_info(old_order):
 
     # If we have a title provided by the comand line, use that otherwise fall
     # fall back on the folder name (at least it's something)
-    if 'title' in Settings:
-        name = Settings['title']
+    if show_title:
+        name = show_title
     else:
         name = os.path.split(path)[1]
 
@@ -259,19 +251,20 @@ def find_old_filenames(path, show_title=None):
     """
     logging.info("Loading up old filenames")
     if 'backup_list' not in Settings:
-        raise Exceptions.API_Exception("Old filenames were not loaded beforehand")
+        load_renamed_file()
 
     if not show_title:
         return Settings['backup_list'].get(path, dict(name="", file_list=[], num_files=0))
 
     try:
         return Settings['backup_list']['path']
-    except:
+    except KeyError:
         for d in Settings['backup_list']:
             info = Settings['backup_list'][d]
             if info['name'] == show_title:
                 return info
-    raise Exceptions.API_Exception("Unable to find rename information based on the current path or the show title")
+
+    return {}
 
 
 def load_renamed_file():
@@ -323,6 +316,10 @@ def replace_invalid_path_chars(path, replacement='-'):
     return path
 
 
+if sys.platform != 'win32':
+    trim_long_filename = lambda name: name
+
+
 def prepare_title(title):
     """
     Remove any punctuation and whitespace from the title
@@ -359,7 +356,7 @@ def num_to_text(num):
     # The 12 kingdoms and twelve kingdoms will yield the same result in the DB
 
     if num < 20:
-        return Constants.NUM_DICT[str(num)]
+        return constants.NUM_DICT[str(num)]
 
     args = []
     num = str(num)
@@ -369,11 +366,11 @@ def num_to_text(num):
         length = len(num)
 
         if length == 3:
-            args.append(Constants.NUM_DICT[num[0]])
+            args.append(constants.NUM_DICT[num[0]])
             args.append("hundred")
         else:
             value = str(digit * (10 ** (length - 1)))
-            args.append(Constants.NUM_DICT[value])
+            args.append(constants.NUM_DICT[value])
 
         num = num[1:]
 
@@ -394,7 +391,7 @@ def encode(text, encoding='utf-8'):
 ##  Web Source Functionality
 ###############################
 
-show_not_found = Constants.SHOW_NOT_FOUND
+show_not_found = constants.SHOW_NOT_FOUND
 
 
 def able_to_poll(site, delay=None, wait=False):
@@ -417,11 +414,13 @@ def able_to_poll(site, delay=None, wait=False):
         flooding = False
 
     if flooding and wait:
-        logging.warn('Possible flooding of "{}" detected: waiting for {} seconds'.format(site, delay))
+        logging.warn('Possible flooding of "{}" detected"'.format(site))
+        logging.warn("Waiting for {} second".format(delay))
         time.sleep(int(delay))
         flooding = False
+
     elif flooding:
-        logging.warn('Possible flooding of "{}" detected'.format(site, delay))
+        logging.warn('Possible flooding of "{}" detected'.format(site))
 
     return not flooding
 
@@ -431,7 +430,7 @@ def open_file_in_resources(name, mode='r'):
     Returns a file object if the filename exists in the resources directory
     """
     name = os.path.split(name)[1]
-    name = os.path.join(Constants.RESOURCE_PATH, name)
+    name = os.path.join(constants.RESOURCE_PATH, name)
 
     if mode in ('w', 'wb'):
         return open(name, mode)
@@ -439,7 +438,7 @@ def open_file_in_resources(name, mode='r'):
     if file_exists_in_resources(name):
         return open(name, mode)
 
-    raise Exceptions.API_FileNotFoundException()
+    raise OSError("File {} was not found".format(name))
 
 
 def file_exists_in_resources(name):
@@ -447,13 +446,13 @@ def file_exists_in_resources(name):
     Returns true if the filename exists in the resources directory
     """
     name = os.path.split(name)[1]
-    name = os.path.join(Constants.RESOURCE_PATH, name)
+    name = os.path.join(constants.RESOURCE_PATH, name)
     return os.path.exists(name)
 
 
 def regex_compile(regex):
     """
-    Returns a compiled regex instance, ignore case and verbose are activated by default
+    Returns a compiled regex instance, ignore case and verbose are on by default
     """
     return re.compile(regex, re.I | re.X)
 
@@ -512,4 +511,4 @@ def update_db():
     elif able_to_poll('db_download', one_unix_day):
         _download()
     else:
-        logging.error("Attempting to download the database file multiple times today")
+        logging.error("Attempting to download the database file multiple times")

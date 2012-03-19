@@ -22,18 +22,17 @@ import os
 import sys
 import logging
 
-from episode_renamer import Utils
-from episode_renamer import Episode
-from episode_renamer import Constants
+import utils
+import episode
 
-from episode_renamer.Cache import Cache
-from episode_renamer.Parser import Parser
-from episode_renamer.Settings import Settings
+from cache import Cache
+from parser import Parser
+from settings import Settings
 
 
 def main():
     cmd = argparse.ArgumentParser(description="Renames your TV shows",
-                                  prog='eplist', usage='%(prog)s --help [options] title')
+                        prog='eplist', usage='%(prog)s --help [options] title')
 
     cmd.add_argument('title', default="", nargs='?',
         help="The title of the show")
@@ -68,17 +67,20 @@ def main():
         help="Delete the cache file and create a new one")
 
     cmd.add_argument('--update-db', action="store_true",
-        help="Update the AniDB titles file, limit this to once a day since it's large")
+        help="Update the AniDB titles file, limit to once a day due to size")
 
     cmd.add_argument('--verify', action="store_true",
         help="Verify the checksums in the filename if they are present")
 
     cmd.add_argument('--filter', choices=['episodes', 'specials', 'both'],
-        help="Choose which types of episodes to show by setting the filter (default=both)")
+        help="Filters episodes based on type (default=both)")
 
     args = cmd.parse_args()
 
-    Settings['title'] = args.title
+    if 'title' in args:
+        Settings['title'] = args.title
+    else:
+        Settings['title'] = ""
 
     # Set the correct working path
     if args.pathname:
@@ -88,20 +90,18 @@ def main():
 
     # If we are acting on files then load the old names into memory
     if args.pathname or args.undo_rename:
-        Utils.load_renamed_file()
+        utils.load_renamed_file()
 
     if args.filter:
         Settings['filter'] = args.filter
 
+    cache = Cache(Settings['db_name'])
     if args.delete_cache:
-        try:
-            os.remove(os.path.join(Constants.RESOURCE_PATH, Settings['db_name']))
-        except Exception as e:
-            logging.warning(e)
-            sys.exit(1)
+        cache.recreate_cache()
 
     if args.title in ('-', '.', 'pwd'):
-        args.title = os.path.split(os.getcwd())[1]  # If a dash is entered use the current basename of the path
+        # If a dash is entered use the current basename of the path
+        args.title = os.path.split(os.getcwd())[1]
         print ("Searching for {}".format(args.title))
 
     if args.verbose:
@@ -116,16 +116,19 @@ def main():
         exit(gui.main())
 
     if args.update_db:
-        Utils.update_db()
+        utils.update_db()
 
     if args.undo_rename:
-        file_dict = Utils.find_old_filenames(Settings['path'], args.title)
-        print file_dict.keys()
+        file_dict = utils.find_old_filenames(Settings['path'], args.title)
         files = file_dict['file_list']
         print_renamed_files(files)
-        errors = Utils.rename(files)
-        if not errors:
-            print ("All files were successfully renamed")
+        old_order, errors = utils.rename(files)
+
+        utils.save_renamed_file_info(old_order, Settings['title'])
+
+        for e in errors:
+            print("File {} could not be successfully renamed".format(os.path.split(e)[1]))
+
         sys.exit(0)
 
     rename = args.pathname is not None
@@ -137,11 +140,10 @@ def main():
         cmd.print_usage()
         sys.exit(1)
 
-    cache = Cache(Settings['db_name'])
     episodeParser = Parser(args.title, cache)
 
     show = episodeParser.getShow()
-    formatter = Episode.EpisodeFormatter(show, args.format)
+    formatter = episode.EpisodeFormatter(show, args.format)
     show.formatter = formatter
 
     if not show.episodes:
@@ -151,25 +153,24 @@ def main():
     # this also checks to make sure its a reasonable season number
     filtered_episodes = []
     if args.season:
-        seasonRange = list(parse_range(args.season))
-        if seasonRange[-1] <= show.num_seasons:
-            filtered_episodes = [x for x in show.episodes if x.season in seasonRange]
-        else:
+        s_range = list(parse_range(args.season))
+        if s_range[-1] > show.num_seasons:
             print ("{} Season {} not found".format(args.title, args.season))
             sys.exit(1)
+        filtered_episodes = [x for x in show.episodes if x.season in s_range]
 
     if args.episode:
-        episodeRange = list(parse_range(args.episode))
+        e_range = list(parse_range(args.episode))
 
         if not args.season:
-            filtered_episodes = [x for x in show.episodes if x.episode_count in episodeRange]
+            filtered_episodes = [x for x in show.episodes if x.episode_count in e_range]
         else:
-            filtered_episodes = filtered_episodes[episodeRange[0] - 1:episodeRange[-1]]
+            filtered_episodes = filtered_episodes[e_range[0] - 1:e_range[-1]]
 
     ## Renaming functionality
     if  rename:
         path = args.pathname if args.pathname != '.' else os.getcwd()
-        Utils.prepare_filenames(path, show)
+        utils.prepare_filenames(path, show)
         files = []
 
         if filtered_episodes:
@@ -186,10 +187,15 @@ def main():
                 files.append((old, new))
 
         print_renamed_files(files)
-        errors = Utils.rename(files)
+        old_order, errors = utils.rename(files)
+
+        utils.save_renamed_file_info(old_order, Settings['title'])
+
         if not errors:
             print ("All files were successfully renamed")
 
+        for e in errors:
+            print("File {} could not be successfully renamed".format(os.path.split(e)[1]))
         sys.exit(0)
 
     print ""
@@ -242,7 +248,7 @@ def verify_files(show):
     episode_files = show.episodes
     path = Settings.get('path', os.getcwd())
     if not all([e.episode_file for e in episode_files]):
-        Utils.prepare_filenames(path, show)
+        utils.prepare_filenames(path, show)
 
     for f in episode_files:
         if not f.episode_file:

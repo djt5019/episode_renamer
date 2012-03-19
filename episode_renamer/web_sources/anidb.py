@@ -45,6 +45,7 @@ def _parse_local(title):
 
             original_title = Utils.encode(res.group('title').lower())
             clean_title = Utils.remove_punctuation(Utils.encode(res.group('title'))).lower()
+
             if title in (original_title, clean_title):
                 return res.group('aid')
 
@@ -52,11 +53,13 @@ def _parse_local(title):
             ratio = sequence.ratio()
 
             if ratio > .80:
-                guesses.append((ratio, res.group('aid'), original_title))
+                d = dict(ratio=ratio, aid=res.group('aid'), title=original_title)
+                guesses.append(d)
 
     if guesses:
+        print guesses
         logging.info("{} possibilities".format(len(guesses)))
-        guesses = sorted(guesses, key=lambda x: x.ratio)
+        guesses = sorted(guesses, key=lambda x: x['ratio'])
         _, aid, name = guesses[0]
         logging.error("Closest show to '{}' is {} with id {}".format(title, name, aid))
 

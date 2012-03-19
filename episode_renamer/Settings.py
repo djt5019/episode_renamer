@@ -9,9 +9,6 @@ import logging
 from os.path import realpath
 from sys import getdefaultencoding
 
-from Exceptions import SettingsException
-
-
 config = {
     ## Filter to output episodes, specials, or both (both is default)
     'filter': 'both',
@@ -83,7 +80,7 @@ class SettingsDict(dict):
 
         if val is None:
             logging.error("Setting {} not present in config file".format(item))
-            raise SettingsException("Setting: {} not present in config file".format(item))
+            raise KeyError("Setting: {} not present in config file".format(item))
         else:
             return val
 

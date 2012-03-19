@@ -10,12 +10,9 @@ import zlib
 import string
 import logging
 
-import Utils
-import Exceptions
+import utils
 
-from collections import defaultdict
-
-from Settings import Settings
+from settings import Settings
 
 
 class Show(object):
@@ -24,10 +21,10 @@ class Show(object):
     to keep track of the custom formatter for those episodes
     """
     def __init__(self, seriesTitle):
-        self.title = Utils.encode(string.capwords(seriesTitle))
-        self.proper_title = Utils.prepare_title(seriesTitle.lower())
+        self.title = utils.encode(string.capwords(seriesTitle))
+        self.proper_title = utils.prepare_title(seriesTitle.lower())
         self._episodeList = []
-        self._episodes_by_season = defaultdict(list)
+        self._episodes_by_season = {}
         self.specials = []
         self._formatter = None
         self.num_seasons = 0
@@ -49,14 +46,14 @@ class Show(object):
             self.num_episodes = len(eps)
 
             for ep in self._episodeList:
-                self._episodes_by_season[ep.season].append(ep)
+                self._episodes_by_season.setdefault(ep.season, []).append(ep)
 
     @property
     def formatter(self):
         if self._formatter:
             return self._formatter
         else:
-            raise Exceptions.ShowException("Formatter not attached to this show '{}'".format(self.show_title))
+            raise AttributeError("Formatter not attached to this show '{}'".format(self.show_title))
 
     @formatter.setter
     def formatter(self, fmt=None):
@@ -76,8 +73,8 @@ class Show(object):
         Sets the shows title to the value passed as well as prepares it for use
         """
         logging.debug("Setting show title to: {}".format(val))
-        self.title = Utils.encode(val.capitalize())
-        self.proper_title = Utils.prepare_title(val)
+        self.title = utils.encode(val.capitalize())
+        self.proper_title = utils.prepare_title(val)
 
     def get_season(self, season):
         """
@@ -118,15 +115,12 @@ class Episode(object):
         """
         A container for an episode's information collected from the web
         """
-        self.title = Utils.encode(episode_title)
+        self.title = utils.encode(episode_title)
         self.season = int(season)
         self.episode_number = int(episode_number)
         self.episode_count = int(episode_count)
         self.episode_file = None
         self.type = "Episode"
-
-    def __repr__(self):
-        return "{} - {}".format(self.title, self.episode_number)
 
 
 class Special(object):
@@ -150,7 +144,7 @@ class EpisodeFile(object):
         """
         self.path = path
         self.ext = os.path.splitext(self.path)[1]
-        self.name = Utils.encode(os.path.split(self.path)[1])
+        self.name = utils.encode(os.path.split(self.path)[1])
         self.new_name = ""
         self.verified = False
         self.__dict__.update(kwargs)
@@ -190,7 +184,7 @@ class EpisodeFormatter(object):
         Allows printing of custom formatted episode information
         """
         self.show_ = show
-        self._format_string = Utils.encode(fmt) if fmt else Settings['format']
+        self._format_string = utils.encode(fmt) if fmt else Settings['format']
 
         ## Use negative lookahead assertion to ensure that the tag had not been escaped
         re_format = r'(?<!\\)(?P<tag>\{start}.*?\{end})'
@@ -218,7 +212,7 @@ class EpisodeFormatter(object):
     @show.setter
     def show(self, show=None):
         if not show:
-            raise Exceptions.FormatterException("Expected a Show object but got {}".format(type(show)))
+            raise AttributeError("Expected a Show object but got {}".format(type(show)))
         logging.debug("Setting show to {}".format(show.title))
         self.show_ = show
 
@@ -232,14 +226,14 @@ class EpisodeFormatter(object):
         Set the format string for the formatter
         """
         if fmt is not None:
-            self._format_string = Utils.encode(fmt)
+            self._format_string = utils.encode(fmt)
             self.tokens = self.re.split(fmt)
         else:
-            raise Exceptions.FormatterException("Empty format string set")
+            raise AttributeError("Empty format string set")
 
     def load_format_config(self):
         """
-        Load tokens from the format setting in Settings.py
+        Load tokens from the format setting in settings.py
         """
         allTokens = set()
         for s in self.tags:
@@ -250,7 +244,7 @@ class EpisodeFormatter(object):
                 #Look for duplicates
                 msg = "In section [{}]: tokens '{}' redefined".format(s, map(str, redefined))
                 logging.error(msg)
-                raise Exceptions.FormatterException(msg)
+                raise AttributeError(msg)
 
             allTokens = allTokens.union(tokens)
 
@@ -272,7 +266,7 @@ class EpisodeFormatter(object):
             else:
                 args.append(token)
 
-        return Utils.encode(''.join(args))
+        return utils.encode(''.join(args))
 
     def _parse_modifiers(self, tag):
         # Tag modifiers such as number padding and caps

@@ -11,7 +11,6 @@ import episode_renamer.Utils as Utils
 
 from episode_renamer.Episode import Episode, Special
 from episode_renamer.Settings import Settings
-from episode_renamer.Exceptions import SettingsException
 
 try:
     from BeautifulSoup import BeautifulStoneSoup as Soup
@@ -24,7 +23,7 @@ priority = 1
 def poll(title):
     try:
         API_KEY = Settings['tvdb_key']
-    except SettingsException as e:
+    except KeyError as e:
         logging.warn("The TvDB Api key was not found, unable to poll the TvDB")
         logging.warn(e)
         return Utils.show_not_found

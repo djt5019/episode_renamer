@@ -3,7 +3,7 @@
 # author:  Dan Tracy
 # program: gui.py
 
-from episode_parser.gui import gui
+from gui import gui
 
 if __name__ == '__main__':
     exit(gui.main())

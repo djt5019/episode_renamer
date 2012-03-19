@@ -5,9 +5,9 @@ __email__ = 'djt5019 at gmail dot com'
 import logging
 
 import poll_sources
-import Utils
+import utils
 
-from Episode import Show
+from episode import Show
 
 
 class Parser(object):
@@ -24,8 +24,10 @@ class Parser(object):
         """Sets a new show to search for, the old show will be removed """
         if showTitle:
             self.show = Show(showTitle)
-            self.show.proper_title = Utils.prepare_title(showTitle.lower())
+            self.show.proper_title = utils.prepare_title(showTitle.lower())
             self.show.title = showTitle
+        else:
+            raise ValueError("Empty show title passed to set show")
 
     def getShow(self):
         """ The main driver function of this class, it will poll
