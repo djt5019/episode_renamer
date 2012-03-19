@@ -7,10 +7,10 @@ import logging
 
 from urllib import quote_plus
 
-import episode_renamer.Utils as Utils
+import eplist.utils as Utils
 
-from episode_renamer.Episode import Episode, Special
-from episode_renamer.Settings import Settings
+from eplist.episode import Episode, Special
+from eplist.settings import Settings
 
 try:
     from BeautifulSoup import BeautifulStoneSoup as Soup

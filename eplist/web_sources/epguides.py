@@ -2,9 +2,9 @@
 __author__ = 'Dan Tracy'
 __email__ = 'djt5019 at gmail dot com'
 
-import episode_renamer.Utils as Utils
+import eplist.utils as Utils
 
-from episode_renamer.Episode import Episode
+from eplist.episode import Episode
 
 priority = 2
 

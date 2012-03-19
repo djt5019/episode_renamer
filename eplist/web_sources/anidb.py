@@ -7,9 +7,9 @@ import logging
 
 from string import punctuation as punct
 
-from episode_renamer import Utils
+from eplist import Utils
 
-from episode_renamer.Episode import Episode, Special
+from eplist.episode import Episode, Special
 
 try:
     from BeautifulSoup import BeautifulStoneSoup as Soup
