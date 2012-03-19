@@ -1,5 +1,4 @@
 include *.py
-include *.pyw
 include *.txt
 include README.rst
 include LICENCE
