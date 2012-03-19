@@ -7,6 +7,8 @@ __email__ = 'djt5019 at gmail dot com'
 
 import re
 
+import os
+import sys
 from os.path import join, split, realpath
 
 VIDEO_EXTENSIONS = set(['.mkv', '.ogm', '.asf', '.asx', '.avi', '.flv', '.mov', '.mp4', '.mpg', '.rm', '.swf', '.vob',
@@ -15,6 +17,22 @@ VIDEO_EXTENSIONS = set(['.mkv', '.ogm', '.asf', '.asx', '.avi', '.flv', '.mov', 
 PROJECT_SOURCE_PATH = split(realpath(__file__))[0]
 PROJECT_PATH = split(PROJECT_SOURCE_PATH)[0]
 WEB_SOURCES_PATH = join(PROJECT_SOURCE_PATH, 'web_sources')
+
+RESOURCE_PATH = os.path.join("eplist", "resources")
+
+if sys.platform == "win32":
+    RESOURCE_PATH = os.path.join(os.environ['APPDATA'], RESOURCE_PATH)
+elif sys.platform == 'darwin':
+    ## Found at http://stackoverflow.com/questions/1084697/how-do-i-store-desktop-application-data-in-a-cross-platform-way-for-python
+    from AppKit import NSSearchPathForDirectoriesInDomains
+    # http://developer.apple.com/DOCUMENTATION/Cocoa/Reference/Foundation/Miscellaneous/Foundation_Functions/Reference/reference.html#//apple_ref/c/func/NSSearchPathForDirectoriesInDomains
+    # NSApplicationSupportDirectory = 14
+    # NSUserDomainMask = 1
+    # True for expanding the tilde into a fully qualified path
+    RESOURCE_PATH = os.path.join(NSSearchPathForDirectoriesInDomains(14, 1, True)[0], RESOURCE_PATH)
+else:  # *nix / solaris
+    RESOURCE_PATH = os.path.expanduser(os.path.join("~", "." + RESOURCE_PATH))
+
 
 SHOW_NOT_FOUND = []
 

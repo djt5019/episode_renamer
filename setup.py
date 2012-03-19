@@ -29,6 +29,6 @@ setup(
         "nose (>=1.1.2)"
     ],
     entry_points={
-        'console_scripts': ['eplist = eplist.eplist:main']
+        'console_scripts': ['eplist = eplist:main']
     }
 )
