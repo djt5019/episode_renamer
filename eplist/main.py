@@ -22,12 +22,12 @@ import os
 import sys
 import logging
 
-import utils
-import episode
+from eplist import utils
+from eplist import episode
 
-from cache import Cache
-from show_finder import Parser
-from settings import Settings
+from eplist.cache import Cache
+from eplist.show_finder import Parser
+from eplist.settings import Settings
 
 
 def main():

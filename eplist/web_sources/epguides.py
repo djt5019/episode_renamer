@@ -2,8 +2,7 @@
 __author__ = 'Dan Tracy'
 __email__ = 'djt5019 at gmail dot com'
 
-import eplist.utils as Utils
-
+from eplist import utils
 from eplist.episode import Episode
 
 priority = 2
@@ -27,15 +26,15 @@ pattern = r"""
 
 
 def poll(title):
-    cleanTitle = Utils.prepare_title(title)
+    cleanTitle = utils.prepare_title(title)
     episodes = []
     url = "http://www.epguides.com/{0}".format(cleanTitle)
-    fd = Utils.get_url_descriptor(url)
+    fd = utils.get_url_descriptor(url)
 
     if fd is None:
-        return Utils.show_not_found
+        return utils.show_not_found
 
-    regex = Utils.regex_compile(pattern)
+    regex = utils.regex_compile(pattern)
 
     count = 1
     for line in fd.iter_lines():
@@ -44,7 +43,7 @@ def poll(title):
             name = info.group('name')
             episode = info.group('episode')
             season = int(info.group('season'))
-            name = Utils.regex_sub('<.*?>', '', name).strip()
+            name = utils.regex_sub('<.*?>', '', name).strip()
 
             if '[Trailer]' in name:
                 name = name.replace('[Trailer]', '')

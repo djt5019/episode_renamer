@@ -20,7 +20,6 @@ setup(
         "Environment :: X11 Applications :: Qt"
         "Operating System :: OS Independent",
     ],
-    scripts=['eplist'],
     requires=[
         "BeautifulSoup (>=3.2.0)",
         "requests (>=0.9.1)",
@@ -30,5 +29,7 @@ setup(
     ],
     entry_points={
         'console_scripts': ['eplist = eplist:main']
-    }
+    },
+
+    include_package_data=True,
 )
