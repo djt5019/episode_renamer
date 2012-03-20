@@ -28,8 +28,8 @@ setup(
         "nose (>=1.1.2)"
     ],
     entry_points={
-        'console_scripts': ['eplist = eplist:main']
+        'console_scripts': ['eplist = eplist.main:main']
     },
-
+    package_data={'': ['eplist.py', 'LICENSE', 'README.rst']},
     include_package_data=True,
 )

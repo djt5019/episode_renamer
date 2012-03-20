@@ -1,4 +1,6 @@
-recursive-include episode_parser *.py
+include *.py
 include *.txt
+
 include README.rst
 include LICENCE
+include eplist.py
