@@ -10,6 +10,7 @@ from string import punctuation as punct
 from eplist import utils
 
 from eplist.episode import Episode, Special
+from eplist.settings import Settings
 
 try:
     from BeautifulSoup import BeautifulStoneSoup as Soup
@@ -69,11 +70,19 @@ def _parse_local(title):
     return -1
 
 
+def _connect_UDP(aid, interactive=True):
+    ## Todo: make this work so we stop relying on the http protocol
+    raise NotImplementedError("I will get to this later... promise.")
+
+    if not Settings['anidb_username'] or not Settings['anidb_password']:
+        raise ValueError("Username/Password required to poll AniDB")
+
+
 def _connect_HTTP(aid):
     """
     Connect to AniDB using the public HTTP Api, this is used as an alternative to the UDP connection function
     """
-    url = r'http://api.anidb.net:9001/httpapi?request=anime&client=eprenamer&clientver=1&protover=1&aid={}'.format(aid)
+    url = Settings['anidb_http_api'].format(aid)
 
     resp = utils.get_url_descriptor(url)
 

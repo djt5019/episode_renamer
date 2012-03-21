@@ -14,6 +14,7 @@ config = {
     'filter': 'both',
 
     ## Your TvDB api key, required to poll their website
+    ## grab on at http://thetvdb.com/?tab=apiregister
     'tvdb_key': None,
 
     # Logger output files
@@ -37,10 +38,11 @@ config = {
 
     ## AniDB flat file with the ids of the shows visit link below for updated version from time to time
     ## http://anidb.net/api/animetitles.dat.gz
-    'anidb_db_file': 'animetitles.dat',
-    'anidb_db_url': 'http://anidb.net/api/animetitles.dat.gz',
     'anidb_username': None,
     'anidb_password': None,
+    'anidb_db_file': 'animetitles.dat',
+    'anidb_db_url': 'http://anidb.net/api/animetitles.dat.gz',
+    'anidb_http_api': 'http://api.anidb.net:9001/httpapi?request=anime&client=eprenamer&clientver=1&protover=1&aid={}',
 
     ## Verbose output
     'verbose': False,
@@ -67,6 +69,9 @@ config = {
 
     ## The current working directory
     'path': realpath('.'),
+
+    ## Database creation schema file name
+    'sql': 'schema.sql'
 
     }
 

@@ -245,11 +245,6 @@ def save_renamed_file_info(old_order, show_title=None):
         json.dump(Settings['backup_list'], f)
 
 
-def create_new_backup_file():
-    with open_file_in_resources(Settings['rename_backup'], 'w') as f:
-        json.dump({}, f)
-
-
 def find_old_filenames(path, show_title=None):
     """
     Returns a dict with the filenames and the number of files
@@ -500,7 +495,18 @@ def load_last_access_times():
         return json.load(f)
 
 
+#################
+## Creation of defualt functions/files functionality
+#################
+
+def create_new_backup_file():
+    logging.info("Creating a new rename info backup file")
+    with open_file_in_resources(Settings['rename_backup'], 'w') as f:
+        json.dump({}, f)
+
+
 def update_db():
+    logging.info("Attempting to update AniDb database file")
     one_unix_day = 24 * 60 * 60
 
     def _download():
@@ -517,3 +523,9 @@ def update_db():
         _download()
     else:
         logging.error("Attempting to download the database file multiple times")
+
+
+def create_default_sql_schema():
+    logging.info("Creating the default sql schema")
+    with open_file_in_resources(Settings['sql'], 'w') as f:
+        f.write(constants.CREATE_DB_QUERY)

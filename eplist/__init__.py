@@ -21,6 +21,8 @@ if new:
     utils.update_db()
     print "[+] Creating a renamed file backup listing"
     utils.create_new_backup_file()
+    print "[+] Creating new sql schema file"
+    utils.create_default_sql_schema()
 
 import logger
 logger.init_logging()
