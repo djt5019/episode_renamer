@@ -499,6 +499,19 @@ def load_last_access_times():
 ## Creation of defualt functions/files functionality
 #################
 
+def initalize_resource_folder():
+    print "[+] Creating resource path"
+    print "[+] Path = {}".format(constants.RESOURCE_PATH)
+    os.makedirs(constants.RESOURCE_PATH, 0755)
+    print "[+] Updating the AniDb database file"
+    utils.update_db()
+    print "[+] Creating a renamed file backup listing"
+    utils.create_new_backup_file()
+    print "[+] Creating new sql schema file"
+    utils.create_default_sql_schema()
+
+
+
 def create_new_backup_file():
     logging.info("Creating a new rename info backup file")
     with open_file_in_resources(Settings['rename_backup'], 'w') as f:

@@ -25,9 +25,15 @@ import logging
 from eplist import utils
 from eplist import episode
 
+from eplist.logger import init_logging()
 from eplist.cache import Cache
 from eplist.show_finder import Parser
 from eplist.settings import Settings
+
+init_logging()
+
+if not os.path.exists(constants.RESOURCE_PATH):
+    utils.initalize_resource_folder()
 
 
 def main():
