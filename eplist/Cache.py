@@ -8,43 +8,17 @@ import sqlite3
 import atexit
 import logging
 
+import utils
+
 from episode import Episode, Special
 from constants import RESOURCE_PATH
 from settings import Settings
 
+if not utils.file_exists_in_resources(Settings['sql']):
+    utils.create_default_sql_schema()
 
-_create_db_query = """
-PRAGMA foreign_keys = ON;
-
-DROP TABLE IF EXISTS shows;
-DROP TABLE IF EXISTS episodes;
-DROP TABLE IF EXISTS specials;
-
-CREATE TABLE shows (
-    sid INTEGER PRIMARY KEY,
-    title TEXT NOT NULL,
-    time TIMESTAMP
-);
-
-CREATE TABLE episodes (
-    eid INTEGER PRIMARY KEY,
-    sid INTEGER NOT NULL,
-    eptitle TEXT NOT NULL,
-    season INTEGER NOT NULL,
-    showNumber INTEGER NOT NULL,
-    FOREIGN KEY(sid) REFERENCES shows(sid)
-);
-
-CREATE TABLE specials(
-    mid INTEGER PRIMARY KEY,
-    sid INTEGER NOT NULL,
-    title TEXT NOT NULL,
-    showNumber INTEGER NOT NULL,
-    type TEXT NOT NULL,
-    FOREIGN KEY(sid) REFERENCES shows(sid)
-);
-
-"""
+with utils.open_file_in_resources(Settings['sql']) as sql:
+    schema = sql.read()
 
 
 class Cache(object):
@@ -61,7 +35,7 @@ class Cache(object):
             if not os.path.exists(dbName):
                 self.connection = sqlite3.connect(dbName, detect_types=sqlite3.PARSE_DECLTYPES)
                 logging.debug("Creating database: {}".format(dbName))
-                self.connection.executescript(_create_db_query)
+                self.connection.executescript(schema)
             else:
                 self.connection = sqlite3.connect(dbName, detect_types=sqlite3.PARSE_DECLTYPES)
         except sqlite3.OperationalError as e:
@@ -188,4 +162,4 @@ class Cache(object):
             self.cursor.execute(query, show)
 
     def recreate_cache(self):
-        self.cursor.executescript(_create_db_query)
+        self.cursor.executescript(schema)
