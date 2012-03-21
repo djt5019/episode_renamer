@@ -4,7 +4,7 @@ from setuptools import find_packages
 
 setup(
     name='eplist',
-    version='0.1.2',
+    version='0.1.3',
     description='Simple episode renaming program',
     long_description=open('README.rst').read(),
     author='Dan Tracy',
@@ -17,15 +17,12 @@ setup(
         "Topic :: Multimedia :: Video",
         "Topic :: Utilities",
         "Environment :: Console",
-        "Environment :: X11 Applications :: Qt"
+        "Environment :: X11 Applications :: Qt",
         "Operating System :: OS Independent",
     ],
     requires=[
         "BeautifulSoup (>=3.2.0)",
         "requests (>=0.9.1)",
-    ],
-    tests_requires=[
-        "nose (>=1.1.2)"
     ],
     entry_points={
         'console_scripts': ['eplist = eplist.main:main']
