@@ -83,3 +83,34 @@ remove_junk_regex = re.compile(r'[\[\(].*?[\]\]]', re.I)
 bracket_season_regex = re.compile(r'[\[\(]{season}X{episode}[\]\)]'.format(**regex_vars), re.I)
 
 del k, e, v, regex_vars, uncompiled_regex
+
+
+CREATE_DB_QUERY = """
+PRAGMA foreign_keys = ON;
+
+DROP TABLE IF EXISTS episodes;
+DROP TABLE IF EXISTS specials;
+DROP TABLE IF EXISTS shows;
+
+CREATE TABLE shows (
+    sid INTEGER PRIMARY KEY,
+    title TEXT NOT NULL,
+    time TIMESTAMP
+);
+
+CREATE TABLE episodes (
+    eid INTEGER PRIMARY KEY,
+    sid INTEGER NOT NULL REFERENCES shows(sid) ON DELETE CASCADE,
+    eptitle TEXT NOT NULL,
+    season INTEGER NOT NULL,
+    showNumber INTEGER NOT NULL
+);
+
+CREATE TABLE specials(
+    mid INTEGER PRIMARY KEY,
+    sid INTEGER NOT NULL REFERENCES shows(sid) ON DELETE CASCADE,
+    title TEXT NOT NULL,
+    showNumber INTEGER NOT NULL,
+    type TEXT NOT NULL
+);
+"""
