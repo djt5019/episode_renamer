@@ -5,24 +5,28 @@ __email__ = 'djt5019 at gmail dot com'
 from eplist import utils
 from eplist.episode import Episode
 
+import re
+
 priority = 2
 
 pattern = r"""
-            ^		                # Start of the string
-            (?:[\s]*?[\d]*\.?)	    # Number on list
-            [\s]{2,}		        # Ignore whitespace
-            (?P<season>\d+)  	    # Season number
-            -			            # Separator
-            [\s]*		            # Optional whitespace
-            (?P<episode>\d+)	    # Episode number
-            [\s]{2,}		        # Whitespace
-            (?P<product>.+|)	    # Product number
-            [\s]{1,}		        # Whitespace
+            ^                       # Start of the string
+            (?:[\s]*?[\d]*\.?)      # Number on list
+            [\s]{2,}                # Ignore whitespace
+            (?P<season>[\d]*)       # Season number
+            -                       # Separator
+            [\s]*                   # Optional whitespace
+            (?P<episode>[\d]*)      # Episode number
+            [\s]{2,}                # Whitespace
+            (?P<product>.+|)        # Product number
+            [\s]{2,}                # Whitespace
             (?P<airdate>[\w\s/]*?)  # Air-date
-            [\s]{2,}		        # Ignore whitespace
-            (?P<name>.*)	        # Episode name
-            $			            # End of line
+            [\s]{2,}                # Ignore whitespace
+            (?P<name>.*)            # Episode name
+            $                       # End of line
             """
+
+epguides_regex = re.compile(pattern)
 
 
 def poll(title):
@@ -34,16 +38,14 @@ def poll(title):
     if fd is None:
         return utils.show_not_found
 
-    regex = utils.regex_compile(pattern)
-
     count = 1
     for line in fd.iter_lines():
-        info = regex.match(line)
+        info = epguides_regex.match(line)
         if info is not None:
             name = info.group('name')
             episode = info.group('episode')
             season = int(info.group('season'))
-            name = utils.regex_sub('<.*?>', '', name).strip()
+            name = re.sub('<.*?>', '', name).strip()
 
             if '[Trailer]' in name:
                 name = name.replace('[Trailer]', '')

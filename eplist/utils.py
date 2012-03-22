@@ -12,7 +12,6 @@ import logging
 
 import constants
 import episode
-from tempfile import TemporaryFile
 
 from settings import Settings
 
@@ -448,27 +447,6 @@ def file_exists_in_resources(name):
     name = os.path.split(name)[1]
     name = os.path.join(constants.RESOURCE_PATH, name)
     return os.path.exists(name)
-
-
-def regex_compile(regex):
-    """
-    Returns a compiled regex instance, ignore case and verbose are on by default
-    """
-    return re.compile(regex, re.I | re.X)
-
-
-def regex_sub(pattern, replacement, target):
-    """
-    Substitutes the replacement in the target if it matches the pattern
-    """
-    return re.sub(pattern, replacement, target)
-
-
-def temporary_file(suffix):
-    """
-    Returns a file object to a temporary file
-    """
-    return TemporaryFile(suffix=suffix)
 
 
 def save_last_access_times():

@@ -2,6 +2,7 @@
 __author__ = 'Dan Tracy'
 __email__ = 'djt5019 at gmail dot com'
 
+import re
 import difflib
 import logging
 
@@ -31,7 +32,7 @@ def _parse_local(title):
 
     title = title.lower()
 
-    regex = utils.regex_compile(r'(?P<aid>\d+)\|(?P<type>\d)\|(?P<lang>.+)\|(?P<title>.*)')
+    regex = re.compile(r'(?P<aid>\d+)\|(?P<type>\d)\|(?P<lang>.+)\|(?P<title>.*)')
 
     sequence = difflib.SequenceMatcher(lambda x: x in punct, title.lower())
 

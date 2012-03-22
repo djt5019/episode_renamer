@@ -4,6 +4,7 @@ __email__ = 'djt5019 at gmail dot com'
 
 import zipfile
 import logging
+import tempfile
 
 from urllib import quote_plus
 
@@ -23,9 +24,8 @@ priority = 1
 def poll(title):
     try:
         API_KEY = Settings['tvdb_key']
-    except KeyError as e:
+    except KeyError:
         logging.warn("The TvDB Api key was not found, unable to poll the TvDB")
-        logging.warn(e)
         return utils.show_not_found
 
     try:
@@ -64,7 +64,7 @@ def poll(title):
     if infoFileDesc is None:
         return utils.show_not_found
 
-    tempZip = utils.temporary_file(suffix='.zip')
+    tempZip = tempfile.TemporaryFile(suffix='.zip')
     tempZip.seek(0)
     tempZip.write(infoFileDesc.content)
 
