@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+
+from __future__ import unicode_literals
+
 __author__ = 'Dan Tracy'
 __email__ = 'djt5019 at gmail dot com'
 
@@ -8,53 +11,36 @@ import sqlite3
 import atexit
 import logging
 
-import utils
-
 from episode import Episode, Special
 from constants import RESOURCE_PATH
 from settings import Settings
 
-if not utils.file_exists_in_resources(Settings['sql']):
-    utils.create_default_sql_schema()
-
-with utils.open_file_in_resources(Settings['sql']) as sql:
-    schema = sql.read()
-
 
 class Cache(object):
     """ Our database logic class"""
-    def __init__(self, dbName=u"episodes.db"):
+    def __init__(self, dbName="episodes.db"):
         """Establish a connection to the show database"""
-        if not dbName or not isinstance(dbName, basestring):
+
+        if not dbName:
             raise ValueError("Empty database name passed to cache")
 
         if dbName != ':memory:':
             dbName = os.path.join(RESOURCE_PATH, dbName)
 
         try:
-            if not os.path.exists(dbName):
-                self.connection = sqlite3.connect(dbName, detect_types=sqlite3.PARSE_DECLTYPES)
-                logging.debug("Creating database: {}".format(dbName))
-                self.connection.executescript(schema)
-            else:
-                self.connection = sqlite3.connect(dbName, detect_types=sqlite3.PARSE_DECLTYPES)
+            self.connection = sqlite3.connect(dbName, detect_types=sqlite3.PARSE_DECLTYPES)
+            logging.debug("Creating database: {}".format(dbName))
+            self.connection.executescript(create_database)
         except sqlite3.OperationalError as e:
             logging.error("Error connecting to database: {}".format(e))
             self.connection = None
 
-        if self.connection:
-            self.cursor = self.connection.cursor()
-
             #Make sure everything is utf-8
             self.connection.text_factory = lambda x: unicode(x, 'utf-8')
             atexit.register(self.close)
-        else:
-            logging.critical("Unable to open a connection to the database")
-            raise sqlite3.OperationalError
 
     def close(self):
         """ Commits any changes to the database then closes connections to it"""
-        self.cursor.close()
         self.connection.commit()
         self.connection.close()
         logging.info("Connections have been closed")
@@ -65,29 +51,25 @@ class Cache(object):
         if not (showTitle and episodes):
             raise ValueError("Empty show title or specials list passed to add_specials")
 
-        if not (isinstance(showTitle, basestring) and isinstance(episodes, list)):
-            raise ValueError("add_show expects a string and a list")
-
         title = showTitle
         time = datetime.datetime.now()
 
-        self.cursor.execute("INSERT INTO shows values (NULL, ?, ?)", (title, time))
+        with self.connection as conn:
+            curs = conn.execute("INSERT INTO shows values (NULL, ?, ?)", (title, time))
+            showId = curs.lastrowid
 
-        showId = self.cursor.lastrowid
-
-        for eps in episodes:
-            show = (showId, eps.title, eps.season, eps.episode_number,)
-            self.cursor.execute(
-                "INSERT INTO episodes values (NULL, ?, ?, ?, ?)", show)
+        with self.connection as conn:
+            for eps in episodes:
+                show = (showId, eps.title, eps.season, eps.episode_number,)
+                conn.execute("INSERT INTO episodes values (NULL, ?, ?, ?, ?)", show)
 
     def remove_show(self, sid):
         """Removes show and episodes matching the show id """
-        if not isinstance(sid, int):
-            raise ValueError("remove_show expects an integer primary key")
-
-        self.cursor.execute("DELETE FROM episodes where sid=?", (sid,))
-        self.cursor.execute("DELETE FROM specials where sid=?", (sid,))
-        self.cursor.execute("DELETE FROM shows where sid=?", (sid,))
+        sid = (sid,)
+        with self.connection as conn:
+            conn.execute("DELETE FROM episodes where sid=?", sid)
+            conn.execute("DELETE FROM specials where sid=?", sid)
+            conn.execute("DELETE FROM shows where sid=?", sid)
 
     def get_episodes(self, showTitle):
         """Returns the episodes associated with the show id"""
@@ -95,12 +77,14 @@ class Cache(object):
             raise ValueError("get_episodes expects a string")
 
         title = (showTitle, )
-        self.cursor.execute(
-            """SELECT e.eptitle, e.showNumber,e.season, s.sid, s.time
-               FROM episodes AS e INNER JOIN shows AS s
-               ON s.sid=e.sid AND s.title=?""", title)
+        query = """SELECT e.eptitle, e.showNumber,e.season, s.sid, s.time
+                   FROM episodes AS e INNER JOIN shows AS s
+                   ON s.sid=e.sid AND s.title=?"""
 
-        result = self.cursor.fetchall()
+        with self.connection as conn:
+            curs = conn.execute(query, title)
+            result = curs.fetchall()
+
         eps = []
 
         if not result:
@@ -110,9 +94,7 @@ class Cache(object):
 
         logging.info("{} days old".format(diffDays.days))
 
-        update_days = Settings['db_update']
-
-        if diffDays.days >= update_days:
+        if diffDays.days >= Settings['db_update']:
             #If the show is older than a week remove it then return not found
             logging.warning("Show is older than a week, removing...")
             sid = result[0][-2]
@@ -127,39 +109,72 @@ class Cache(object):
     def get_specials(self, showTitle):
         """ Returns a list of Special episode objects """
         if not showTitle:
-            raise ValueError("Show title was not an acceptable type: requires string")
+            raise ValueError("Show title requires a string")
 
         title = (showTitle, )
-        self.cursor.execute(
-            """SELECT sp.title, sp.showNumber, sp.type
-               FROM specials AS sp INNER JOIN shows
-               ON sp.sid=shows.sid AND shows.title=?""", title)
 
-        result = self.cursor.fetchall()
+        query = """SELECT sp.title, sp.showNumber, sp.type
+                   FROM specials AS sp INNER JOIN shows
+                   ON sp.sid=shows.sid AND shows.title=?"""
+
+        with self.connection as conn:
+            curs = conn.execute(query, title)
+            result = curs.fetchall()
 
         if result is not None:
-            eps = [Special(*episode) for episode in result]
-
-        return eps
+            return [Special(*episode) for episode in result]
+        else:
+            return []
 
     def add_specials(self, showTitle, episodes):
         """ Add a list of special episode objects """
-        query = """
-        INSERT INTO specials (mid,  sid, title, showNumber, type)
-        SELECT NULL, sid, ?, ?, ?
-        FROM shows
-        WHERE shows.title=?
-        """
+        query = """INSERT INTO specials (mid,  sid, title, showNumber, type)
+                   SELECT NULL, sid, ?, ?, ?
+                   FROM shows
+                   WHERE shows.title=?"""
 
         if not (showTitle and episodes):
             return
 
-        if not (isinstance(showTitle, basestring) and isinstance(episodes, list)):
-            raise ValueError("add_specials expects a string and a list")
-
-        for eps in episodes:
-            show = (eps.title, eps.num, eps.type, showTitle)
-            self.cursor.execute(query, show)
+        with self.connection as conn:
+            for eps in episodes:
+                show = (eps.title, eps.num, eps.type, showTitle)
+                conn.execute(query, show)
 
     def recreate_cache(self):
-        self.cursor.executescript(schema)
+        with self.connection as conn:
+            conn.executescript(delete_database)
+            conn.executescript(create_database)
+
+
+create_database = """
+PRAGMA foreign_keys = ON;
+
+CREATE TABLE IF NOT EXISTS shows (
+    sid INTEGER PRIMARY KEY,
+    title TEXT NOT NULL,
+    time TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS episodes (
+    eid INTEGER PRIMARY KEY,
+    sid INTEGER NOT NULL REFERENCES shows(sid) ON DELETE CASCADE,
+    eptitle TEXT NOT NULL,
+    season INTEGER NOT NULL,
+    showNumber INTEGER NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS specials(
+    mid INTEGER PRIMARY KEY,
+    sid INTEGER NOT NULL REFERENCES shows(sid) ON DELETE CASCADE,
+    title TEXT NOT NULL,
+    showNumber INTEGER NOT NULL,
+    type TEXT NOT NULL
+);
+"""
+
+delete_database = """
+DROP TABLE IF EXISTS episodes;
+DROP TABLE IF EXISTS specials;
+DROP TABLE IF EXISTS shows;
+"""
