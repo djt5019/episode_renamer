@@ -59,11 +59,11 @@ def _parse_local(title):
                 guesses.append(d)
 
     if guesses:
-        print guesses
         logging.info("{} possibilities".format(len(guesses)))
         guesses = sorted(guesses, key=lambda x: x['ratio'])
-        _, aid, name = guesses[0]
-        logging.error("Closest show to '{}' is {} with id {}".format(title, name, aid))
+        aid = guesses[0]['aid']
+        name = guesses[0]['title']
+        logging.error("Closest show to '{}' is '{}'' with id {}".format(title, name, aid))
 
         for guess in guesses[1:]:
             logging.info("Similar show {} [{}] also found".format(name, aid))
@@ -71,7 +71,7 @@ def _parse_local(title):
     return -1
 
 
-def _connect_UDP(aid, interactive=True):
+def _connect_UDP(aid):
     ## Todo: make this work so we stop relying on the http protocol
     raise NotImplementedError("I will get to this later... promise.")
 
@@ -88,7 +88,7 @@ def _connect_HTTP(aid):
     resp = utils.get_url_descriptor(url)
 
     if resp is None:
-        return []
+        return utils.show_not_found
 
     soup = Soup(resp.content)
 
@@ -99,7 +99,7 @@ def _connect_HTTP(aid):
     episodes = soup.findAll('episode')
 
     if not episodes:
-        return []
+        return utils.show_not_found
 
     epList = []
 
