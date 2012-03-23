@@ -31,10 +31,10 @@ from eplist.cache import Cache
 from eplist.show_finder import Parser
 from eplist.settings import Settings
 
-init_logging()
-
 if not os.path.exists(constants.RESOURCE_PATH):
     utils.init_resource_folder()
+
+init_logging()
 
 
 def main():
