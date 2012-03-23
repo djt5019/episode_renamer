@@ -5,7 +5,6 @@ __email__ = 'djt5019 at gmail dot com'
 
 import os
 import sys
-import re
 import time
 import json
 import logging
@@ -53,7 +52,6 @@ def regex_search(filename):
     """
 
     # deal with anything in brackets ourselves, they tend to throw off the regexes
-    info_dict = {}
     checksum = constants.checksum_regex.search(filename)
     filename = constants.checksum_regex.sub("", filename)
     season = constants.bracket_season_regex.search(filename)
@@ -79,6 +77,8 @@ def regex_search(filename):
 
     logging.info(result)
 
+    # Info dict will hold the proper data for our episode or special
+    info_dict = {}
     if 'junk' in result:
         return info_dict
 
@@ -150,7 +150,7 @@ def prepare_filenames(path, show):
         elif f.episode_number > show.max_episode_number:
             episode = show.get_special(f.episode_number - show.max_episode_number)
         else:
-            episode = show.get_episode(season=f.season, episode=f.episode_number)
+            episode = show.get_episode(f.season, f.episode_number)
 
         if not episode:
             logging.warning("Could not find an episode for {}".format(f.name))
@@ -167,7 +167,7 @@ def prepare_filenames(path, show):
             sameCount += 1
             continue
 
-        newName = trim_long_filename(os.path.join(path, newName))
+        newName = os.path.join(path, trim_long_filename(newName))
 
         episode.episode_file.new_name = newName
         cleanFiles.append((f.path, newName))
@@ -482,12 +482,9 @@ def initalize_resource_folder():
     print "[+] Path = {}".format(constants.RESOURCE_PATH)
     os.makedirs(constants.RESOURCE_PATH, 0755)
     print "[+] Updating the AniDb database file"
-    utils.update_db()
+    update_db()
     print "[+] Creating a renamed file backup listing"
-    utils.create_new_backup_file()
-    print "[+] Creating new sql schema file"
-    utils.create_default_sql_schema()
-
+    create_new_backup_file()
 
 
 def create_new_backup_file():
@@ -514,9 +511,3 @@ def update_db():
         _download()
     else:
         logging.error("Attempting to download the database file multiple times")
-
-
-def create_default_sql_schema():
-    logging.info("Creating the default sql schema")
-    with open_file_in_resources(Settings['sql'], 'w') as f:
-        f.write(constants.CREATE_DB_QUERY)

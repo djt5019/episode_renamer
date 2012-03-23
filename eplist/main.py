@@ -24,8 +24,9 @@ import logging
 
 from eplist import utils
 from eplist import episode
+from eplist import constants
 
-from eplist.logger import init_logging()
+from eplist.logger import init_logging
 from eplist.cache import Cache
 from eplist.show_finder import Parser
 from eplist.settings import Settings
