@@ -194,11 +194,15 @@ def main():
                 files.append((old, new))
 
         print_renamed_files(files)
-        old_order, errors = utils.rename(files)
+        res = utils.rename(files)
+
+        old_order, errors = res
 
         utils.save_renamed_file_info(old_order, Settings['title'])
 
-        if not errors:
+        if not old_order:
+            print ("Changes were not committed to the files")
+        elif not errors:
             print ("All files were successfully renamed")
 
         for e in errors:

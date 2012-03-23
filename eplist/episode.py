@@ -82,7 +82,7 @@ class Show(object):
         """
         return self._episodes_by_season.get(season, [])
 
-    def get_episode(self, episode, season=0):
+    def get_episode(self, episode, season):
         """
         Returns a specific episode from a specific season or None
         """
@@ -92,12 +92,9 @@ class Show(object):
         # Adjust by one since episodes start count at 1 not 0
         episode -= 1
 
-        if season > 0:
-            season = self._episodes_by_seasonSeason.get(season, None)
-            if season:
-                return season[episode]
-            else:
-                return None
+        season = self._episodes_by_season.get(season, None)
+        if season:
+            return season[episode]
         else:
             return self.episodes[episode]
 
@@ -121,6 +118,9 @@ class Episode(object):
         self.episode_count = int(episode_count)
         self.episode_file = None
         self.type = "Episode"
+
+    def __repr__(self):
+        return "{} - S{} - E{}".format(self.title, self.season, self.episode_count)
 
 
 class Special(object):
