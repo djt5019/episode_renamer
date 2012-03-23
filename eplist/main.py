@@ -34,7 +34,7 @@ from eplist.settings import Settings
 init_logging()
 
 if not os.path.exists(constants.RESOURCE_PATH):
-    utils.initalize_resource_folder()
+    utils.init_resource_folder()
 
 
 def main():
@@ -119,8 +119,8 @@ def main():
         l.setLevel(logging.NOTSET)
 
     if args.gui_enabled:
-        import episode_renamer.gui.gui as gui
-        exit(gui.main())
+        from gui.gui import main
+        exit(main())
 
     if args.update_db:
         utils.update_db()

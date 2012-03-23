@@ -60,7 +60,7 @@ def locate_show(title):
 
     if not episodes:
         logging.info("Unable to locate the show: " + title)
-        return (eps, specials)
+        return eps, specials
 
     for e in episodes:
         if isinstance(e, Special):
@@ -71,4 +71,4 @@ def locate_show(title):
     eps = sorted(ifilter(lambda x: x.episode_number > 0, eps), key=lambda z: z.episode_count)
     specials = sorted(ifilter(lambda x: x.num > 0, specials), key=lambda z: z.num)
 
-    return (eps, specials)
+    return eps, specials

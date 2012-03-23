@@ -11,8 +11,8 @@ import os
 import sys
 from os.path import join, split, realpath
 
-VIDEO_EXTENSIONS = set(['.mkv', '.ogm', '.asf', '.asx', '.avi', '.flv', '.mov', '.mp4', '.mpg', '.rm', '.swf', '.vob',
-                    '.wmv', '.mpeg'])
+VIDEO_EXTENSIONS = {'.mkv', '.ogm', '.asf', '.asx', '.avi', '.flv', '.mov', '.mp4', '.mpg', '.rm', '.swf', '.vob',
+                    '.wmv', '.mpeg'}
 
 PROJECT_SOURCE_PATH = split(realpath(__file__))[0]
 PROJECT_PATH = split(PROJECT_SOURCE_PATH)[0]
@@ -22,12 +22,8 @@ RESOURCE_PATH = os.path.join("eplist", "resources")
 
 if sys.platform == "win32":
     RESOURCE_PATH = os.path.join(os.environ['APPDATA'], RESOURCE_PATH)
-elif sys.platform == 'darwin':
-    ## Found at http://stackoverflow.com/questions/1084697/how-do-i-store-desktop-application-data-in-a-cross-platform-way-for-python
-    from AppKit import NSSearchPathForDirectoriesInDomains
-    RESOURCE_PATH = os.path.join(NSSearchPathForDirectoriesInDomains(14, 1, True)[0], RESOURCE_PATH)
 else:  # *nix / solaris
-    RESOURCE_PATH = os.path.expanduser(os.path.join("~", "." + RESOURCE_PATH))
+    RESOURCE_PATH = os.path.expanduser(os.path.join("~", ".{}".format(RESOURCE_PATH)))
 
 
 SHOW_NOT_FOUND = []
@@ -59,7 +55,7 @@ for k, v in regex_vars.iteritems():
     except IndexError as e:
         pass
 
-uncompiled_regex = [
+regexList = [
             r'^(?P<series>.*?) - Season (?P<season>\d+) - Episode (?P<episode>\d*) - .*',  # Also mine
             r'^(?P<series>.*?) - Episode (?P<episode>\d*) - .*',  # My usual format
             r'^{series}{sep}+{special}',
@@ -73,13 +69,10 @@ uncompiled_regex = [
             r'.*{episode}',  # More of a general catch-all regex, last resort search for the first numbers in the filename
             ]
 
-## Substitute the dictionary variables in to the unformated regexes (is the plural of regex, regexes?)
-uncompiled_regex = [r.format(**regex_vars) for r in uncompiled_regex]
-
-regexList = map(lambda x: re.compile(x, re.I), uncompiled_regex)
+## Substitute the dictionary variables in to the unformatted regex
+regexList = [r.format(**regex_vars) for r in regexList]
+regexList = [re.compile(regex) for regex in regexList]
 
 checksum_regex = re.compile(r'[\[\(](?P<sum>[a-f0-9]{8})[\]\)]', re.I)
 remove_junk_regex = re.compile(r'[\[\(].*?[\]\]]', re.I)
 bracket_season_regex = re.compile(r'[\[\(]{season}X{episode}[\]\)]'.format(**regex_vars), re.I)
-
-del k, e, v, regex_vars, uncompiled_regex

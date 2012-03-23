@@ -11,16 +11,16 @@ import logging
 
 from PySide import QtGui, QtCore
 
-from episode_renamer.Parser import Parser
-from episode_renamer.Episode import Show, EpisodeFormatter
-from episode_renamer.Cache import Cache
-from episode_renamer.Settings import Settings
+from eplist.show_finder import Parser
+from eplist.episode import Show, EpisodeFormatter
+from eplist.cache import Cache
+from eplist.settings import Settings
 
-from episode_renamer import Utils
+from eplist import utils
 
 cache = Cache()
 parser = Parser(cache=cache)
-Utils.load_renamed_file()
+utils.load_renamed_file()
 
 Settings['title'] = ""
 
@@ -147,7 +147,7 @@ class Form(QtGui.QWidget):
         self.currentDirLabel.setText(os.path.abspath(self.renameDir))
         self.dirList.clear()
         self.epList.clear()
-        for ep in Utils.clean_filenames(self.renameDir):
+        for ep in utils.clean_filenames(self.renameDir):
             self.dirList.addItem(ep.name)
 
     def updateEpisodeListing(self):
@@ -177,7 +177,7 @@ class Form(QtGui.QWidget):
             self.updater.update_episodes.emit()
 
     def findShow(self):
-        showTitle = Utils.remove_punctuation(self.epLine.text().strip())
+        showTitle = utils.remove_punctuation(self.epLine.text().strip())
 
         if not showTitle:
             InfoMessage(self, "Find Show", "No show specified")
@@ -217,7 +217,7 @@ class Form(QtGui.QWidget):
             InfoMessage(self, "Rename Files", "No Show Information Retrieved")
             return
 
-        files = Utils.prepare_filenames(self.renameDir, self.show)
+        files = utils.prepare_filenames(self.renameDir, self.show)
         dialog = RenameDialog(files, self)
         dialog.finished.connect(self.updateDirectoryListing)
         dialog.exec_()
@@ -288,9 +288,9 @@ class RenameDialog(QtGui.QDialog, object):
             for old, new in self.files:
                 item = QtGui.QStandardItem()
 
-                old_name = Utils.encode(os.path.split(old)[1])
-                new_name = Utils.encode(os.path.split(new)[1])
-                string = Utils.encode("OLD: {}\nNEW: {}\n".format(old_name, new_name))
+                old_name = utils.encode(os.path.split(old)[1])
+                new_name = utils.encode(os.path.split(new)[1])
+                string = utils.encode("OLD: {}\nNEW: {}\n".format(old_name, new_name))
                 item.setText(string)
                 item.setCheckState(QtCore.Qt.Checked)
                 item.setCheckable(True)
@@ -310,11 +310,11 @@ class RenameDialog(QtGui.QDialog, object):
             if item.checkState() == QtCore.Qt.Checked:
                 files.append(item.rename_info)
 
-        old_order, errors = Utils.rename(files, 'yes')
+        old_order, errors = utils.rename(files, 'yes')
         self.model.clear()
         self.buttonBox.accepted.disconnect()
 
-        Utils.save_renamed_file_info(old_order, Settings['title'])
+        utils.save_renamed_file_info(old_order, Settings['title'])
 
         if errors:
             self.model.appendRow(QtGui.QStandardItem("&The following files could not be renamed\n"))

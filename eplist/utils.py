@@ -474,10 +474,10 @@ def load_last_access_times():
 
 
 #################
-## Creation of defualt functions/files functionality
+## Creation of default functions/files functionality
 #################
 
-def initalize_resource_folder():
+def init_resource_folder():
     print "[+] Creating resource path"
     print "[+] Path = {}".format(constants.RESOURCE_PATH)
     os.makedirs(constants.RESOURCE_PATH, 0755)

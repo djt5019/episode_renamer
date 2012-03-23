@@ -71,7 +71,7 @@ class Parser(object):
         it's not in the database"""
         eps = self.cache.get_episodes(self.show.proper_title)
         spc = self.cache.get_specials(self.show.proper_title)
-        return (eps, spc)
+        return eps, spc
 
     def _parseHTMLData(self):
         """ Passes the sites contents through the regex to seperate episode
