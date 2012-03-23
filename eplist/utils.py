@@ -50,7 +50,7 @@ def regex_search(filename):
     """
     Compare the filename to each of the regular expressions for a match
     """
-
+    logging.info("Matching '{}'".format(filename))
     # deal with anything in brackets ourselves, they tend to throw off the regexes
     checksum = constants.checksum_regex.search(filename)
     filename = constants.checksum_regex.sub("", filename)
@@ -89,7 +89,7 @@ def regex_search(filename):
         info_dict['special_type'] = result.get('type', 'OVA')
     else:
         info_dict['episode_number'] = int(result['episode'])
-        info_dict['season'] = int(result.get('season', '-1'))
+        info_dict['season'] = int(result.get('season', '1'))
 
     return info_dict
 
@@ -150,7 +150,7 @@ def prepare_filenames(path, show):
         elif f.episode_number > show.max_episode_number:
             episode = show.get_special(f.episode_number - show.max_episode_number)
         else:
-            episode = show.get_episode(f.season, f.episode_number)
+            episode = show.get_episode(f.episode_number, f.season)
 
         if not episode:
             logging.warning("Could not find an episode for {}".format(f.name))
@@ -187,14 +187,14 @@ def rename(files, resp=""):
     (list of tuples with old info, list of file that cold not be renamed)
     """
     errors = []
+    old_order = []
+
     if resp == '':
         resp = raw_input("\nDo you wish to rename these files [y|N]: ").lower()
 
     if not resp.startswith('y'):
         logging.info("Changes were not committed to the files")
-        return errors
-
-    old_order = []
+        return old_order, errors
 
     for old, new in files:
         try:
@@ -228,6 +228,10 @@ def save_renamed_file_info(old_order, show_title=None):
     Save the previous names from the last renaming operation to disk
     """
     logging.info("Backing up old filenames")
+
+    if not old_order:
+        return
+
     path = os.path.split(old_order[0][0])[0]
 
     # If we have a title provided by the comand line, use that otherwise fall
