@@ -34,13 +34,11 @@ class Parser(object):
         the database first, if the show doesn't exist it will
         then try the internet. """
 
-        if self.show.title == '':
+        if not self.show.title:
             return None
 
         if self.cache:
-            (episodes, specials) = self._parseCacheData()
-            self.show.episodes = episodes
-            self.show.specials = specials
+            self.show.add_episodes(self._parseCacheData())
 
         # The show was found in the database
         if self.show.episodes:
@@ -49,9 +47,9 @@ class Parser(object):
 
         # The show was not in the database so now we try the website
         logging.info("Show not found in database, polling web")
-        eps, specials = self._parseHTMLData()
-        self.show.episodes = eps
-        self.show.specials = specials
+        self.show.add_episodes(self._parseHTMLData())
+
+        print self.show.num_episodes
 
         if not self.show.episodes:
             logging.error("Show was not found, check spelling and try again")
@@ -59,19 +57,16 @@ class Parser(object):
 
         # If we successfully find the show from the internet then
         # we should add it to our database for later use
-        if self.cache is not None:
+        if self.cache:
             logging.info("Adding show to the database")
-            self.cache.add_show(self.show.proper_title, self.show.episodes)
-            self.cache.add_specials(self.show.proper_title, self.show.specials)
+            self.cache.add_show(self.show.proper_title, self.show.episodes, self.show.specials)
 
         return self.show
 
     def _parseCacheData(self):
         """The query should return a positive show id otherwise
         it's not in the database"""
-        eps = self.cache.get_episodes(self.show.proper_title)
-        spc = self.cache.get_specials(self.show.proper_title)
-        return eps, spc
+        return self.cache.get_episodes(self.show.proper_title)
 
     def _parseHTMLData(self):
         """ Passes the sites contents through the regex to seperate episode

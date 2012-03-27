@@ -145,10 +145,10 @@ def prepare_filenames(path, show):
         return
 
     for f in files:
-        if f.is_ova:
+        if f.is_special:
             episode = show.get_special(f.special_number)
-        elif f.episode_number > show.max_episode_number:
-            episode = show.get_special(f.episode_number - show.max_episode_number)
+        elif f.episode_number > show.max_episode:
+            episode = show.get_special(f.episode_number - show.max_episode)
         else:
             episode = show.get_episode(f.episode_number, f.season)
 
@@ -157,7 +157,7 @@ def prepare_filenames(path, show):
             continue
 
         # attach the episode file to the corresponding episode entry
-        episode.episode_file = f
+        episode.file = f
 
         fileName = encode(f.name)
         newName = replace_invalid_path_chars(show.formatter.display(episode) + f.ext)
@@ -169,7 +169,7 @@ def prepare_filenames(path, show):
 
         newName = os.path.join(path, trim_long_filename(newName))
 
-        episode.episode_file.new_name = newName
+        episode.file.new_name = newName
         cleanFiles.append((f.path, newName))
 
     if sameCount > 0:
@@ -200,8 +200,8 @@ def rename(files, resp=""):
         try:
             os.rename(old, new)
             old_order.append((new, old))
-        except OSError as e:
-            errors.append((old, e))
+        except OSError:
+            errors.append(old)
 
     return old_order, errors
 
@@ -223,7 +223,7 @@ def rename(files, resp=""):
 #############################
 
 
-def save_renamed_file_info(old_order, show_title=None):
+def save_renamed_file_info(old_order=None, show_title=None, path=None):
     """
     Save the previous names from the last renaming operation to disk
     """
@@ -232,7 +232,8 @@ def save_renamed_file_info(old_order, show_title=None):
     if not old_order:
         return
 
-    path = os.path.split(old_order[0][0])[0]
+    if not path:
+        path = os.path.split(old_order[0][0])[0]
 
     # If we have a title provided by the comand line, use that otherwise fall
     # fall back on the folder name (at least it's something)

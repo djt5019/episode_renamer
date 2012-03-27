@@ -188,15 +188,14 @@ def main():
         episodes += show.specials if Settings['filter'] in ('both', 'specials') else []
 
         for e in episodes:
-            if e.episode_file and e.episode_file.new_name:
-                old = os.path.join(path, e.episode_file.name)
-                new = os.path.join(path, e.episode_file.new_name)
+            if e.file and e.file.new_name:
+                old = os.path.join(path, e.file.name)
+                new = os.path.join(path, e.file.new_name)
                 files.append((old, new))
 
         print_renamed_files(files)
-        res = utils.rename(files)
 
-        old_order, errors = res
+        old_order, errors = utils.rename(files)
 
         utils.save_renamed_file_info(old_order, Settings['title'])
 
@@ -205,8 +204,10 @@ def main():
         elif not errors:
             print ("All files were successfully renamed")
 
-        for e in errors:
-            print("File {} could not be successfully renamed".format(os.path.split(e)[1]))
+        for name in errors:
+            print("File {} could not be successfully renamed".format(os.path.split(name)[1]))
+            sys.exit(1)
+
         sys.exit(0)
 
     print ""
@@ -258,14 +259,14 @@ def verify_files(show):
 
     episode_files = show.episodes
     path = Settings.get('path', os.getcwd())
-    if not all([e.episode_file for e in episode_files]):
+    if not all([e.file for e in episode_files]):
         utils.prepare_filenames(path, show)
 
     for f in episode_files:
-        if not f.episode_file:
+        if not f.file:
             continue
 
-        ep_file = f.episode_file
+        ep_file = f.file
 
         if ep_file.given_checksum <= 0:
             print("Episode {} dosen't have a checksum to compare to".format(ep_file.name))

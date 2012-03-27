@@ -15,53 +15,76 @@ import utils
 from settings import Settings
 
 
+class Episode(object):
+    """
+    A simple class to organize the episodes/specials
+    """
+    def __init__(self, title, number, season, count=-1, type_="Episode"):
+        """
+        A container for an episode's information collected from the web
+        """
+        self.title = utils.encode(title)
+        self.season = int(season)
+        self.number = int(number)
+        self.count = int(count)
+        self.file = None
+        self.type = type_
+        self.is_special = (type_.lower() != "episode")
+
+    def __repr__(self):
+        return "{} - {} {}".format(self.type, self.count, self.title)
+
+
 class Show(object):
     """
     A convenience class to keep track of the list of episodes as well as
     to keep track of the custom formatter for those episodes
     """
-    def __init__(self, seriesTitle):
+    def __init__(self, seriesTitle, episodes=None):
         self.title = utils.encode(string.capwords(seriesTitle))
         self.proper_title = utils.prepare_title(seriesTitle.lower())
-        self._episodeList = []
-        self._episodes_by_season = {}
+        self.episodes = []
         self.specials = []
-        self._formatter = None
-        self.num_seasons = 0
-        self.max_episode_number = 0
+        self._episodes_by_season = {}
+        self.formatter = None
+
+        if episodes:
+            self.add_episodes(episodes)
+
+    def add_episodes(self, eplist):
+        if not eplist:
+            return
+
+        eps, spc = [], []
+
+        for e in eplist:
+            if e.count < 0 or e.number < 0:
+                continue
+
+            if e.is_special:
+                spc.append(e)
+            else:
+                eps.append(e)
+                self._episodes_by_season.setdefault(e.season, []).append(e)
+
+        self.episodes = sorted(eps, key=lambda x: x.count)
+        self.specials = sorted(spc, key=lambda x: x.number)
 
     @property
-    def episodes(self):
-        return self._episodeList
-
-    @episodes.setter
-    def episodes(self, eps):
-        """
-        Add episodes to the shows episode list
-        """
-        if eps:
-            self._episodeList = eps
-            self.num_seasons = eps[-1].season
-            self.max_episode_number = max(x.episode_number for x in eps)
-            self.num_episodes = len(eps)
-
-            for ep in self._episodeList:
-                self._episodes_by_season.setdefault(ep.season, []).append(ep)
+    def num_episodes(self):
+        return len(self.episodes)
 
     @property
-    def formatter(self):
-        if self._formatter:
-            return self._formatter
-        else:
-            raise AttributeError("Formatter not attached to this show '{}'".format(self.show_title))
+    def max_episode(self):
+        return max(x.number for x in self.episodes)
 
-    @formatter.setter
-    def formatter(self, fmt=None):
-        if not fmt or not isinstance(fmt, EpisodeFormatter):
-            raise ValueError("Expected a formatter but got {}".format(type(fmt)))
+    @property
+    def num_seasons(self):
+        return self.episodes[-1].season
 
-        self._formatter = fmt
-        self._formatter.show = self
+    @property
+    def num_specials(self):
+        return self.specials[-1].number
 
     @property
     def show_title(self):
@@ -104,36 +127,6 @@ class Show(object):
         return None
 
 
-class Episode(object):
-    """
-    A simple class to organize the episodes
-    """
-    def __init__(self, episode_title, episode_number, season, episode_count):
-        """
-        A container for an episode's information collected from the web
-        """
-        self.title = utils.encode(episode_title)
-        self.season = int(season)
-        self.episode_number = int(episode_number)
-        self.episode_count = int(episode_count)
-        self.episode_file = None
-        self.type = "Episode"
-
-    def __repr__(self):
-        return "{} - S{} - E{}".format(self.title, self.season, self.episode_count)
-
-
-class Special(object):
-    """
-    Container class for Specials/Movies/OVAs
-    """
-    def __init__(self, special_title, special_number, special_type):
-        self.title = special_title
-        self.num = int(special_number)
-        self.type = special_type
-        self.episode_file = None
-
-
 class EpisodeFile(object):
     """
     Represents a TV show file.  Used for renaming purposes
@@ -148,13 +141,15 @@ class EpisodeFile(object):
         self.new_name = ""
         self.verified = False
         self.__dict__.update(kwargs)
-        self.is_ova = ('special_number' in kwargs)
+        self.is_special = ('special_number' in kwargs)
         self.given_checksum = kwargs.get('checksum', 0)
         self.episode_number = self.__dict__.get('episode_number', -1)
+        self.multipart = False
+        ## TODO: Add multipart functionality later
 
     def crc32(self):
         """
-        Calculate the CRC32 checksum for a file, painfully slow
+        Calculate the CRC32 checksum for a file... slowly
         """
         logging.info("calculating CRC for {}".format(os.path.split(self.path)[1]))
         with open(self.path, 'rb') as f:
@@ -343,7 +338,7 @@ class EpisodeFormatter(object):
             return str(number)
 
     def _handle_season(self, ep):
-        if isinstance(ep, Special):
+        if ep.is_special:
             # Going on the basis that specials don't have seasons
             return ""
 
@@ -351,32 +346,39 @@ class EpisodeFormatter(object):
         return self._handle_number(ep.season, pad)
 
     def _handle_episode_number(self, ep):
-        if isinstance(ep, Episode):
-            number = ep.episode_number
-            pad = len(str(self.show.max_episode_number))
+        number = ep.number
+        if not ep.is_special:
+            pad = len(str(self.show.max_episode))
         else:
-            number = ep.num
-            pad = len(str(self.show.specials[-1].num))
+            pad = len(str(self.show.num_specials))
 
         return self._handle_number(number, pad)
 
     def _handle_episode_counter(self, ep):
-        if isinstance(ep, Episode):
-            number = ep.episode_count
+        number = ep.count
+        if not ep.is_special:
             pad = len(str(self.show.num_episodes))
         else:
-            number = ep.num
-            pad = len(str(self.show.specials[-1].num))
+            pad = len(str(self.show.num_specials))
 
         return self._handle_number(number, pad)
 
     def _handle_hash(self, ep):
-        if not ep.episode_file:
+        if not ep.file:
             return "00000000"
 
-        if ep.episode_file.checksum > 0:
-            return self._handle_string(hex(ep.episode_file.checksum))
+        if ep.file.checksum > 0:
+            return self._handle_string(hex(ep.file.checksum))
 
         else:
             # To remove the 0x from the hex string
-            return self._handle_string(hex(ep.episode_file.crc32())[2:10])
+            checksum = hex(ep.file.crc32())
+
+            if checksum.startswith('0x'):
+                checksum = checksum[2:]
+
+            if checksum.endswith('L'):
+                checksum = checksum[:-1]
+
+            ## If the checksum is less than 8 digits, pad to to 8
+            return self._handle_string(checksum.zfill(8))

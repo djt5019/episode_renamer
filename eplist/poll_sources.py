@@ -6,18 +6,13 @@ import sys
 import logging
 
 from os import listdir
-from itertools import ifilter
 
 import constants
-
-from episode import Special
 
 
 def locate_show(title):
     """Polls the web sources looking for the show"""
     modules = []
-    eps = []
-    specials = []
 
     sys.path.append(constants.WEB_SOURCES_PATH)
     # This will import all the modules within the web_sources directory so that
@@ -60,15 +55,5 @@ def locate_show(title):
 
     if not episodes:
         logging.info("Unable to locate the show: " + title)
-        return eps, specials
 
-    for e in episodes:
-        if isinstance(e, Special):
-            specials.append(e)
-        else:
-            eps.append(e)
-
-    eps = sorted(ifilter(lambda x: x.episode_number > 0, eps), key=lambda z: z.episode_count)
-    specials = sorted(ifilter(lambda x: x.num > 0, specials), key=lambda z: z.num)
-
-    return eps, specials
+    return episodes

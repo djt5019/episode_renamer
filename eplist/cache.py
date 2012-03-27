@@ -11,14 +11,16 @@ import sqlite3
 import atexit
 import logging
 
-from episode import Episode, Special
+from itertools import chain
+
+from episode import Episode
 from constants import RESOURCE_PATH
 from settings import Settings
 
 
 class Cache(object):
     """ Our database logic class"""
-    def __init__(self, dbName):
+    def __init__(self, dbName=""):
         """Establish a connection to the show database"""
 
         if not dbName:
@@ -45,7 +47,7 @@ class Cache(object):
         self.connection.close()
         logging.info("Connections have been closed")
 
-    def add_show(self, showTitle, episodes):
+    def add_show(self, showTitle, episodes, specials):
         """ If we find a show on the internet that is not in our database
         we can use this function to add it into our database for the future"""
         if not (showTitle and episodes):
@@ -59,16 +61,15 @@ class Cache(object):
             showId = curs.lastrowid
 
         with self.connection as conn:
-            for eps in episodes:
-                show = (showId, eps.title, eps.season, eps.episode_number,)
-                conn.execute("INSERT INTO episodes values (NULL, ?, ?, ?, ?)", show)
+            for eps in chain(episodes, specials):
+                show = (showId, eps.title, eps.season, eps.number, eps.count, eps.type,)
+                conn.execute("INSERT INTO episodes values (NULL, ?, ?, ?, ?, ?, ?)", show)
 
     def remove_show(self, sid):
         """Removes show and episodes matching the show id """
         sid = (sid,)
         with self.connection as conn:
             conn.execute("DELETE FROM episodes where sid=?", sid)
-            conn.execute("DELETE FROM specials where sid=?", sid)
             conn.execute("DELETE FROM shows where sid=?", sid)
 
     def get_episodes(self, showTitle):
@@ -77,7 +78,7 @@ class Cache(object):
             raise ValueError("get_episodes expects a string")
 
         title = (showTitle, )
-        query = """SELECT e.eptitle, e.showNumber,e.season, s.sid, s.time
+        query = """SELECT e.title, e.season, e.number, e.count, e.type, s.sid, s.time
                    FROM episodes AS e INNER JOIN shows AS s
                    ON s.sid=e.sid AND s.title=?"""
 
@@ -101,45 +102,15 @@ class Cache(object):
             self.remove_show(sid)
             return eps
 
-        for count, episode in enumerate(result, start=1):
-            eps.append(Episode(episode[0], episode[1], episode[2], count))
+        for episode in result:
+            title = episode[0]
+            season = episode[1]
+            number = episode[2]
+            count = episode[3]
+            type_ = episode[4]
+            eps.append(Episode(title, number, season, count, type_))
 
         return eps
-
-    def get_specials(self, showTitle):
-        """ Returns a list of Special episode objects """
-        if not showTitle:
-            raise ValueError("Show title requires a string")
-
-        title = (showTitle, )
-
-        query = """SELECT sp.title, sp.showNumber, sp.type
-                   FROM specials AS sp INNER JOIN shows
-                   ON sp.sid=shows.sid AND shows.title=?"""
-
-        with self.connection as conn:
-            curs = conn.execute(query, title)
-            result = curs.fetchall()
-
-        if result is not None:
-            return [Special(*episode) for episode in result]
-        else:
-            return []
-
-    def add_specials(self, showTitle, episodes):
-        """ Add a list of special episode objects """
-        query = """INSERT INTO specials (mid,  sid, title, showNumber, type)
-                   SELECT NULL, sid, ?, ?, ?
-                   FROM shows
-                   WHERE shows.title=?"""
-
-        if not (showTitle and episodes):
-            return
-
-        with self.connection as conn:
-            for eps in episodes:
-                show = (eps.title, eps.num, eps.type, showTitle)
-                conn.execute(query, show)
 
     def recreate_cache(self):
         with self.connection as conn:
@@ -159,22 +130,15 @@ CREATE TABLE IF NOT EXISTS shows (
 CREATE TABLE IF NOT EXISTS episodes (
     eid INTEGER PRIMARY KEY,
     sid INTEGER NOT NULL REFERENCES shows(sid) ON DELETE CASCADE,
-    eptitle TEXT NOT NULL,
-    season INTEGER NOT NULL,
-    showNumber INTEGER NOT NULL
-);
-
-CREATE TABLE IF NOT EXISTS specials(
-    mid INTEGER PRIMARY KEY,
-    sid INTEGER NOT NULL REFERENCES shows(sid) ON DELETE CASCADE,
     title TEXT NOT NULL,
-    showNumber INTEGER NOT NULL,
+    season INTEGER NOT NULL,
+    number INTEGER NOT NULL,
+    count INTEGER NOT NULL,
     type TEXT NOT NULL
 );
 """
 
 delete_database = """
 DROP TABLE IF EXISTS episodes;
-DROP TABLE IF EXISTS specials;
 DROP TABLE IF EXISTS shows;
 """
