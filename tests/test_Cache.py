@@ -8,8 +8,10 @@ import sqlite3
 from nose.tools import assert_raises, assert_equal
 from nose.tools import nottest
 
-from episode_renamer.Cache import Cache
-from episode_renamer.Settings import Settings
+from eplist.cache import Cache
+
+# Mock settings dict
+Settings = dict(db_update=7)
 
 
 @nottest
@@ -45,34 +47,34 @@ def make_series():
 
 
 def test_good_connection():
-    cache = Cache()
+    cache = Cache(':memory:')
+
     assert cache is not None
     assert cache.connection is not None
-    assert cache.cursor is not None
+
+    with cache.connection as conn:
+        conn.execute("CREATE TABLE test (id INTEGER PRIMARY KEY);")
+        conn.execute("INSERT INTO test VALUES (1)")
+        conn.execute("INSERT INTO test VALUES (2)")
+        curs = conn.execute("INSERT INTO test VALUES (3)")
+        assert curs.lastrowid == 3
 
     cache.close()
 
     try:
-        cache.cursor.execute("SELECT * FROM table")
-        assert False
+        cache.cursor.execute("SELECT * FROM test")
+        assert False  # Database should be scrapped
     except:
-        assert True
-
-    cache = Cache(":memory:")
-    cache.recreate_cache()
-    assert cache is not None
-    assert cache.connection is not None
-    assert cache.cursor is not None
-
-    cache.close()
+        assert True   # Database was successfully destroyed
 
 
 def test_bad_connection():
+    assert_raises(ValueError, Cache)
     assert_raises(ValueError, Cache, dbName=None)
-    assert_raises(ValueError, Cache, dbName=1)
-    assert_raises(ValueError, Cache, dbName=False)
-    assert_raises(ValueError, Cache, dbName=True)
-    assert_raises(ValueError, Cache, dbName=[1, 2, 3])
+    assert_raises(TypeError, Cache, dbName=1)
+    assert_raises(TypeError, Cache, dbName=False)
+    assert_raises(TypeError, Cache, dbName=True)
+    assert_raises(TypeError, Cache, dbName=[1, 2, 3])
     assert_raises(sqlite3.OperationalError, Cache, dbName='../')
 
 
@@ -162,7 +164,6 @@ def test_bad_add_special_eps():
 
     eps, spc = make_series()
 
-    assert_raises(ValueError, cache.add_specials, showTitle="", episodes=spc)
     assert_raises(ValueError, cache.add_specials, showTitle=None, episodes=None)
     assert_raises(ValueError, cache.add_specials, showTitle="Show", episodes=None)
     assert_raises(ValueError, cache.add_specials, showTitle="Show", episodes="Title")

@@ -4,7 +4,7 @@ __email__ = 'djt5019 at gmail dot com'
 
 import unittest
 
-from episode_renamer.web_sources import anidb
+from eplist.web_sources import anidb
 
 
 class TestAniDB(unittest.TestCase):

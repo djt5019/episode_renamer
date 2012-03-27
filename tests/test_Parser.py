@@ -2,7 +2,7 @@
 __author__ = 'Dan Tracy'
 __email__ = 'djt5019 at gmail dot com'
 
-from episode_renamer import Parser
+from eplist.show_finder import Parser
 
 from nose.tools import nottest
 
