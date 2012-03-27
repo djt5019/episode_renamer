@@ -10,7 +10,7 @@ from string import punctuation as punct
 
 from eplist import utils
 
-from eplist.episode import Episode, Special
+from eplist.episode import Episode
 from eplist.settings import Settings
 
 try:
@@ -101,7 +101,7 @@ def _connect_HTTP(aid):
     if not episodes:
         return utils.show_not_found
 
-    epList = []
+    eplist = []
 
     for e in episodes:
         # 1 is a normal episode, 2 is a special
@@ -114,12 +114,16 @@ def _connect_HTTP(aid):
 
         if ep_type == '1':
             epNum = int(e.epno.getText())
-            epList.append(Episode(utils.encode(title), epNum, 1, epNum))
+            type_ = "Episode"
         else:
             epNum = int(e.epno.getText()[1:])
-            epList.append(Special(utils.encode(title), epNum, 'OVA'))
+            type_ = "OVA"
 
-    return epList
+        e = Episode(utils.encode(title), epNum, 1, epNum, type_)
+
+        eplist.append(e)
+
+    return eplist
 
 
 def poll(title=""):

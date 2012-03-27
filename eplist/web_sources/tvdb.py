@@ -10,7 +10,7 @@ from urllib import quote_plus
 
 from eplist import utils
 
-from eplist.episode import Episode, Special
+from eplist.episode import Episode
 from eplist.settings import Settings
 
 try:
@@ -92,10 +92,12 @@ def poll(title):
         if 'commentary' in name.lower():
             continue
 
-        if int(season) > 0:
-            eps.append(Episode(name, num, season, count))
-        else:
-            eps.append(Special(name, num, 'OVA'))
+        if int(season) < 0:
+            type_ = "OVA"
+            count = num
+            season = 1
+
+        eps.append(Episode(name, num, season, count, type_))
 
         count += 1
 
