@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-__author__ = 'Dan Tracy'
-__email__ = 'djt5019 at gmail dot com'
+from __future__ import unicode_literals
 
 from eplist import utils
 from eplist.episode import Episode

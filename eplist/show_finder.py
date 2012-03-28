@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
-__author__ = 'Dan Tracy'
-__email__ = 'djt5019 at gmail dot com'
+from __future__ import unicode_literals
 
 import logging
 
-from . import poll_sources
-from . import utils
+from eplist import poll_sources
+from eplist import utils
 
-from .episode import Show
+from eplist.episode import Show
 
 
 class Parser(object):

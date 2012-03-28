@@ -1,9 +1,5 @@
 # -*- coding: utf-8 -*-
-
 from __future__ import unicode_literals
-
-__author__ = 'Dan Tracy'
-__email__ = 'djt5019 at gmail dot com'
 
 import os
 import datetime
@@ -13,10 +9,10 @@ import logging
 
 from itertools import chain
 
-from .episode import Episode
-from .constants import RESOURCE_PATH
-from .settings import Settings
-from .utils import encode
+from eplist.episode import Episode
+from eplist.constants import RESOURCE_PATH
+from eplist.settings import Settings
+from eplist.utils import encode
 
 
 class Cache(object):

@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
-__author__ = 'Dan Tracy'
-__email__ = 'djt5019 at gmail dot com'
+from __future__ import unicode_literals
 
 import sys
 import logging
 
 from os import listdir
 
-import constants
+from eplist import constants
 
 
 def locate_show(title):

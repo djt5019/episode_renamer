@@ -6,9 +6,9 @@ __version__ = '0.1.5'
 import atexit
 import os
 
-from . import utils
-from . import logger
-from . import constants
+from eplist import utils
+from eplist import logger
+from eplist import constants
 
 if not os.path.exists(constants.RESOURCE_PATH):
     utils.init_resource_folder()

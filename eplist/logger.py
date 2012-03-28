@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-__author__ = 'Dan Tracy'
-__email__ = 'djt5019 at gmail dot com'
+from __future__ import unicode_literals
 
 import logging
 import logging.config
@@ -8,8 +7,8 @@ import logging.config
 from os.path import join
 from datetime import datetime
 
-from .constants import RESOURCE_PATH
-from .settings import Settings
+from eplist.constants import RESOURCE_PATH
+from eplist.settings import Settings
 
 
 def init_logging():

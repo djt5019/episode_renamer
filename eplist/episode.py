@@ -1,16 +1,13 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-__author__ = 'Dan Tracy'
-__email__ = 'djt5019 at gmail dot com'
-
 import re
 import os
 import zlib
 import string
 import logging
 
-from . import utils
+from eplist import utils
 
 from settings import Settings
 

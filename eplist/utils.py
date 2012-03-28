@@ -1,7 +1,5 @@
-
 # -*- coding: utf-8 -*-
-__author__ = 'Dan Tracy'
-__email__ = 'djt5019 at gmail dot com'
+from __future__ import unicode_literals
 
 import os
 import sys
@@ -9,9 +7,9 @@ import time
 import json
 import logging
 
-from . import constants
+from eplist import constants
 
-from .settings import Settings
+from eplist.settings import Settings
 
 import requests
 import requests.exceptions
@@ -103,6 +101,8 @@ def clean_filenames(path):
     Attempts to extract order information about the files passed
     returns: list of EpisodeFiles
     """
+
+    from eplist import episode
     # Filter out anything that doesnt have the correct extension and
     # filter out any directories
     files = []
@@ -123,7 +123,7 @@ def clean_filenames(path):
         info = regex_search(f)
 
         if info:
-            cleanFiles.append(EpisodeFile(os.path.join(path, f), **info))
+            cleanFiles.append(episode.EpisodeFile(os.path.join(path, f), **info))
 
     if not cleanFiles:
         logging.error("The files could not be matched")
@@ -150,30 +150,30 @@ def prepare_filenames(path, show):
 
     for f in files:
         if f.is_special:
-            episode = show.get_special(f.special_number)
+            ep = show.get_special(f.special_number)
         elif f.episode_number > show.max_episode:
-            episode = show.get_special(f.episode_number - show.max_episode)
+            ep = show.get_special(f.episode_number - show.max_episode)
         else:
-            episode = show.get_episode(f.episode_number, f.season)
+            ep = show.get_episode(f.episode_number, f.season)
 
-        if not episode:
+        if not ep:
             logging.warning("Could not find an episode for {}".format(f.name))
             continue
 
         # attach the episode file to the corresponding episode entry
-        episode.file = f
+        ep.file = f
 
         fileName = encode(f.name)
-        newName = replace_invalid_path_chars(show.formatter.display(episode) + f.ext)
+        newName = replace_invalid_path_chars(show.formatter.display(ep) + f.ext)
 
         if newName == fileName:
-            logging.info("File {} and Episode {} have same name".format(f.name, episode.title))
+            logging.info("File {} and Episode {} have same name".format(f.name, ep.title))
             sameCount += 1
             continue
 
         newName = os.path.join(path, trim_long_filename(newName))
 
-        episode.file.new_name = newName
+        ep.file.new_name = newName
         cleanFiles.append((f.path, newName))
 
     if sameCount > 0:
@@ -548,6 +548,3 @@ def update_db():
         _download()
     else:
         logging.error("Attempting to download the database file multiple times")
-
-
-from .episode import EpisodeFile

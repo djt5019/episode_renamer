@@ -3,9 +3,6 @@
 
 from __future__ import unicode_literals, print_function
 
-__author__ = 'Dan Tracy'
-__email__ = 'djt5019 at gmail dot com'
-
 # This command line program will take a T.V. show as input and
 # will return information about each episode, such as the title
 # season and number.  I use this program to help clean up my
