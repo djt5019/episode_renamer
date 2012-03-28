@@ -11,9 +11,12 @@ from eplist.episode import Episode
 from eplist.settings import Settings
 
 try:
-    from BeautifulSoup import BeautifulStoneSoup as Soup
+    from bs4 import BeautifulStoneSoup as Soup
 except ImportError:
-    logging.critical("Error: BeautifulSoup was not found, unable to parse theTVdb")
+    try:
+        from BeautifulSoup import BeautifulStoneSoup as Soup
+    except ImportError:
+        logging.critical("Error: BeautifulSoup was not found, unable to parse AniDB")
 
 priority = 1
 
