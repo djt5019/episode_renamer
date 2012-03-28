@@ -10,7 +10,6 @@ import json
 import logging
 
 from . import constants
-from . import episode
 
 from .settings import Settings
 
@@ -124,7 +123,7 @@ def clean_filenames(path):
         info = regex_search(f)
 
         if info:
-            cleanFiles.append(episode.EpisodeFile(os.path.join(path, f), **info))
+            cleanFiles.append(EpisodeFile(os.path.join(path, f), **info))
 
     if not cleanFiles:
         logging.error("The files could not be matched")
@@ -549,3 +548,6 @@ def update_db():
         _download()
     else:
         logging.error("Attempting to download the database file multiple times")
+
+
+from .episode import EpisodeFile

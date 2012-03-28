@@ -10,7 +10,7 @@ import zlib
 import string
 import logging
 
-import utils
+from . import utils
 
 from settings import Settings
 

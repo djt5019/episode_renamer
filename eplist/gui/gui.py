@@ -239,7 +239,6 @@ class Form(QtGui.QWidget):
         for d in Settings['backup_list']:
             renamed_entry = Settings['backup_list'][d]
             if text == renamed_entry['name']:
-                print d
                 self.renameDir = d
                 items = renamed_entry['file_list']
                 break

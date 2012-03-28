@@ -4,10 +4,11 @@ __email__ = 'djt5019 at gmail dot com'
 __version__ = '0.1.5'
 
 import atexit
-import utils
-import logger
 import os
-import constants
+
+from . import utils
+from . import logger
+from . import constants
 
 if not os.path.exists(constants.RESOURCE_PATH):
     utils.init_resource_folder()
