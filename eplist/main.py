@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from __future__ import unicode_literals, print_function
+from __future__ import unicode_literals, print_function, absolute_import
 
 # This command line program will take a T.V. show as input and
 # will return information about each episode, such as the title
@@ -19,14 +19,14 @@ import os
 import sys
 import logging
 
-from eplist import utils
-from eplist import episode
-from eplist import constants
+from . import utils
+from . import episode
+from . import constants
 
-from eplist.logger import init_logging
-from eplist.cache import Cache
-from eplist.show_finder import Parser
-from eplist.settings import Settings
+from .logger import init_logging
+from .cache import Cache
+from .show_finder import Parser
+from .settings import Settings
 
 if not os.path.exists(constants.RESOURCE_PATH):
     utils.init_resource_folder()

@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals, absolute_import
+
 __author__ = 'Dan Tracy'
 __email__ = 'djt5019 at gmail dot com'
 __version__ = '0.1.5'
@@ -6,9 +8,9 @@ __version__ = '0.1.5'
 import atexit
 import os
 
-from eplist import utils
-from eplist import logger
-from eplist import constants
+from . import utils
+from . import logger
+from . import constants
 
 if not os.path.exists(constants.RESOURCE_PATH):
     utils.init_resource_folder()

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+from __future__ import unicode_literals, absolute_import
 
 import re
 import os
@@ -7,9 +7,9 @@ import zlib
 import string
 import logging
 
-from eplist import utils
+from . import utils
 
-from settings import Settings
+from .settings import Settings
 
 
 class Episode(object):

@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+from __future__ import unicode_literals, absolute_import
 
 import sys
 import logging
 
 from os import listdir
 
-from eplist import constants
+from . import constants
 
 
 def locate_show(title):

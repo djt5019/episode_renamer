@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+from __future__ import unicode_literals, absolute_import
 
 import logging
 import logging.config
@@ -7,8 +7,8 @@ import logging.config
 from os.path import join
 from datetime import datetime
 
-from eplist.constants import RESOURCE_PATH
-from eplist.settings import Settings
+from .constants import RESOURCE_PATH
+from .settings import Settings
 
 
 def init_logging():

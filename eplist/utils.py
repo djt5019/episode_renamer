@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+from __future__ import unicode_literals, absolute_import
 
 import os
 import sys
@@ -7,9 +7,9 @@ import time
 import json
 import logging
 
-from eplist import constants
+from . import constants
 
-from eplist.settings import Settings
+from .settings import Settings
 
 import requests
 import requests.exceptions

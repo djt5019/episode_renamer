@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+from __future__ import unicode_literals, absolute_import
 
 import logging
 
-from eplist import poll_sources
-from eplist import utils
+from . import poll_sources
+from . import utils
 
-from eplist.episode import Show
+from .episode import Show
 
 
 class Parser(object):
@@ -47,8 +47,6 @@ class Parser(object):
         # The show was not in the database so now we try the website
         logging.info("Show not found in database, polling web")
         self.show.add_episodes(self._parseHTMLData())
-
-        print(self.show.num_episodes)
 
         if not self.show.episodes:
             logging.error("Show was not found, check spelling and try again")
