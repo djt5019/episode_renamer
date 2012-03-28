@@ -25,7 +25,7 @@ pattern = r"""
             $                       # End of line
             """
 
-epguides_regex = re.compile(pattern)
+epguides_regex = re.compile(pattern, re.I | re.X)
 
 
 def poll(title):
@@ -40,6 +40,7 @@ def poll(title):
     count = 1
     for line in fd.iter_lines():
         info = epguides_regex.match(line)
+
         if info is not None:
             name = info.group('name')
             episode = info.group('episode')

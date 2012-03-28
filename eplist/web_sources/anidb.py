@@ -29,6 +29,8 @@ def _parse_local(title):
         logging.warning("Try using the --update-db option to download an copy of it")
         return -1
 
+    logging.info("Searching the AniDB database file")
+
     title = title.lower()
 
     regex = re.compile(r'(?P<aid>\d+)\|(?P<type>\d)\|(?P<lang>.+)\|(?P<title>.*)')

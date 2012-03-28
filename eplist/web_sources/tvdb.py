@@ -19,9 +19,9 @@ priority = 1
 
 
 def poll(title):
-    try:
-        API_KEY = Settings['tvdb_key']
-    except KeyError:
+    API_KEY = Settings['tvdb_key']
+
+    if not API_KEY:
         logging.warn("The TvDB Api key was not found, unable to poll the TvDB")
         return utils.show_not_found
 
