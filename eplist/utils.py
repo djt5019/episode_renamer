@@ -9,13 +9,18 @@ import time
 import json
 import logging
 
-import constants
-import episode
+from . import constants
+from . import episode
 
-from settings import Settings
+from .settings import Settings
 
 import requests
 import requests.exceptions
+
+if Settings['py3k']:
+    from urllib.parse import quote_plus as url_quote
+else:
+    from urllib import quote_plus as url_quote
 
 
 def get_url_descriptor(url):
@@ -190,7 +195,7 @@ def rename(files, resp=""):
     old_order = []
 
     if resp == '':
-        resp = raw_input("\nDo you wish to rename these files [y|N]: ").lower()
+        resp = get_input("\nDo you wish to rename these files [y|N]: ").lower()
 
     if not resp.startswith('y'):
         logging.info("Changes were not committed to the files")
@@ -292,6 +297,30 @@ def load_renamed_file():
 ## Text based functions
 #######################
 
+def parse_range(range_):
+    if '-' in range_:
+        high, low = range_.split('-')
+        high = int(high)
+        low = int(low)
+    else:
+        high = low = int(range_)
+
+    low = max(low, 1)
+    high = max(high, 1)
+
+    if low > high:
+        low, high = high, low
+
+    return range(low, high + 1)
+
+
+def get_input(msg):
+    if Settings['py3k']:
+        return input(msg)
+    else:
+        return raw_input(msg)
+
+
 def trim_long_filename(name):
     if len(name) > 255:
         ext = os.path.splitext(name)[1]
@@ -390,6 +419,10 @@ def encode(text, encoding='utf-8'):
             text = unicode(text, encoding, 'ignore')
     return text
 
+## Strings in python3 are unicode by default (awesome!)
+if Settings['py3k']:
+    encode = lambda text: text
+
 
 ###############################
 ##  Web Source Functionality
@@ -483,12 +516,12 @@ def load_last_access_times():
 #################
 
 def init_resource_folder():
-    print "[+] Creating resource path"
-    print "[+] Path = {}".format(constants.RESOURCE_PATH)
-    os.makedirs(constants.RESOURCE_PATH, 0755)
-    print "[+] Updating the AniDb database file"
+    print("[+] Creating resource path")
+    print("[+] Path = {}".format(constants.RESOURCE_PATH))
+    os.makedirs(constants.RESOURCE_PATH, 0o755)
+    print("[+] Updating the AniDb database file")
     update_db()
-    print "[+] Creating a renamed file backup listing"
+    print("[+] Creating a renamed file backup listing")
     create_new_backup_file()
 
 
