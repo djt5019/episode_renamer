@@ -1,11 +1,8 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+from __future__ import unicode_literals, absolute_import
 
-__author__ = 'Dan Tracy'
-__email__ = 'djt5019 at gmail dot com'
-
-from os.path import realpath
-from sys import getdefaultencoding
+from .constants import RESOURCE_PATH
+from sys import getdefaultencoding, version_info
 
 Settings = {
     ## Filter to output episodes, specials, or both (both is default)
@@ -66,5 +63,9 @@ Settings = {
     'type_tags': ['type', 'format'],
 
     ## The current working directory
-    'path': realpath('.'),
-    }
+    'path': RESOURCE_PATH,
+
+    ## This is true if the current python distribution is py3k, Boolean
+    'py3k': (version_info >= (3, 0))
+
+}

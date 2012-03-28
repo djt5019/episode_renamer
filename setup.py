@@ -1,6 +1,5 @@
 #!/usr/bin/env python
-from distutils.core import setup
-from setuptools import find_packages
+from setuptools import find_packages, setup
 
 from eplist import __author__  as author
 from eplist import __email__   as email
@@ -23,7 +22,7 @@ setup(
     author_email=email,
     url='https://github.com/djt5019/episode_renamer',
     packages=find_packages(),
-    license="MIT",
+    license="unlicense",
     zip_safe=False,
     platforms="all",
     classifiers=[
