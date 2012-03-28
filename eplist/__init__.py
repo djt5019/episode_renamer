@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 __author__ = 'Dan Tracy'
 __email__ = 'djt5019 at gmail dot com'
-__version__ = '0.1.4'
+__version__ = '0.1.5'
 
 import atexit
 import utils
