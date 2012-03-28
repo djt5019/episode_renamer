@@ -4,10 +4,10 @@ __email__ = 'djt5019 at gmail dot com'
 
 import logging
 
-import poll_sources
-import utils
+from . import poll_sources
+from . import utils
 
-from episode import Show
+from .episode import Show
 
 
 class Parser(object):
@@ -49,7 +49,7 @@ class Parser(object):
         logging.info("Show not found in database, polling web")
         self.show.add_episodes(self._parseHTMLData())
 
-        print self.show.num_episodes
+        print(self.show.num_episodes)
 
         if not self.show.episodes:
             logging.error("Show was not found, check spelling and try again")
