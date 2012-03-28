@@ -11,8 +11,8 @@ import os
 import sys
 from os.path import join, split, realpath
 
-VIDEO_EXTENSIONS = {'.mkv', '.ogm', '.asf', '.asx', '.avi', '.flv', '.mov', '.mp4', '.mpg', '.rm', '.swf', '.vob',
-                    '.wmv', '.mpeg'}
+VIDEO_EXTENSIONS = set(['.mkv', '.ogm', '.asf', '.asx', '.avi', '.flv', '.mov',
+                        '.mp4', '.mpg', '.rm', '.swf', '.vob', '.wmv', '.mpeg'])
 
 PROJECT_SOURCE_PATH = split(realpath(__file__))[0]
 PROJECT_PATH = split(PROJECT_SOURCE_PATH)[0]
@@ -37,9 +37,12 @@ NUM_DICT = {'0': '', '1': 'one', '2': 'two', '3': 'three', '4': 'four', '5': 'fi
         '50': 'fifty', '60': 'sixty', '70': 'seventy', '80': 'eighty', '90': 'ninety'}
 
 
+# If you wish to use braces for matching ranges like {1,10} you need to escape
+# the braces by doubling them to prevent pythons formatting system from breaking.
+# eg: {1,10} becomes {{1, 10}}
 regex_vars = {
 'sep': r'[\-\~\.\_\s]',
-'sum': r'(.*[\[\(](?P<sum>[a-z0-9]{8})[\]\)])',
+'sum': r'.*[\[\(](?P<sum>[a-z0-9]{{8}}[\]\)])',
 'year': r'(:P<year>(19|20)?\d\d)',
 'episode': r'(e|ep|episode)?{sep}*?(?P<episode>\d+)(?:v\d)?',  # ex: e3v2
 'season': r'(s|season)?{sep}*?(?P<season>\d+)',
@@ -48,12 +51,8 @@ regex_vars = {
 'special': r'(?P<type>ova|ona|extra|special|movie|dvd|bluray){sep}+(?P<special>\d+)',
 }
 
-for k, v in regex_vars.iteritems():
-    try:
-        # Substitute any regex variables that may have been used within later dictionary entries
-        regex_vars[k] = v.format(**regex_vars)
-    except IndexError as e:
-        continue
+# Substitute any regex variables that may have been used within later dictionary entries
+regex_vars = {r: regex_vars[r].format(**regex_vars) for r in regex_vars}
 
 regexList = [
             r'^(?P<series>.*?) - Season (?P<season>\d+) - Episode (?P<episode>\d*) - .*',  # Also mine
@@ -66,7 +65,7 @@ regexList = [
             r'^(?P<series>.*) - OVA (?P<special>\d+) - \w*',
             r'^{series}{sep}*{special}',
             r'{series}{sep}*(op|ed){sep}*(?P<junk>\d*)',  # Show intro /outro music, just ignore them
-            r'.*{episode}',  # More of a general catch-all regex, last resort search for the first numbers in the filename
+            r'{episode}',  # More of a general catch-all regex, last resort search for the first numbers in the filename
             ]
 
 ## Substitute the dictionary variables in to the unformatted regex

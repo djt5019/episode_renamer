@@ -6,8 +6,6 @@ import zipfile
 import logging
 import tempfile
 
-from urllib import quote_plus
-
 from eplist import utils
 
 from eplist.episode import Episode
@@ -16,7 +14,7 @@ from eplist.settings import Settings
 try:
     from BeautifulSoup import BeautifulStoneSoup as Soup
 except ImportError:
-    logging.critical(u"Error: BeautifulSoup was not found, unable to parse theTVdb")
+    logging.critical("Error: BeautifulSoup was not found, unable to parse theTVdb")
 
 priority = 1
 
@@ -33,7 +31,7 @@ def poll(title):
     except NameError:
         return utils.show_not_found
 
-    cleanTitle = quote_plus(title)
+    cleanTitle = utils.url_quote(title)
 
     #1) First we need to find the series ID
     seriesIdLoc = "http://www.thetvdb.com/api/GetSeries.php?seriesname={0}".format(cleanTitle)

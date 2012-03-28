@@ -13,9 +13,10 @@ import logging
 
 from itertools import chain
 
-from episode import Episode
-from constants import RESOURCE_PATH
-from settings import Settings
+from .episode import Episode
+from .constants import RESOURCE_PATH
+from .settings import Settings
+from .utils import encode
 
 
 class Cache(object):
@@ -38,7 +39,7 @@ class Cache(object):
             self.connection = None
 
             #Make sure everything is utf-8
-            self.connection.text_factory = lambda x: unicode(x, 'utf-8')
+            self.connection.text_factory = lambda x: encode(x)
             atexit.register(self.close)
 
     def close(self):

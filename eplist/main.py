@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from __future__ import unicode_literals
+from __future__ import unicode_literals, print_function
 
 __author__ = 'Dan Tracy'
 __email__ = 'djt5019 at gmail dot com'
@@ -109,7 +109,7 @@ def main():
     if args.title in ('-', '.', 'pwd'):
         # If a dash is entered use the current basename of the path
         args.title = os.path.split(os.getcwd())[1]
-        print ("Searching for {}".format(args.title))
+        print("Searching for {}".format(args.title))
 
     if args.verbose:
         Settings['verbose'] = True
@@ -119,7 +119,7 @@ def main():
         l.setLevel(logging.NOTSET)
 
     if args.gui_enabled:
-        from gui.gui import main
+        from .gui.gui import main
         exit(main())
 
     if args.update_db:
@@ -160,14 +160,14 @@ def main():
     # this also checks to make sure its a reasonable season number
     filtered_episodes = []
     if args.season:
-        s_range = list(parse_range(args.season))
+        s_range = list(utils.parse_range(args.season))
         if s_range[-1] > show.num_seasons:
             print ("{} Season {} not found".format(args.title, args.season))
             sys.exit(1)
         filtered_episodes = [x for x in show.episodes if x.season in s_range]
 
     if args.episode:
-        e_range = list(parse_range(args.episode))
+        e_range = list(utils.parse_range(args.episode))
 
         if not args.season:
             filtered_episodes = [x for x in show.episodes if x.episode_count in e_range]
@@ -209,8 +209,6 @@ def main():
             sys.exit(1)
 
         sys.exit(0)
-
-    print ""
 
     if args.verify:
         verify_files(show)
@@ -259,6 +257,7 @@ def verify_files(show):
 
     episode_files = show.episodes
     path = Settings.get('path', os.getcwd())
+
     if not all([e.file for e in episode_files]):
         utils.prepare_filenames(path, show)
 
@@ -288,26 +287,9 @@ def print_renamed_files(files):
     print ("-------" + '-' * len(p))
 
     for old, new in files:
-        print (u"OLD: {0}".format(os.path.split(old)[1]).encode(Settings['encoding'], 'ignore'))
-        print (u"NEW: {0}".format(os.path.split(new)[1]).encode(Settings['encoding'], 'ignore'))
-        print
-
-
-def parse_range(range):
-    if '-' in range:
-        high, low = range.split('-')
-        high = int(high)
-        low = int(low)
-    else:
-        high = low = int(range)
-
-    low = max(low, 1)
-    high = max(high, 1)
-
-    if low > high:
-        low, high = high, low
-
-    return xrange(low, high + 1)
+        print ("OLD: {0}".format(os.path.split(old)[1]).encode(Settings['encoding'], 'ignore'))
+        print ("NEW: {0}".format(os.path.split(new)[1]).encode(Settings['encoding'], 'ignore'))
+        print()
 
 
 if __name__ == '__main__':

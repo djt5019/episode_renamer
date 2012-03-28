@@ -16,7 +16,7 @@ from eplist.settings import Settings
 try:
     from BeautifulSoup import BeautifulStoneSoup as Soup
 except ImportError:
-    logging.critical(u"Error: BeautifulSoup was not found, unable to parse AniDB")
+    logging.critical("Error: BeautifulSoup was not found, unable to parse AniDB")
 
 priority = 3
 

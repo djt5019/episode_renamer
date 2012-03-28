@@ -189,6 +189,8 @@ class EpisodeFormatter(object):
         self.tokens = self.re.split(self._format_string)
         self.strip_whitespace_regex = re.compile(r'[\s]+')
 
+        self.modifier_settings = dict(upper=False, lower=False, pad=False, proper=False)
+
         self.episode_number_tags = None
         self.type_tags = None
         self.season_number_tags = None
@@ -196,8 +198,10 @@ class EpisodeFormatter(object):
         self.episode_name_tags = None
         self.hash_tags = None
         self.series_name_tags = None
-        self.tags = filter(lambda x: x.endswith('tags'), dir(self))
-        self.settings = dict(upper=False, lower=False, pad=False, proper=False)
+        self.tags = ['episode_number_tags', 'type_tags', 'hash_tags',
+                     'episode_count_tags', 'episode_name_tags',
+                     'season_number_tags', 'series_name_tags']
+
         self.load_format_config()
 
     @property
@@ -237,7 +241,7 @@ class EpisodeFormatter(object):
             redefined = tokens.intersection(allTokens)
             if redefined:
                 #Look for duplicates
-                msg = "In section [{}]: tokens '{}' redefined".format(s, map(str, redefined))
+                msg = "In section [{}]: tokens '{}' redefined".format(s, [str(r) for r in redefined])
                 logging.error(msg)
                 raise AttributeError(msg)
 
@@ -273,14 +277,14 @@ class EpisodeFormatter(object):
             return tag
 
         if 'pad' in modifiers:
-            self.settings['pad'] = True
+            self.modifier_settings['pad'] = True
 
         if 'caps' in modifiers or 'upper' in modifiers:
-            self.settings['upper'] = True
+            self.modifier_settings['upper'] = True
         elif 'lower' in modifiers:
-            self.settings['lower'] = True
+            self.modifier_settings['lower'] = True
         elif 'proper' in modifiers:
-            self.settings['proper'] = True
+            self.modifier_settings['proper'] = True
 
         return tag
 
@@ -289,10 +293,10 @@ class EpisodeFormatter(object):
         Tokenize and substitute tags for their values using an episode
         as well as the episode file for reference
         """
-        self.settings['proper'] = False
-        self.settings['upper'] = False
-        self.settings['lower'] = False
-        self.settings['pad'] = False
+        self.modifier_settings['proper'] = False
+        self.modifier_settings['upper'] = False
+        self.modifier_settings['lower'] = False
+        self.modifier_settings['pad'] = False
 
         tag = self._parse_modifiers(tag.lower())
 
@@ -322,17 +326,17 @@ class EpisodeFormatter(object):
             return Settings['tag_start'] + tag + Settings['tag_end']
 
     def _handle_string(self, string_):
-        if self.settings['lower']:
+        if self.modifier_settings['lower']:
             return string_.lower()
-        elif self.settings['upper']:
+        elif self.modifier_settings['upper']:
             return string_.upper()
-        elif self.settings['proper']:
+        elif self.modifier_settings['proper']:
             return string.capwords(string_)
         else:
             return string_
 
     def _handle_number(self, number, pad_length):
-        if self.settings['pad']:
+        if self.modifier_settings['pad']:
             return str(number).zfill(pad_length)
         else:
             return str(number)

@@ -18,7 +18,7 @@ from eplist.settings import Settings
 
 from eplist import utils
 
-cache = Cache()
+cache = Cache(Settings['db_name'])
 parser = Parser(cache=cache)
 utils.load_renamed_file()
 
