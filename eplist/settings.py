@@ -1,8 +1,15 @@
 # -*- coding: utf-8 -*-
+"""
+The settings module is just a simple dictionary.  While the program
+is running more settings will be added or modified.  To edit the defaults
+just change the entries below.
+"""
+
 from __future__ import unicode_literals, absolute_import
 
 from .constants import RESOURCE_PATH
 from sys import getdefaultencoding, version_info
+
 
 Settings = {
     ## Filter to output episodes, specials, or both (both is default)
@@ -31,7 +38,7 @@ Settings = {
     ## Time in seconds between polling a website, recommended is 2
     'poll_delay': 2,
 
-    ## AniDB flat file with the ids of the shows visit link below for updated version from time to time
+    ## AniDB flat file with the ids of the shows
     ## http://anidb.net/api/animetitles.dat.gz
     'anidb_username': None,
     'anidb_password': None,
@@ -52,15 +59,15 @@ Settings = {
     'tag_config': 'tags.cfg',
     'tag_start': '<',
     'tag_end': '>',
-    'tags': ['episode_name_tags', 'episode_number_tags', 'episode_count_tags', 'series_name_tags', 'season_number_tags', 'hash_tags', 'type_tags'],
+    'tags': {'episode_name_tags': ['name', 'episode', 'title'],
+             'episode_number_tags': ['epnum', 'number', 'num'],
+             'episode_count_tags': ['count', 'ep'],
+             'series_name_tags': ['series', 'show'],
+             'season_number_tags': ['season', 'seasons'],
+             'hash_tags': ['hash', 'crc32', 'checksum'],
+             'type_tags': ['type', 'format']
+             },
 
-    'episode_name_tags': ['name', 'episode', 'title'],
-    'episode_number_tags': ['epnum', 'number', 'num'],
-    'episode_count_tags': ['count', 'ep'],
-    'series_name_tags': ['series', 'show'],
-    'season_number_tags': ['season', 'seasons'],
-    'hash_tags': ['hash', 'crc32', 'checksum'],
-    'type_tags': ['type', 'format'],
 
     ## The current working directory
     'path': RESOURCE_PATH,

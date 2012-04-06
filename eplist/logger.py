@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+"""
+Logging.py
+"""
 from __future__ import unicode_literals, absolute_import
 
 import logging
@@ -12,6 +15,9 @@ from .settings import Settings
 
 
 def init_logging():
+    """
+    Load the logging config dictionary and begin logging
+    """
     logging.config.dictConfig(log_config)
     logging.debug("APPLICATION START: {}".format(datetime.now()))
 

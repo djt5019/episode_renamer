@@ -103,10 +103,10 @@ def main():
     if args.delete_cache:
         cache.recreate_cache()
 
-    if args.title in ('-', '.', 'pwd'):
+    if Settings['title'] in ('-', '.', 'pwd'):
         # If a dash is entered use the current basename of the path
-        args.title = os.path.split(os.getcwd())[1]
-        print("Searching for {}".format(args.title))
+        Settings['title'] = os.path.split(os.getcwd())[1]
+        print("Searching for {}".format(Settings['title']))
 
     if args.verbose:
         Settings['verbose'] = True
@@ -123,8 +123,7 @@ def main():
         utils.update_db()
 
     if args.undo_rename:
-        file_dict = utils.find_old_filenames(Settings['path'], args.title)
-        files = file_dict['file_list']
+        files = utils.find_old_filenames(Settings['path'], Settings['title'])
         print_renamed_files(files)
         old_order, errors = utils.rename(files)
 
@@ -140,11 +139,11 @@ def main():
     if rename and not os.path.exists(args.pathname):
         sys.exit("ERROR - Path provided does not exist")
 
-    if not args.title:
+    if not Settings['title']:
         cmd.print_usage()
         sys.exit(1)
 
-    episodeParser = Parser(args.title, cache)
+    episodeParser = Parser(Settings['title'], cache)
 
     show = episodeParser.getShow()
     formatter = episode.EpisodeFormatter(show, args.format)
@@ -158,18 +157,23 @@ def main():
     filtered_episodes = []
     if args.season:
         s_range = list(utils.parse_range(args.season))
+
         if s_range[-1] > show.num_seasons:
-            print ("{} Season {} not found".format(args.title, args.season))
+            print ("{} Season {} not found".format(Settings['title'], args.season))
             sys.exit(1)
+
         filtered_episodes = [x for x in show.episodes if x.season in s_range]
 
     if args.episode:
         e_range = list(utils.parse_range(args.episode))
 
         if not args.season:
-            filtered_episodes = [x for x in show.episodes if x.episode_count in e_range]
+            filtered_episodes = [x for x in show.episodes if x.count in e_range]
         else:
             filtered_episodes = filtered_episodes[e_range[0] - 1:e_range[-1]]
+
+    if filtered_episodes:
+        show.episodes = filtered_episodes
 
     ## Renaming functionality
     if  rename:
@@ -177,14 +181,9 @@ def main():
         utils.prepare_filenames(path, show)
         files = []
 
-        if filtered_episodes:
-            episodes = filtered_episodes
-        else:
-            episodes = show.episodes
+        show.episodes += show.specials if Settings['filter'] in ('both', 'specials') else []
 
-        episodes += show.specials if Settings['filter'] in ('both', 'specials') else []
-
-        for e in episodes:
+        for e in show.episodes:
             if e.file and e.file.new_name:
                 old = os.path.join(path, e.file.name)
                 new = os.path.join(path, e.file.new_name)
@@ -208,7 +207,10 @@ def main():
         sys.exit(0)
 
     if args.verify:
-        verify_files(show)
+        if not all(e.file for e in show.episodes):
+            utils.prepare_filenames(Settings['path'], show)
+
+        verify_files(show.episodes)
         exit(1)
 
     if Settings['filter'] in ('both', 'episodes'):
@@ -248,17 +250,8 @@ def display_specials(show, header=False):
         print (show.formatter.display(eps).encode(Settings['encoding'], 'ignore'))
 
 
-def verify_files(show):
-    if not show:
-        return()
-
-    episode_files = show.episodes
-    path = Settings.get('path', os.getcwd())
-
-    if not all([e.file for e in episode_files]):
-        utils.prepare_filenames(path, show)
-
-    for f in episode_files:
+def verify_files(episodes):
+    for f in episodes:
         if not f.file:
             continue
 

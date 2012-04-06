@@ -1,10 +1,14 @@
 # -*- coding: utf-8 -*-
+"""
+A module containing general utilites and text functions / parsing
+functionality for the program
+"""
 from __future__ import unicode_literals, absolute_import
 
 import os
 import sys
-import time
 import json
+import time
 import logging
 
 from . import constants
@@ -15,9 +19,11 @@ import requests
 import requests.exceptions
 
 if Settings['py3k']:
-    from urllib.parse import quote_plus as url_quote
+    from urllib.parse import quote_plus
+    url_quote = quote_plus
 else:
-    from urllib import quote_plus as url_quote
+    from urllib import quote_plus
+    url_quote = quote_plus
 
 
 def get_url_descriptor(url):
@@ -53,7 +59,7 @@ def regex_search(filename):
     Compare the filename to each of the regular expressions for a match
     """
     logging.info("Matching '{}'".format(filename))
-    # deal with anything in brackets ourselves, they tend to throw off the regexes
+    # deal with anything in brackets, they tend to throw off the regexes
     checksum = constants.checksum_regex.search(filename)
     filename = constants.checksum_regex.sub("", filename)
     season = constants.bracket_season_regex.search(filename)
@@ -64,7 +70,9 @@ def regex_search(filename):
     for count, regex in enumerate(constants.regexList):
         result = regex.search(filename)
         if result:
-            logging.info("Regex #{} matched {}".format(count, filename.encode(Settings['encoding'], 'ignore')))
+            name = filename.encode(Settings['encoding'], 'ignore')
+            msg = "Regex #{} matched {}".format(count, name)
+            logging.info(msg)
             break
 
     if not result and not season:
@@ -74,8 +82,8 @@ def regex_search(filename):
 
     # Work with the result dict rather than the annoying groupdicts
     result = result.groupdict() if result else {}
-    result.update(**checksum.groupdict() if checksum else {})
-    result.update(**season.groupdict() if season else {})
+    result.update(checksum.groupdict() if checksum else {})
+    result.update(season.groupdict() if season else {})
 
     logging.info(result)
 
@@ -106,24 +114,26 @@ def clean_filenames(path):
     # Filter out anything that doesnt have the correct extension and
     # filter out any directories
     files = []
-    for f in os.listdir(path):
-        if is_valid_file(os.path.join(path, f)):
-            files.append(f)
+    for file_ in os.listdir(path):
+        if is_valid_file(os.path.join(path, file_)):
+            files.append(file_)
         else:
-            logging.info("Invalid file: {}".format(f))
+            logging.info("Invalid file: {}".format(file_))
 
     if not files:
         logging.error("No video files were found in {}".format(path))
         return []
 
     cleanFiles = []
-    # We are going to store the episode number and path in a tuple then sort on the
-    # episodes number.  Special episodes will be appended to the end of the clean list
-    for f in files:
-        info = regex_search(f)
+    # We are going to store the episode number and path in a tuple then
+    # sort on the episodes number.  Special episodes will be appended to the
+    # end of the clean list
+    for file_ in files:
+        info = regex_search(file_)
 
         if info:
-            cleanFiles.append(episode.EpisodeFile(os.path.join(path, f), **info))
+            episode = episode.EpisodeFile(os.path.join(path, file_), **info)
+            cleanFiles.append(episode)
 
     if not cleanFiles:
         logging.error("The files could not be matched")
@@ -148,38 +158,41 @@ def prepare_filenames(path, show):
         logging.info("No files were able to be renamed")
         return
 
-    for f in files:
-        if f.is_special:
-            ep = show.get_special(f.special_number)
-        elif f.episode_number > show.max_episode:
-            ep = show.get_special(f.episode_number - show.max_episode)
+    for file_ in files:
+        if file_.is_special:
+            episode = show.get_special(file_.special_number)
+        elif file_.episode_number > show.max_episode:
+            episode = show.get_special(file_.episode_number - show.max_episode)
         else:
-            ep = show.get_episode(f.episode_number, f.season)
+            episode = show.get_episode(file_.episode_number, file_.season)
 
-        if not ep:
-            logging.warning("Could not find an episode for {}".format(f.name))
+        if not episode:
+            msg = "Could not find an episode for {}".format(file_.name)
+            logging.warning(msg)
             continue
 
         # attach the episode file to the corresponding episode entry
-        ep.file = f
+        episode.file = file_
 
-        fileName = encode(f.name)
-        newName = replace_invalid_path_chars(show.formatter.display(ep) + f.ext)
+        fileName = encode(file_.name)
+        new = show.formatter.display(episode) + file_.ext
+        new = replace_invalid_path_chars(new)
 
-        if newName == fileName:
-            logging.info("File {} and Episode {} have same name".format(f.name, ep.title))
+        if new == fileName:
+            msg = "File {} and Episode {} have same name"
+            logging.info(msg.format(file_.name, episode.title))
             sameCount += 1
             continue
 
-        newName = os.path.join(path, trim_long_filename(newName))
+        new = os.path.join(path, trim_long_filename(new))
 
-        ep.file.new_name = newName
-        cleanFiles.append((f.path, newName))
+        episode.file.new_name = new
+        cleanFiles.append((file_.path, new))
 
     if sameCount > 0:
-        msg = "1 file" if sameCount == 1 else "{} files".format(sameCount)
-        logging.warning(
-            "{} in this directory would have been renamed to the same filename".format(msg))
+        num = "1 file" if sameCount == 1 else "{} files".format(sameCount)
+        msg = "{} don't need to be renamed".format(num)
+        logging.warning(msg)
 
     return cleanFiles
 
@@ -249,30 +262,31 @@ def save_renamed_file_info(old_order=None, show_title=None, path=None):
     fmt = dict(num_files=len(old_order), file_list=old_order, name=name)
     Settings['backup_list'][path] = fmt
 
-    with open_file_in_resources(Settings['rename_backup'], 'w') as f:
-        json.dump(Settings['backup_list'], f)
+    with open_file_in_resources(Settings['rename_backup'], 'w') as file_:
+        json.dump(Settings['backup_list'], file_)
 
 
 def find_old_filenames(path, show_title=None):
     """
-    Returns a dict with the filenames and the number of files
+    Returns a list of tuples with the filenames
     """
     logging.info("Loading up old filenames")
     if 'backup_list' not in Settings:
         load_renamed_file()
 
-    if not show_title:
-        return Settings['backup_list'].get(path, dict(name="", file_list=[], num_files=0))
+    default = dict(name="", file_list=[], num_files=0)
+    info = Settings['backup_list'].get(path, default)
 
-    try:
-        return Settings['backup_list']['path']
-    except KeyError:
-        for d in Settings['backup_list']:
-            info = Settings['backup_list'][d]
-            if info['name'] == show_title:
-                return info
+    if info['num_files'] > 0:
+        return info['file_list']
 
-    return {}
+    for info in Settings['backup_list']:
+        possible_info = Settings['backup_list'].get(info, default)
+        if possible_info['name'].lower() == show_title.lower():
+            return info['file_list']
+
+    ## Couldn't be found in the json file
+    return default['file_list']
 
 
 def load_renamed_file():
@@ -281,12 +295,14 @@ def load_renamed_file():
     """
     logging.info("Loading the renamed episode json file")
     if not file_exists_in_resources(Settings['rename_backup']):
-        logging.warn("Json file [{}] with old information could not be found".format(Settings['rename_backup']))
+        msg = "Json file [{}] with old information could not be found"
+        msg = msg.format(Settings['rename_backup'])
+        logging.warn(msg)
         Settings['backup_list'] = {}
     else:
-        with open_file_in_resources(Settings['rename_backup']) as f:
+        with open_file_in_resources(Settings['rename_backup']) as file_:
             try:
-                Settings['backup_list'] = json.load(f)
+                Settings['backup_list'] = json.load(file_)
             except ValueError:
                 logging.warning("The json file is empty")
                 Settings['backup_list'] = {}
@@ -297,6 +313,9 @@ def load_renamed_file():
 #######################
 
 def parse_range(range_):
+    """
+    Returns a list contaning a range of numbers from the range passed
+    """
     if '-' in range_:
         high, low = range_.split('-')
         high = int(high)
@@ -314,6 +333,9 @@ def parse_range(range_):
 
 
 def get_input(msg):
+    """
+    Get user input in a compatible way
+    """
     if Settings['py3k']:
         return input(msg)
     else:
@@ -321,12 +343,18 @@ def get_input(msg):
 
 
 def trim_long_filename(name):
+    """
+    Trim a long filename on a windows platform to conform to 256 char limit
+    """
     if len(name) > 255:
         ext = os.path.splitext(name)[1]
-        logging.error('The filename "{}" may be too long to rename, truncating'.format(name))
+        logging.error('Truncating long filename: "{}" '.format(name))
         offset = 255 - len(ext)
         name = name[:offset] + ext
     return name
+
+if sys.platform != 'win32':
+    trim_long_filename = lambda name: name
 
 
 def remove_punctuation(title):
@@ -348,10 +376,6 @@ def replace_invalid_path_chars(path, replacement='-'):
     return path
 
 
-if sys.platform != 'win32':
-    trim_long_filename = lambda name: name
-
-
 def prepare_title(title):
     """
     Remove any punctuation and whitespace from the title
@@ -369,19 +393,19 @@ def prepare_title(title):
         title.remove(title[0])
 
     out = []
-    for n in title:
+    for number in title:
         try:
-            value = num_to_text(int(n))
+            value = num_to_text(int(number))
             out.append(value)
-        except Exception:
-            out.append(n)
+        except ValueError:
+            out.append(number)
 
     return ''.join(out)
 
 
 def num_to_text(num):
     """
-    Converts a number up to 999 to it's English representation
+    Converts a number up to 999 to its English representation
     """
     # The purpose of this function is to resolve numbers to text so we don't
     # have additional entries in the database for the same show.  For example
@@ -493,8 +517,8 @@ def save_last_access_times():
     if not Settings['access_dict']:
         return False
 
-    with open_file_in_resources(Settings['access_time_file'], 'w') as p:
-        json.dump(Settings['access_dict'], p)
+    with open_file_in_resources(Settings['access_time_file'], 'w') as file_:
+        json.dump(Settings['access_dict'], file_)
 
     return True
 
@@ -506,8 +530,8 @@ def load_last_access_times():
     if not file_exists_in_resources(Settings['access_time_file']):
         return {}
 
-    with open_file_in_resources(Settings['access_time_file']) as f:
-        return json.load(f)
+    with open_file_in_resources(Settings['access_time_file']) as file_:
+        return json.load(file_)
 
 
 #################
@@ -515,6 +539,10 @@ def load_last_access_times():
 #################
 
 def init_resource_folder():
+    """
+    Recreate the default resources folder and create some resources such as
+    anidb database file
+    """
     print("[+] Creating resource path")
     print("[+] Path = {}".format(constants.RESOURCE_PATH))
     os.makedirs(constants.RESOURCE_PATH, 0o755)
@@ -525,21 +553,30 @@ def init_resource_folder():
 
 
 def create_new_backup_file():
+    """
+    Create an empty backup file in the resources folder
+    """
     logging.info("Creating a new rename info backup file")
-    with open_file_in_resources(Settings['rename_backup'], 'w') as f:
-        json.dump({}, f)
+    with open_file_in_resources(Settings['rename_backup'], 'w') as file_:
+        json.dump({}, file_)
 
 
 def update_db():
+    """
+    Grab an updated version of the AniDb database, limited to once a day
+    """
     logging.info("Attempting to update AniDb database file")
     one_unix_day = 24 * 60 * 60
 
     def _download():
-        with open_file_in_resources(Settings['anidb_db_file'], 'w') as f:
+        """
+        perform the grabbing of the file
+        """
+        with open_file_in_resources(Settings['anidb_db_file'], 'w') as file_:
             logging.info("Retrieving AniDB Database file")
             url = get_url_descriptor(Settings['anidb_db_url'])
 
-            f.write(url.content)
+            file_.write(url.content)
         logging.info("Successfully updated anidb_db_file")
 
     if not file_exists_in_resources(Settings['anidb_db_file']):

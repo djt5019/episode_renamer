@@ -22,9 +22,9 @@ priority = 1
 
 
 def poll(title):
-    API_KEY = Settings['tvdb_key']
+    api_key = Settings['tvdb_key']
 
-    if not API_KEY:
+    if not api_key:
         logging.warn("The TvDB Api key was not found, unable to poll the TvDB")
         return utils.show_not_found
 
@@ -59,7 +59,7 @@ def poll(title):
     seriesIdXml.close()
 
     #2) Get base info zip file
-    infoLoc = "http://www.thetvdb.com/api/{0}/series/{1}/all/en.zip".format(API_KEY, seriesID)
+    infoLoc = "http://www.thetvdb.com/api/{0}/series/{1}/all/en.zip".format(api_key, seriesID)
     infoFileDesc = utils.get_url_descriptor(infoLoc)
     if infoFileDesc is None:
         return utils.show_not_found
