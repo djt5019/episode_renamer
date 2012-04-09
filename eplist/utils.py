@@ -132,8 +132,8 @@ def clean_filenames(path):
         info = regex_search(file_)
 
         if info:
-            episode = episode.EpisodeFile(os.path.join(path, file_), **info)
-            cleanFiles.append(episode)
+            episode_data = episode.EpisodeFile(os.path.join(path, file_), **info)
+            cleanFiles.append(episode_data)
 
     if not cleanFiles:
         logging.error("The files could not be matched")
@@ -160,33 +160,33 @@ def prepare_filenames(path, show):
 
     for file_ in files:
         if file_.is_special:
-            episode = show.get_special(file_.special_number)
+            episode_data = show.get_special(file_.special_number)
         elif file_.episode_number > show.max_episode:
-            episode = show.get_special(file_.episode_number - show.max_episode)
+            episode_data = show.get_special(file_.episode_number - show.max_episode)
         else:
-            episode = show.get_episode(file_.episode_number, file_.season)
+            episode_data = show.get_episode(file_.episode_number, file_.season)
 
-        if not episode:
-            msg = "Could not find an episode for {}".format(file_.name)
+        if not episode_data:
+            msg = "Could not find an episode_data for {}".format(file_.name)
             logging.warning(msg)
             continue
 
-        # attach the episode file to the corresponding episode entry
-        episode.file = file_
+        # attach the episode_data file to the corresponding episode_data entry
+        episode_data.file = file_
 
         fileName = encode(file_.name)
-        new = show.formatter.display(episode) + file_.ext
+        new = show.formatter.display(episode_data) + file_.ext
         new = replace_invalid_path_chars(new)
 
         if new == fileName:
             msg = "File {} and Episode {} have same name"
-            logging.info(msg.format(file_.name, episode.title))
+            logging.info(msg.format(file_.name, episode_data.title))
             sameCount += 1
             continue
 
         new = os.path.join(path, trim_long_filename(new))
 
-        episode.file.new_name = new
+        episode_data.file.new_name = new
         cleanFiles.append((file_.path, new))
 
     if sameCount > 0:
