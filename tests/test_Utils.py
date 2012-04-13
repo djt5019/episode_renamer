@@ -121,6 +121,8 @@ def test_clean_filenames():
 def test_rename():
     create_temp_files(filenames)
 
+    utils.load_renamed_file()
+
     files = []
     for index, f in enumerate(os.listdir(temp_dir)):
         old = os.path.join(temp_dir, f)
@@ -136,7 +138,6 @@ def test_rename():
         assert_equal(f, "{:02}.avi".format(index))
 
     files = utils.find_old_filenames(temp_dir, 'test-show')
-    files = files['file_list']
     old, error = utils.rename(files, 'y')
     assert_equal(errors, [])
     assert_not_equal(old, [])
@@ -146,7 +147,6 @@ def test_rename():
         assert new in filenames
 
     files = utils.find_old_filenames(temp_dir, 'test-show')
-    files = files['file_list']
     old, errors = utils.rename(files, 'n')
     assert_equal(errors, [])
     assert_equal(old, [])
@@ -154,7 +154,6 @@ def test_rename():
     teardown()
 
     files = utils.find_old_filenames(temp_dir, 'test-show')
-    files = files['file_list']
     old, errors = utils.rename(files, 'y')
     assert errors
     assert not old
@@ -194,6 +193,7 @@ def test_prepare_title():
 
 
 def test_able_to_poll():
+    utils.load_last_access_times()
     assert_equal(utils.able_to_poll("http://www.google.com"), True)
     ## It hasn't been at least two seconds since the last poll
     ## so it should fail
@@ -201,3 +201,8 @@ def test_able_to_poll():
     time.sleep(2)
     assert_equal(utils.able_to_poll("http://www.google.com"), True)
     assert_equal(utils.able_to_poll("http://www.google.com", wait=True), True)
+    utils.save_last_access_times()
+
+
+def test_update_db():
+    pass

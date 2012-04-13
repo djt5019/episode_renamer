@@ -4,7 +4,6 @@ from __future__ import unicode_literals, absolute_import
 import os
 import datetime
 import sqlite3
-import atexit
 import logging
 
 from itertools import chain
@@ -32,11 +31,10 @@ class Cache(object):
             self.connection.executescript(create_database)
         except sqlite3.OperationalError as e:
             logging.error("Error connecting to database: {}".format(e))
-            self.connection = None
-
+            raise e
+        else:
             #Make sure everything is utf-8
             self.connection.text_factory = lambda x: encode(x)
-            atexit.register(self.close)
 
     def close(self):
         """ Commits any changes to the database then closes connections to it"""
@@ -44,11 +42,17 @@ class Cache(object):
         self.connection.close()
         logging.info("Connections have been closed")
 
-    def add_show(self, showTitle, episodes, specials):
+    def add_show(self, showTitle, episodes=None, specials=None):
         """ If we find a show on the internet that is not in our database
         we can use this function to add it into our database for the future"""
-        if not (showTitle and episodes):
-            raise ValueError("Empty show title or specials list passed to add_specials")
+        if not showTitle:
+            raise ValueError("Empty show title passed to add_specials")
+
+        if not episodes or not specials:
+            raise ValueError("Empty specials/episode list passed")
+
+        if not isinstance(episodes, list) or not isinstance(specials, list):
+            raise ValueError("Episode/specials must be in a list")
 
         title = showTitle
         time = datetime.datetime.now()
@@ -69,7 +73,7 @@ class Cache(object):
             conn.execute("DELETE FROM episodes where sid=?", sid)
             conn.execute("DELETE FROM shows where sid=?", sid)
 
-    def get_episodes(self, showTitle):
+    def get_episodes(self, showTitle, expiration=None):
         """Returns the episodes associated with the show id"""
         if not showTitle:
             raise ValueError("get_episodes expects a string")
@@ -92,7 +96,10 @@ class Cache(object):
 
         logging.info("{} days old".format(diffDays.days))
 
-        if diffDays.days >= Settings['db_update']:
+        if not expiration:
+            expiration = Settings['db_update']
+
+        if diffDays.days >= expiration:
             #If the show is older than a week remove it then return not found
             logging.warning("Show is older than a week, removing...")
             sid = result[0][-2]

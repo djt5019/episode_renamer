@@ -3,7 +3,7 @@ from __future__ import unicode_literals, absolute_import
 
 __author__ = 'Dan Tracy'
 __email__ = 'djt5019 at gmail dot com'
-__version__ = '0.1.5'
+__version__ = '0.1.6'
 
 import atexit
 import os

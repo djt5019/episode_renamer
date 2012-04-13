@@ -132,7 +132,8 @@ def clean_filenames(path):
         info = regex_search(file_)
 
         if info:
-            episode_data = episode.EpisodeFile(os.path.join(path, file_), **info)
+            file_path = os.path.join(path, file_)
+            episode_data = episode.EpisodeFile(file_path, **info)
             cleanFiles.append(episode_data)
 
     if not cleanFiles:
@@ -283,7 +284,7 @@ def find_old_filenames(path, show_title=None):
     for info in Settings['backup_list']:
         possible_info = Settings['backup_list'].get(info, default)
         if possible_info['name'].lower() == show_title.lower():
-            return info['file_list']
+            return possible_info['file_list']
 
     ## Couldn't be found in the json file
     return default['file_list']

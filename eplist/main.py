@@ -14,10 +14,11 @@ from __future__ import unicode_literals, print_function, absolute_import
 # well as calculate the CRC32 of a file.  If you mistakenly rename
 # files you have the option to revert the last renaming operation
 
-import argparse
 import os
 import sys
 import logging
+import argparse
+import atexit
 
 from . import utils
 from . import episode
@@ -100,6 +101,8 @@ def main():
         Settings['filter'] = args.filter
 
     cache = Cache(Settings['db_name'])
+    atexit.register(cache)
+
     if args.delete_cache:
         cache.recreate_cache()
 
