@@ -48,7 +48,7 @@ class Cache(object):
         if not showTitle:
             raise ValueError("Empty show title passed to add_specials")
 
-        if not episodes or not specials:
+        if not episodes and not specials:
             raise ValueError("Empty specials/episode list passed")
 
         if not isinstance(episodes, list) or not isinstance(specials, list):

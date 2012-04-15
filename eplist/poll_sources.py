@@ -55,4 +55,4 @@ def locate_show(title):
     if not episodes:
         logging.info("Unable to locate the show: " + title)
 
-    return episodes
+    return sorted(episodes, key=lambda ep: ep.number)

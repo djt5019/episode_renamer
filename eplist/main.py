@@ -101,7 +101,7 @@ def main():
         Settings['filter'] = args.filter
 
     cache = Cache(Settings['db_name'])
-    atexit.register(cache)
+    atexit.register(cache.close)
 
     if args.delete_cache:
         cache.recreate_cache()

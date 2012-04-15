@@ -124,10 +124,9 @@ class Show(object):
 
         # Adjust by one since episodes start count at 1 not 0
         episode -= 1
-
         season = self._episodes_by_season.get(season, None)
 
-        if season and len(season) > episode:
+        if season > 0 and len(season) > episode:
             return season[episode]
         else:
             return self.episodes[episode]
