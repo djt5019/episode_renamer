@@ -19,7 +19,7 @@ class Episode(object):
     """
     A simple class to organize the episodes/specials
     """
-    def __init__(self, title, number, season, count=-1, type_="Episode"):
+    def __init__(self, title, number, season=1, count=-1, type_="Episode"):
         """
         A container for an episode's information collected from the web
         """
@@ -196,7 +196,8 @@ class EpisodeFormatter(object):
         self.show = show
         self._format_string = utils.encode(fmt) if fmt else Settings['format']
 
-        ## Use negative lookahead assertion to ensure that the tag had not been escaped
+        ## Use negative lookahead assertion to ensure that the
+        ## tag had not been escaped
         regex = r'(?<!\\)(?P<tag>\{start}.*?\{end})'
         regex = regex.format(start=Settings['tag_start'], end=Settings['tag_end'])
 
