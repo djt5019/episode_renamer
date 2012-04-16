@@ -1,5 +1,10 @@
-from fabric.api import local
+from fabric.api import  local, env
 import os
+
+env['project_name'] = 'eplist'
+env['path'] = os.getcwd()
+env['env_path'] = os.path.join(env.path, 'env')
+env['python'] = 'python2.7'
 
 
 def test(src="all"):
@@ -13,3 +18,18 @@ def test(src="all"):
             local(cmd.format(f.lower(), f))
     else:
         local(cmd.format(src, src))
+
+
+def make_venv():
+    """
+    create a new virtualenv
+    """
+
+    local('virtualenv %(env_path)s;' % env)
+    local('%(env_path)s/bin/activate.bat;' % env)
+
+
+def get_reqs():
+    """
+    Install the necessary requirements for our virtualenv
+    """

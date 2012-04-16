@@ -63,16 +63,16 @@ regex_vars = {
 regex_vars = {r: regex_vars[r].format(**regex_vars) for r in regex_vars}
 
 regexList = [
-    r'^(?P<series>.*?) - Season (?P<season>\d+) - Episode (?P<episode>\d*) - .*',
-    r'^(?P<series>.*?) - Episode (?P<episode>\d*) - .*',  # My usual format
-    r'^{series}{sep}+{special}',
-    r'^{series}{sep}+{episode}',
-    r'^{series}{sep}+{season}{sep}*{episode}',
-    r'^{series}{sep}+{season}{sep}*{episode}{sep}*{sum}?',
-    r'^{series}{sep}+{episode}',
-    r'^(?P<series>.*) - OVA (?P<special>\d+) - \w*',
-    r'^{series}{sep}*{special}',
-    r'{series}{sep}*(op|ed){sep}*(?P<junk>\d*)',  # Show intro /outro music
+    r'(?P<series>.*?) - Season (?P<season>\d+) - Episode (?P<episode>\d*) - .*',
+    r'(?P<series>.*?) - Episode (?P<episode>\d*) - .*',  # My usual format
+    r'{series}{sep}+{special}',
+    r'{series}{sep}+{episode}',
+    r'{series}{sep}+{season}{sep}*{episode}',
+    r'{series}{sep}+{season}{sep}*{episode}{sep}*{sum}?',
+    r'{series}{sep}+{episode}',
+    r'(?P<series>.*) - OVA (?P<special>\d+) - \w*',
+    r'{series}{sep}*{special}',
+    r'{series}{sep}*(op|ed|trailer){sep}*(?P<junk>\d*)',  # Show intro /outro music
     r'{episode}',  # More of a general catch-all regex
             ]
 
@@ -83,3 +83,4 @@ regexList = [re.compile(regex) for regex in regexList]
 checksum_regex = re.compile(r'[\[\(](?P<sum>[a-f0-9]{8})[\]\)]', re.I)
 remove_junk_regex = re.compile(r'[\[\(].*?[\]\]]', re.I)
 bracket_season_regex = re.compile(r'[\[\(]{season}X{episode}[\]\)]'.format(**regex_vars), re.I)
+encoding_regex = re.compile(r'(?P<encoding>\d{3,4}x\d{3,4})')

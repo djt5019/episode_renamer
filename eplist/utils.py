@@ -58,34 +58,49 @@ def regex_search(filename):
     """
     Compare the filename to each of the regular expressions for a match
     """
+    if not filename:
+        return {}
+
     logging.info("Matching '{}'".format(filename))
     # deal with anything in brackets, they tend to throw off the regexes
+    filename = filename.lower()
+
+    encoding = constants.encoding_regex.search(filename)
+    filename = constants.encoding_regex.sub("", filename)
+
     checksum = constants.checksum_regex.search(filename)
     filename = constants.checksum_regex.sub("", filename)
+
     season = constants.bracket_season_regex.search(filename)
+    filename = constants.bracket_season_regex.sub('', filename)
+
+    filename = filename.replace('h.264', '')
 
     filename = constants.remove_junk_regex.sub("", filename)
 
-    result = None
     for count, regex in enumerate(constants.regexList):
-        result = regex.search(filename)
-        if result:
+        regex_result = regex.search(filename)
+        if regex_result:
             name = filename.encode(Settings['encoding'], 'ignore')
             msg = "Regex #{} matched {}".format(count, name)
             logging.info(msg)
             break
 
-    if not result and not season:
+    if not regex_result and not season:
         msg = "Unable to find information on: {}".format(filename)
         logging.error(msg)
         raise Exception(msg)
 
     # Work with the result dict rather than the annoying groupdicts
-    result = result.groupdict() if result else {}
+    result = {}
+    result.update(encoding.groupdict() if encoding else {})
     result.update(checksum.groupdict() if checksum else {})
     result.update(season.groupdict() if season else {})
+    result.update(regex_result.groupdict() if regex_result else {})
 
     logging.info(result)
+
+    print result
 
     # Info dict will hold the proper data for our episode or special
     info_dict = {}
@@ -100,6 +115,8 @@ def regex_search(filename):
     else:
         info_dict['episode_number'] = int(result['episode'])
         info_dict['season'] = int(result.get('season', '1'))
+
+    info_dict['encoding'] = result.get('encoding', None)
 
     return info_dict
 
@@ -162,6 +179,11 @@ def prepare_filenames(path, show):
     for file_ in files:
         if file_.is_special:
             episode_data = show.get_special(file_.special_number)
+
+            if not episode_data:
+                logging.warn("Could not find a special episode for {}".format(file_))
+                continue
+
         elif file_.episode_number > show.max_episode:
             episode_data = show.get_special(file_.episode_number - show.max_episode)
         else:
@@ -191,8 +213,11 @@ def prepare_filenames(path, show):
         cleanFiles.append((file_.path, new))
 
     if sameCount > 0:
-        num = "1 file" if sameCount == 1 else "{} files".format(sameCount)
-        msg = "{} don't need to be renamed".format(num)
+        if sameCount == 1:
+            num = "1 file doesn't"
+        else:
+            num = "{} files don't".format(sameCount)
+        msg = "{} need to be renamed".format(num)
         logging.warning(msg)
 
     return cleanFiles
