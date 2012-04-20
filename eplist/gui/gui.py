@@ -213,7 +213,7 @@ class Form(QtGui.QWidget):
             InfoMessage(self, "Rename Files", "No Directory Selected")
             return
 
-        if self.epList.count() == 0:
+        if not self.epList.count():
             InfoMessage(self, "Rename Files", "No Show Information Retrieved")
             return
 

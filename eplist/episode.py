@@ -151,12 +151,12 @@ class EpisodeFile(object):
         self.name = utils.encode(os.path.split(self.path)[1])
         self.new_name = ""
         self.verified = False
-        self.__dict__.update(kwargs)
         self.is_special = ('special_number' in kwargs)
         self.given_checksum = kwargs.get('checksum', 0)
-        self.episode_number = self.__dict__.get('episode_number', -1)
+        self.episode_number = self.kwargs.get('episode_number', -1)
         self.multipart = False
-        ## TODO: Add multipart functionality later
+        self.__dict__.update(kwargs)
+        ## TODO: Add multi part functionality later
 
     def crc32(self):
         """

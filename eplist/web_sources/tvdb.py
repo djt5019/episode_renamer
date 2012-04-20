@@ -84,6 +84,7 @@ def poll(title):
         name = data.episodename.getText()
         season = int(data.seasonnumber.getText())
         num = int(data.episodenumber.getText())
+        type_ = 'Episode'
 
         if name == "":
             logging.info("The name pulled from TvDB appears to be empty")

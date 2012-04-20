@@ -78,6 +78,7 @@ def regex_search(filename):
 
     filename = constants.remove_junk_regex.sub("", filename)
 
+    regex_result = None
     for count, regex in enumerate(constants.regexList):
         regex_result = regex.search(filename)
         if regex_result:
@@ -99,8 +100,6 @@ def regex_search(filename):
     result.update(regex_result.groupdict() if regex_result else {})
 
     logging.info(result)
-
-    print result
 
     # Info dict will hold the proper data for our episode or special
     info_dict = {}
@@ -397,7 +396,7 @@ def replace_invalid_path_chars(path, replacement='-'):
     """
     Replace invalid path character with a different, acceptable, character
     """
-    exclude = set('\\/"?<>|*:')
+    exclude = set('\\/"?<>|*:-')
     path = ''.join(ch if ch not in exclude else replacement for ch in path)
     return path
 

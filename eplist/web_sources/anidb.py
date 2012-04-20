@@ -56,6 +56,9 @@ def _parse_local(title):
             if title in (original_title, clean_title):
                 return res.group('aid')
 
+            if title.replace(' ', '') in (original_title.replace(' ', ''), clean_title.replace(' ', '')):
+                return res.group('aid')
+
             sequence.set_seq2(clean_title.lower())
             ratio = sequence.ratio()
 
@@ -71,7 +74,7 @@ def _parse_local(title):
         logging.error("Closest show to '{}' is '{}'' with id {}".format(title, name, aid))
 
         for guess in guesses[1:]:
-            logging.info("Similar show {} [{}] also found".format(name, aid))
+            logging.info("Similar show {} [{}] also found".format(guess['name'], guess['aid']))
 
     return -1
 
