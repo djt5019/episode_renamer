@@ -19,7 +19,7 @@ PROJECT_SOURCE_PATH = split(realpath(__file__))[0]
 PROJECT_PATH = split(PROJECT_SOURCE_PATH)[0]
 WEB_SOURCES_PATH = join(PROJECT_SOURCE_PATH, 'web_sources')
 
-RESOURCE_PATH = os.path.join("eplist", "resources")
+RESOURCE_PATH = "eplist"
 
 if sys.platform == "win32":
     RESOURCE_PATH = os.path.join(os.environ['APPDATA'], RESOURCE_PATH)
@@ -55,7 +55,7 @@ regex_vars = {
 'season': r'(s|season)?{sep}*?(?P<season>\d+)',
 'series': r'(?P<series>.*)',
 'subgroup': r'(?P<group>\[.*\])',
-'special': r'(?P<type>{specical_types}){sep}+(?P<special>\d+)',
+'special': r'(?P<type>{specical_types}){sep}*?(?P<special>\d+)',
 'specical_types': types,
 }
 
@@ -63,18 +63,17 @@ regex_vars = {
 regex_vars = {r: regex_vars[r].format(**regex_vars) for r in regex_vars}
 
 regexList = [
-    r'(?P<series>.*?) - Season (?P<season>\d+) - Episode (?P<episode>\d*) - .*',
-    r'(?P<series>.*?) - Episode (?P<episode>\d*) - .*',  # My usual format
-    r'{series}{sep}+{special}',
-    r'{series}{sep}+{episode}',
-    r'{series}{sep}+{season}{sep}*{episode}',
-    r'{series}{sep}+{season}{sep}*{episode}{sep}*{sum}?',
-    r'{series}{sep}+{episode}',
-    r'(?P<series>.*) - OVA (?P<special>\d+) - \w*',
-    r'{series}{sep}*{special}',
-    r'{series}{sep}*(op|ed|trailer){sep}*(?P<junk>\d*)',  # Show intro /outro music
-    r'{episode}',  # More of a general catch-all regex
-            ]
+    r'^{special}',
+    r'^{episode}',
+    r'^{series}{sep}+{special}',
+    r'^{series}{sep}+{episode}',
+    r'^{series}{sep}+{season}{sep}*{episode}',
+    r'^{series}{sep}+{season}{sep}*{episode}{sep}*{sum}?',
+    r'^{series}{sep}*(op|ed|trailer){sep}*(?P<junk>\d*)',  # Show intro /outro music
+    r'^(?P<series>.*?) - Season (?P<season>\d+) - Episode (?P<episode>\d*) - .*',
+    r'^(?P<series>.*?) - Episode (?P<episode>\d*) - .*',  # My usual formats
+    r'{episode}',  # General catch-all, look for the first set of numbers
+    ]
 
 ## Substitute the dictionary variables in to the unformatted regex
 regexList = [r.format(**regex_vars) for r in regexList]
@@ -83,4 +82,4 @@ regexList = [re.compile(regex) for regex in regexList]
 checksum_regex = re.compile(r'[\[\(](?P<sum>[a-f0-9]{8})[\]\)]', re.I)
 remove_junk_regex = re.compile(r'[\[\(].*?[\]\]]', re.I)
 bracket_season_regex = re.compile(r'[\[\(]{season}X{episode}[\]\)]'.format(**regex_vars), re.I)
-encoding_regex = re.compile(r'(?P<encoding>\d{3,4}x\d{3,4})')
+encoding_regex = re.compile(r'(?P<encoding>\d{3,4}x\d{3,4}|\d{3,4}p)')

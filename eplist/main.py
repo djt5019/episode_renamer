@@ -127,14 +127,7 @@ def main():
 
     if args.undo_rename:
         files = utils.find_old_filenames(Settings['path'], Settings['title'])
-        print_renamed_files(files)
-        old_order, errors = utils.rename(files)
-
-        utils.save_renamed_file_info(old_order, Settings['title'])
-
-        for e in errors:
-            print("File {} could not be successfully renamed".format(os.path.split(e)[1]))
-
+        do_rename(files)
         sys.exit(0)
 
     rename = args.pathname is not None
@@ -157,56 +150,15 @@ def main():
 
     # If the user specified a specific season we will filter our results
     # this also checks to make sure its a reasonable season number
-    filtered_episodes = []
-    if args.season:
-        s_range = list(utils.parse_range(args.season))
-
-        if s_range[-1] > show.num_seasons:
-            print ("{} Season {} not found".format(Settings['title'], args.season))
-            sys.exit(1)
-
-        filtered_episodes = [x for x in show.episodes if x.season in s_range]
-
-    if args.episode:
-        e_range = list(utils.parse_range(args.episode))
-
-        if not args.season:
-            filtered_episodes = [x for x in show.episodes if x.count in e_range]
-        else:
-            filtered_episodes = filtered_episodes[e_range[0] - 1:e_range[-1]]
-
-    if filtered_episodes:
-        show.episodes = filtered_episodes
+    eps = filter_episodes(show, args)
+    show.episodes = []
+    show.specials = []
+    show.add_episodes(eps)
 
     ## Renaming functionality
-    if  rename:
-        path = args.pathname if args.pathname != '.' else os.getcwd()
-        utils.prepare_filenames(path, show)
-        files = []
-
-        show.episodes += show.specials if Settings['filter'] in ('both', 'specials') else []
-
-        for e in show.episodes:
-            if e.file and e.file.new_name:
-                old = os.path.join(path, e.file.name)
-                new = os.path.join(path, e.file.new_name)
-                files.append((old, new))
-
-        print_renamed_files(files)
-
-        old_order, errors = utils.rename(files)
-
-        utils.save_renamed_file_info(old_order, Settings['title'])
-
-        if not old_order:
-            print ("Changes were not committed to the files")
-        elif not errors:
-            print ("All files were successfully renamed")
-
-        for name in errors:
-            print("File {} could not be successfully renamed".format(os.path.split(name)[1]))
-            sys.exit(1)
-
+    if rename:
+        files = utils.prepare_filenames(Settings['path'], show)
+        do_rename(files)
         sys.exit(0)
 
     if args.verify:
@@ -214,16 +166,59 @@ def main():
             utils.prepare_filenames(Settings['path'], show)
 
         verify_files(show.episodes)
-        exit(1)
+        sys.exit(1)
 
     if Settings['filter'] in ('both', 'episodes'):
-        if filtered_episodes:
-            display_episodes(show, filtered_episodes, args.display_header)
-        else:
-            display_episodes(show, show.episodes, args.display_header)
+        display_episodes(show, show.episodes, args.display_header)
 
     if Settings['filter'] in ('specials', 'both'):
         display_specials(show, args.display_header)
+
+
+def do_rename(files):
+    print_renamed_files(files)
+    old_order, errors = utils.rename(files)
+
+    utils.save_renamed_file_info(old_order, Settings['title'])
+
+    if not old_order:
+        print ("Changes were not committed to the files")
+    elif not errors:
+        print ("All files were successfully renamed")
+
+    for name in errors:
+        print("File {} could not be successfully renamed".format(os.path.split(name)[1]))
+        sys.exit(1)
+
+
+def filter_episodes(show, args):
+    eps = []
+
+    if Settings['filter'].lower() == "episodes":
+        eps = show.episodes
+    elif Settings['filter'].lower() == "specials":
+        eps = show.specials
+    else:
+        eps = show.specials + show.episodes
+
+    if args.season:
+        s_range = list(utils.parse_range(args.season))
+
+        if s_range[-1] > show.num_seasons:
+            print ("{} Season {} not found".format(Settings['title'], args.season))
+            sys.exit(1)
+
+        eps = [x for x in eps if x.season in s_range]
+
+    if args.episode:
+        e_range = list(utils.parse_range(args.episode))
+
+        if not args.season:
+            eps = [x for x in eps if x.count in e_range]
+        else:
+            eps = eps[e_range[0] - 1:e_range[-1]]
+
+    return eps
 
 
 def display_episodes(show, episodes, header=False):

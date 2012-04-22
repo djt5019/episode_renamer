@@ -180,11 +180,8 @@ def prepare_filenames(path, show):
             episode_data = show.get_special(file_.special_number)
 
             if not episode_data:
-                logging.warn("Could not find a special episode for {}".format(file_))
+                logging.info("Could not find a special episode for {}".format(file_))
                 continue
-
-        elif file_.episode_number > show.max_episode:
-            episode_data = show.get_special(file_.episode_number - show.max_episode)
         else:
             episode_data = show.get_episode(file_.episode_number, file_.season)
 
@@ -207,7 +204,6 @@ def prepare_filenames(path, show):
             continue
 
         new = os.path.join(path, trim_long_filename(new))
-
         episode_data.file.new_name = new
         cleanFiles.append((file_.path, new))
 
@@ -320,9 +316,10 @@ def load_renamed_file():
     """
     logging.info("Loading the renamed episode json file")
     if not file_exists_in_resources(Settings['rename_backup']):
-        msg = "Json file [{}] with old information could not be found"
+        msg = "Json file [{}] with old information could not be found, recreating"
         msg = msg.format(Settings['rename_backup'])
         logging.warn(msg)
+        create_new_backup_file()
         Settings['backup_list'] = {}
     else:
         with open_file_in_resources(Settings['rename_backup']) as file_:
@@ -331,6 +328,7 @@ def load_renamed_file():
             except ValueError:
                 logging.warning("The json file is empty")
                 Settings['backup_list'] = {}
+
 
 
 ########################

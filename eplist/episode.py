@@ -83,7 +83,7 @@ class Show(object):
     @property
     def max_episode(self):
         """ Returns the highest episode number in the show """
-        return max(x.number for x in self.episodes)
+        return max(x.number for x in self.episodes) if self.episodes else 0
 
     @property
     def num_seasons(self):
@@ -153,7 +153,7 @@ class EpisodeFile(object):
         self.verified = False
         self.is_special = ('special_number' in kwargs)
         self.given_checksum = kwargs.get('checksum', 0)
-        self.episode_number = self.kwargs.get('episode_number', -1)
+        self.episode_number = kwargs.get('episode_number', -1)
         self.multipart = False
         self.__dict__.update(kwargs)
         ## TODO: Add multi part functionality later
