@@ -182,12 +182,14 @@ def prepare_filenames(path, show):
             if not episode_data:
                 logging.info("Could not find a special episode for {}".format(file_))
                 continue
+        elif 1 < show.max_episode < file_.episode_number:
+            episode_data = show.get_special(file_.episode_number - show.max_episode)
         else:
             episode_data = show.get_episode(file_.episode_number, file_.season)
 
         if not episode_data:
-            msg = "Could not find an episode_data for {}".format(file_.name)
-            logging.warning(msg)
+            msg = "Could not find episode data for {}".format(file_.name)
+            logging.info(msg)
             continue
 
         # attach the episode_data file to the corresponding episode_data entry
