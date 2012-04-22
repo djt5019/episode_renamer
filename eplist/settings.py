@@ -44,7 +44,6 @@ Settings = {
     'anidb_password': None,
     'anidb_db_file': 'animetitles.dat',
     'anidb_db_url': 'http://anidb.net/api/animetitles.dat.gz',
-    'anidb_http_api': 'http://api.anidb.net:9001/httpapi?request=anime&client=eprenamer&clientver=1&protover=1&aid={}',
 
     ## Verbose output
     'verbose': False,

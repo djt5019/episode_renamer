@@ -26,7 +26,7 @@ from . import constants
 
 from .logger import init_logging
 from .cache import Cache
-from .show_finder import Parser
+from .show_finder import ShowFinder
 from .settings import Settings
 
 if not os.path.exists(constants.RESOURCE_PATH):
@@ -139,7 +139,7 @@ def main():
         cmd.print_usage()
         sys.exit(1)
 
-    episodeParser = Parser(Settings['title'], cache)
+    episodeParser = ShowFinder(Settings['title'], cache)
 
     show = episodeParser.getShow()
     formatter = episode.EpisodeFormatter(show, args.format)

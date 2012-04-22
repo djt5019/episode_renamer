@@ -1,4 +1,9 @@
 # -*- coding: utf-8 -*-
+"""
+Provides funtionality for locating a show.  First tries polling the cache
+then calls the locate_show in poll_sources to attempt to locate the show
+online
+"""
 from __future__ import unicode_literals, absolute_import
 
 import logging
@@ -9,7 +14,7 @@ from . import utils
 from .episode import Show
 
 
-class Parser(object):
+class ShowFinder(object):
     """The main parser will poll the internet as well as a database
     looking for the show by using the parseData() function"""
 
@@ -56,7 +61,8 @@ class Parser(object):
         # we should add it to our database for later use
         if self.cache:
             logging.info("Adding show to the database")
-            self.cache.add_show(self.show.proper_title, self.show.episodes, self.show.specials)
+            self.cache.add_show(self.show.proper_title, self.show.episodes,
+                                self.show.specials)
 
         return self.show
 

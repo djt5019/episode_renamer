@@ -1,4 +1,12 @@
 # -*- coding: utf-8 -*-
+"""
+Provides the logic for polling web sources.  Any python source in the
+web_sources directory that has a poll method defined will be imported.  The
+imported modules will then be iterated over and have their poll method called
+until one of them returns a list of episodes.  The user can create their
+own web source just by defining a poll method and saving the source in the
+web_sources directory.
+"""
 from __future__ import unicode_literals, absolute_import
 
 import sys
@@ -18,20 +26,20 @@ def locate_show(title):
     # we can easily plug in new sources for finding episode information so long
     # as they define a poll function
 
-    for m in listdir(constants.WEB_SOURCES_PATH):
-        if m.endswith('.py') and not m.startswith('__'):
-            logging.info("Importing web resource {}".format(m[:-3]))
+    for mod in listdir(constants.WEB_SOURCES_PATH):
+        if mod.endswith('.py') and not mod.startswith('__'):
+            logging.info("Importing web resource {}".format(mod[:-3]))
 
-            x = __import__(m[:-3])
-            if not hasattr(x, 'poll'):
-                logging.error("Module {} doesn't have a poll method defined, ignoring module".format(m))
+            module = __import__(mod[:-3])
+            if not hasattr(module, 'poll'):
+                logging.error("Module {} doesn't have a poll method defined, ignoring module".format(mod))
                 continue
 
-            if not hasattr(x, 'priority'):
-                logging.error("Module {} doesn't have a priority defined, defaulting to 0".format(m))
-                x.priority = 0
+            if not hasattr(module, 'priority'):
+                logging.error("Module {} doesn't have a priority defined, defaulting to 0".format(mod))
+                module.priority = 0
 
-            modules.append(x)
+            modules.append(module)
 
     # If the modules have a poll priority we will respect it
     # by sorting the list by priority, higher number have higher precedence
@@ -50,7 +58,8 @@ def locate_show(title):
             logging.info("LOCATED {0}".format(title))
             break
 
-        logging.info("Unable to locate {0} at {1}".format(title, source.__name__))
+        msg = "Unable to locate {0} at {1}".format(title, source.__name__)
+        logging.info(msg)
 
     if not episodes:
         logging.info("Unable to locate the show: " + title)

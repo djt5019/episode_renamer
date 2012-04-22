@@ -106,18 +106,18 @@ def regex_search(filename):
     if 'junk' in result:
         return info_dict
 
-    info_dict['checksum'] = int(result.get('sum', '0x0'), base=16)
+    result['checksum'] = int(result.get('checksum', '0x0'), base=16)
 
     if 'special' in result:
-        info_dict['special_number'] = int(result['special'])
-        info_dict['special_type'] = result.get('type', 'OVA')
+        result['special_number'] = int(result['special_number'])
+        result['special_type'] = result.get('special_type', 'OVA')
     else:
-        info_dict['episode_number'] = int(result['episode'])
-        info_dict['season'] = int(result.get('season', '1'))
+        result['episode_number'] = int(result['episode_number'])
+        result['season'] = int(result.get('season', '1'))
 
-    info_dict['encoding'] = result.get('encoding', None)
+    result['encoding'] = result.get('encoding', None)
 
-    return info_dict
+    return result
 
 
 def clean_filenames(path):
@@ -169,18 +169,19 @@ def prepare_filenames(path, show):
     path = os.path.abspath(path)
     sameCount = 0
     cleanFiles = []
-    files = clean_filenames(path)
+    episode_files = clean_filenames(path)
     #Match the list of EpisodeFiles to the list of shows in the 'show' variable
-    if not files:
+    if not episode_files:
         logging.info("No files were able to be renamed")
         return
 
-    for file_ in files:
+    for file_ in episode_files:
         if file_.is_special:
             episode_data = show.get_special(file_.special_number)
 
             if not episode_data:
-                logging.info("Could not find a special episode for {}".format(file_))
+                msg = "Could not find a special episode for {}".format(file_)
+                logging.info(msg)
                 continue
         elif 1 < show.max_episode < file_.episode_number:
             episode_data = show.get_special(file_.episode_number - show.max_episode)
@@ -318,7 +319,7 @@ def load_renamed_file():
     """
     logging.info("Loading the renamed episode json file")
     if not file_exists_in_resources(Settings['rename_backup']):
-        msg = "Json file [{}] with old information could not be found, recreating"
+        msg = "File [{}] with old name information was not be found, recreating"
         msg = msg.format(Settings['rename_backup'])
         logging.warn(msg)
         create_new_backup_file()
@@ -330,7 +331,6 @@ def load_renamed_file():
             except ValueError:
                 logging.warning("The json file is empty")
                 Settings['backup_list'] = {}
-
 
 
 ########################

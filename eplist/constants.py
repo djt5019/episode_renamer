@@ -49,37 +49,42 @@ types = r'|'.join(types)
 
 regex_vars = {
 'sep': r'[\-\~\.\_\s]',
-'sum': r'.*[\[\(](?P<sum>[a-z0-9]{{8}}[\]\)])',
+'sum': r'.*[\[\(](?P<checksum>[a-z0-9]{{8}}[\]\)])',
 'year': r'(:P<year>(19|20)?\d\d)',
-'episode': r'(e|ep|episode)?{sep}*?(?P<episode>\d+)(?:v\d)?',  # ex: e3v2
+'episode': r'(e|ep|episode)?{sep}*?(?P<episode_number>\d+)(?:v\d)?',  # ex: e3v2
 'season': r'(s|season)?{sep}*?(?P<season>\d+)',
 'series': r'(?P<series>.*)',
 'subgroup': r'(?P<group>\[.*\])',
-'special': r'(?P<type>{specical_types}){sep}*?(?P<special>\d+)',
+'special': r'(?P<special_type>{specical_types}){sep}*?(?P<special_number>\d+)',
 'specical_types': types,
 }
 
-# Substitute any regex variables that may have been used within later dictionary entries
-regex_vars = {r: regex_vars[r].format(**regex_vars) for r in regex_vars}
+# Substitute any regex variables that may have been used
+# within later dictionary entries
+regex_vars = {key: regex_vars[key].format(**regex_vars) for key in regex_vars}
 
 regexList = [
-    r'^{special}',
-    r'^{episode}',
-    r'^{series}{sep}+{special}',
-    r'^{series}{sep}+{episode}',
-    r'^{series}{sep}+{season}{sep}*{episode}',
-    r'^{series}{sep}+{season}{sep}*{episode}{sep}*{sum}?',
-    r'^{series}{sep}*(op|ed|trailer){sep}*(?P<junk>\d*)',  # Show intro /outro music
-    r'^(?P<series>.*?) - Season (?P<season>\d+) - Episode (?P<episode>\d*) - .*',
-    r'^(?P<series>.*?) - Episode (?P<episode>\d*) - .*',  # My usual formats
-    r'{episode}',  # General catch-all, look for the first set of numbers
-    ]
+   r'^{special}',
+   r'^{episode}',
+   r'^{series}{sep}+{special}',
+   r'^{series}{sep}+{episode}',
+   r'^{series}{sep}+{season}{sep}*{episode}',
+   r'^{series}{sep}+{season}{sep}*{episode}{sep}*{sum}?',
+   r'^{series}{sep}*(op|ed|trailer){sep}*(?P<junk>\d*)',  # intro /outro music
+   r'^(?P<series>.*?) - Season (?P<season>\d+) - Episode (?P<episode>\d*) - .*',
+   r'^(?P<series>.*?) - Episode (?P<episode>\d*) - .*',  # My usual formats
+   r'{episode}',  # General catch-all, look for the first set of numbers
+]
 
 ## Substitute the dictionary variables in to the unformatted regex
 regexList = [r.format(**regex_vars) for r in regexList]
 regexList = [re.compile(regex) for regex in regexList]
 
 checksum_regex = re.compile(r'[\[\(](?P<sum>[a-f0-9]{8})[\]\)]', re.I)
+
 remove_junk_regex = re.compile(r'[\[\(].*?[\]\]]', re.I)
-bracket_season_regex = re.compile(r'[\[\(]{season}X{episode}[\]\)]'.format(**regex_vars), re.I)
+
+bracket_season_regex = re.compile(
+                   r'[\[\(]{season}X{episode}[\]\)]'.format(**regex_vars), re.I)
+
 encoding_regex = re.compile(r'(?P<encoding>\d{3,4}x\d{3,4}|\d{3,4}p)')

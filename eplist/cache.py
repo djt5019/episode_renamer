@@ -1,12 +1,17 @@
 # -*- coding: utf-8 -*-
+"""
+Provides the logic of keeping a cache of show information to avoid slow lookups
+on the internet
+"""
 from __future__ import unicode_literals, absolute_import
 
 import os
 import datetime
-import sqlite3
 import logging
 
 from itertools import chain
+
+from sqlite3 import PARSE_DECLTYPES, connect, OperationalError
 
 from .episode import Episode
 from .constants import RESOURCE_PATH
@@ -26,12 +31,12 @@ class Cache(object):
             dbName = os.path.join(RESOURCE_PATH, dbName)
 
         try:
-            self.connection = sqlite3.connect(dbName, detect_types=sqlite3.PARSE_DECLTYPES)
+            self.connection = connect(dbName, detect_types=PARSE_DECLTYPES)
             logging.debug("Creating database: {}".format(dbName))
             self.connection.executescript(create_database)
-        except sqlite3.OperationalError as e:
-            logging.error("Error connecting to database: {}".format(e))
-            raise e
+        except OperationalError as reason:
+            logging.error("Error connecting to database: {}".format(reason))
+            raise reason
         else:
             #Make sure everything is utf-8
             self.connection.text_factory = lambda x: encode(x)
@@ -58,13 +63,20 @@ class Cache(object):
         time = datetime.datetime.now()
 
         with self.connection as conn:
-            curs = conn.execute("INSERT INTO shows values (NULL, ?, ?)", (title, time))
+            curs = conn.execute(
+                    "INSERT INTO shows values (NULL, ?, ?)",
+                    (title, time))
+
             showId = curs.lastrowid
 
         with self.connection as conn:
             for eps in chain(episodes, specials):
-                show = (showId, eps.title, eps.season, eps.number, eps.count, eps.type,)
-                conn.execute("INSERT INTO episodes values (NULL, ?, ?, ?, ?, ?, ?)", show)
+                show_info = (showId, eps.title, eps.season, eps.number,
+                        eps.count, eps.type,)
+
+                conn.execute(
+                    "INSERT INTO episodes values (NULL, ?, ?, ?, ?, ?, ?)",
+                    show_info)
 
     def remove_show(self, sid):
         """Removes show and episodes matching the show id """
@@ -79,9 +91,11 @@ class Cache(object):
             raise ValueError("get_episodes expects a string")
 
         title = (showTitle, )
-        query = """SELECT e.title, e.season, e.number, e.count, e.type, s.sid, s.time
-                   FROM episodes AS e INNER JOIN shows AS s
-                   ON s.sid=e.sid AND s.title=?"""
+        query = """
+            SELECT e.title, e.season, e.number, e.count, e.type, s.sid, s.time
+            FROM episodes AS e INNER JOIN shows AS s
+            ON s.sid=e.sid AND s.title=?
+            """
 
         with self.connection as conn:
             curs = conn.execute(query, title)
@@ -117,6 +131,9 @@ class Cache(object):
         return eps
 
     def recreate_cache(self):
+        """
+        Delete the cache then create a new one
+        """
         with self.connection as conn:
             conn.executescript(delete_database)
             conn.executescript(create_database)

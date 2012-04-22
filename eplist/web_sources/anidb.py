@@ -23,6 +23,16 @@ except ImportError:
 
 priority = 3
 
+anidb_client = 'eprenamer'
+anidb_version = '1'
+anidb_proto = '1'
+
+anidb_http_url = 'http://api.anidb.net:9001/httpapi?{}'
+anidb_request = "request=anime&client={}&clientver={}&protover={}&aid={{}}"
+anidb_request = anidb_request.format(anidb_client, anidb_version, anidb_proto)
+
+anidb_http_url = anidb_http_url.format(anidb_request)
+
 
 def _parse_local(title):
     """
@@ -74,7 +84,8 @@ def _parse_local(title):
         logging.error("Closest show to '{}' is '{}'' with id {}".format(title, name, aid))
 
         for guess in guesses[1:]:
-            logging.info("Similar show {} [{}] also found".format(guess['name'], guess['aid']))
+            print guess
+            logging.info("Similar show {} [{}] also found".format(guess['title'], guess['aid']))
 
     return -1
 
@@ -91,7 +102,7 @@ def _connect_HTTP(aid):
     """
     Connect to AniDB using the public HTTP Api, this is used as an alternative to the UDP connection function
     """
-    url = Settings['anidb_http_api'].format(aid)
+    url = anidb_http_url.format(aid)
 
     resp = utils.get_url_descriptor(url)
 

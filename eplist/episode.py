@@ -35,6 +35,53 @@ class Episode(object):
         return "{} - {} {}".format(self.type, self.count, self.title)
 
 
+class EpisodeFile(object):
+    """
+    Represents a TV show file.  Used for renaming purposes
+    """
+    def __init__(self, path, **kwargs):
+        """
+        A physical episode on disk
+        """
+        self.path = path
+        self.ext = os.path.splitext(self.path)[1]
+        self.name = utils.encode(os.path.split(self.path)[1])
+        self.new_name = ""
+        self.verified = False
+        self.is_special = ('special_number' in kwargs)
+        self.given_checksum = kwargs.get('checksum', 0)
+        self.episode_number = kwargs.get('episode_number', -1)
+        self.encoding = kwargs.get('encoding', None)
+        self.multipart = False
+        self.__dict__.update(kwargs)
+        ## TODO: Add multi part functionality later
+
+    def crc32(self):
+        """
+        Calculate the CRC32 checksum for a file... slowly
+        """
+        logging.info("calculating CRC for {}".format(self.name))
+        with open(self.path, 'rb') as ep_file:
+            checksum = 0
+            for line in ep_file:
+                checksum = zlib.crc32(line, checksum)
+
+        return checksum & 0xFFFFFFFF
+
+    def verify_integrity(self):
+        """
+        Compares the checksum in the filename to the calculated one
+        """
+        if self.verified:
+            return True
+
+        if self.given_checksum > 0:
+            if self.given_checksum == self.crc32():
+                self.verified = True
+                return True
+        return False
+
+
 class Show(object):
     """
     A convenience class to keep track of the list of episodes as well as
@@ -138,52 +185,6 @@ class Show(object):
         return None
 
 
-class EpisodeFile(object):
-    """
-    Represents a TV show file.  Used for renaming purposes
-    """
-    def __init__(self, path, **kwargs):
-        """
-        A physical episode on disk
-        """
-        self.path = path
-        self.ext = os.path.splitext(self.path)[1]
-        self.name = utils.encode(os.path.split(self.path)[1])
-        self.new_name = ""
-        self.verified = False
-        self.is_special = ('special_number' in kwargs)
-        self.given_checksum = kwargs.get('checksum', 0)
-        self.episode_number = kwargs.get('episode_number', -1)
-        self.multipart = False
-        self.__dict__.update(kwargs)
-        ## TODO: Add multi part functionality later
-
-    def crc32(self):
-        """
-        Calculate the CRC32 checksum for a file... slowly
-        """
-        logging.info("calculating CRC for {}".format(self.name))
-        with open(self.path, 'rb') as ep_file:
-            checksum = 0
-            for line in ep_file:
-                checksum = zlib.crc32(line, checksum)
-
-        return checksum & 0xFFFFFFFF
-
-    def verify_integrity(self):
-        """
-        Compares the checksum in the filename to the calculated one
-        """
-        if self.verified:
-            return True
-
-        if self.given_checksum > 0:
-            if self.given_checksum == self.crc32():
-                self.verified = True
-                return True
-        return False
-
-
 class EpisodeFormatter(object):
     """
     Provides custom tag handling, formatting, printing of episode
@@ -199,10 +200,12 @@ class EpisodeFormatter(object):
         ## Use negative lookahead assertion to ensure that the
         ## tag had not been escaped
         regex = r'(?<!\\)(?P<tag>\{start}.*?\{end})'
-        regex = regex.format(start=Settings['tag_start'], end=Settings['tag_end'])
 
-        self.regex = re.compile(regex, re.I)
-        self.tokens = self.regex.split(self._format_string)
+        regex = regex.format(start=Settings['tag_start'],
+                             end=Settings['tag_end'])
+
+        self.tag_regex = re.compile(regex, re.I)
+        self.tokens = self.tag_regex.split(self._format_string)
         self.strip_whitespace_regex = re.compile(r'[\s]+')
 
         self.modifier_settings = {'upper': False, 'lower': False,
@@ -232,7 +235,7 @@ class EpisodeFormatter(object):
         """
         if fmt:
             self._format_string = utils.encode(fmt)
-            self.tokens = self.regex.split(fmt)
+            self.tokens = self.tag_regex.split(fmt)
         else:
             raise AttributeError("Empty format string set")
 
@@ -265,7 +268,7 @@ class EpisodeFormatter(object):
         for token in self.tokens:
             if escaped_token in token:
                 args.append(token.replace(escaped_token, Settings['tag_start']))
-            elif self.regex.match(token):
+            elif self.tag_regex.match(token):
                 #If it's a tag try to resolve it
                 token = self.strip_whitespace_regex.sub("", token)
                 args.append(self._parse(episode, token[1:-1]))
