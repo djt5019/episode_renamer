@@ -94,7 +94,7 @@ def _connect_UDP(aid):
     ## Todo: make this work so we stop relying on the http protocol
     raise NotImplementedError("I will get to this later... promise.")
 
-    if not Settings['anidb_username'] or not Settings['anidb_password']:
+    if not Settings.anidb_username or not Settings.anidb_password:
         raise ValueError("Username/Password required to poll AniDB")
 
 

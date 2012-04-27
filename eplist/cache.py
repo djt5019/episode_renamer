@@ -111,7 +111,7 @@ class Cache(object):
         logging.info("{} days old".format(diffDays.days))
 
         if not expiration:
-            expiration = Settings['db_update']
+            expiration = Settings.db_update
 
         if diffDays.days >= expiration:
             #If the show is older than a week remove it then return not found

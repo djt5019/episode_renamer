@@ -75,3 +75,13 @@ Settings = {
     'py3k': (version_info >= (3, 0))
 
 }
+
+
+class _SettingsDict(dict):
+    def __getattribute__(self, val):
+        if val in self:
+            return self[val]
+        else:
+            return super(_SettingsDict, self).__getattribute__(val)
+
+Settings = _SettingsDict(Settings)

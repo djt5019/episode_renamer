@@ -46,7 +46,7 @@ log_config = {
             'level': 'DEBUG',
             'class': 'logging.handlers.RotatingFileHandler',
             'formatter': 'file_format',
-            'filename': r'{}'.format(join(RESOURCE_PATH, Settings['log_file'])),
+            'filename': r'{}'.format(join(RESOURCE_PATH, Settings.log_file)),
             'maxBytes': 2 ** 20,
             'backupCount': 3
         },

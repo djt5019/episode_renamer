@@ -31,9 +31,6 @@ class Episode(object):
         self.type = type_
         self.is_special = (type_.lower() != "episode")
 
-    def __repr__(self):
-        return "{} - {} {}".format(self.type, self.count, self.title)
-
 
 class EpisodeFile(object):
     """
@@ -195,14 +192,14 @@ class EpisodeFormatter(object):
         Allows printing of custom formatted episode information
         """
         self.show = show
-        self._format_string = utils.encode(fmt) if fmt else Settings['format']
+        self._format_string = utils.encode(fmt) if fmt else Settings.format
 
         ## Use negative lookahead assertion to ensure that the
         ## tag had not been escaped
         regex = r'(?<!\\)(?P<tag>\{start}.*?\{end})'
 
-        regex = regex.format(start=Settings['tag_start'],
-                             end=Settings['tag_end'])
+        regex = regex.format(start=Settings.tag_start,
+                             end=Settings.tag_end)
 
         self.tag_regex = re.compile(regex, re.I)
         self.tokens = self.tag_regex.split(self._format_string)
@@ -244,8 +241,8 @@ class EpisodeFormatter(object):
         Load tokens from the format setting in settings.py
         """
         allTokens = set()
-        for tag in Settings['tags']:
-            tokens = set(Settings['tags'][tag])
+        for tag in Settings.tags:
+            tokens = set(Settings.tags[tag])
 
             redefined = tokens.intersection(allTokens)
             if redefined:
@@ -264,10 +261,10 @@ class EpisodeFormatter(object):
         Displays the episode according to the users format
         """
         args = []
-        escaped_token = "\{}".format(Settings['tag_start'])
+        escaped_token = "\{}".format(Settings.tag_start)
         for token in self.tokens:
             if escaped_token in token:
-                args.append(token.replace(escaped_token, Settings['tag_start']))
+                args.append(token.replace(escaped_token, Settings.tag_start))
             elif self.tag_regex.match(token):
                 #If it's a tag try to resolve it
                 token = self.strip_whitespace_regex.sub("", token)
@@ -333,7 +330,7 @@ class EpisodeFormatter(object):
 
         else:
             # If it reaches this case it's most likely an invalid tag
-            return Settings['tag_start'] + tag + Settings['tag_end']
+            return Settings.tag_start + tag + Settings.tag_end
 
     def _handle_string(self, string_):
         """ Applies modifiers to strings in the format """

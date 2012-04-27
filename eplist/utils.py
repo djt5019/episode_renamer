@@ -18,7 +18,7 @@ from .settings import Settings
 import requests
 import requests.exceptions
 
-if Settings['py3k']:
+if Settings.py3k:
     from urllib.parse import quote_plus
     url_quote = quote_plus
 else:
@@ -82,7 +82,7 @@ def regex_search(filename):
     for count, regex in enumerate(constants.regexList):
         regex_result = regex.search(filename)
         if regex_result:
-            name = filename.encode(Settings['encoding'], 'ignore')
+            name = filename.encode(Settings.encoding, 'ignore')
             msg = "Regex #{} matched {}".format(count, name)
             logging.info(msg)
             break
@@ -284,10 +284,10 @@ def save_renamed_file_info(old_order=None, show_title=None, path=None):
         name = os.path.split(path)[1]
 
     fmt = dict(num_files=len(old_order), file_list=old_order, name=name)
-    Settings['backup_list'][path] = fmt
+    Settings.backup_list[path] = fmt
 
-    with open_file_in_resources(Settings['rename_backup'], 'w') as file_:
-        json.dump(Settings['backup_list'], file_)
+    with open_file_in_resources(Settings.rename_backup, 'w') as file_:
+        json.dump(Settings.backup_list, file_)
 
 
 def find_old_filenames(path, show_title=None):
@@ -299,13 +299,13 @@ def find_old_filenames(path, show_title=None):
         load_renamed_file()
 
     default = dict(name="", file_list=[], num_files=0)
-    info = Settings['backup_list'].get(path, default)
+    info = Settings.backup_list.get(path, default)
 
     if info['num_files'] > 0:
         return info['file_list']
 
-    for info in Settings['backup_list']:
-        possible_info = Settings['backup_list'].get(info, default)
+    for info in Settings.backup_list:
+        possible_info = Settings.backup_list.get(info, default)
         if possible_info['name'].lower() == show_title.lower():
             return possible_info['file_list']
 
@@ -315,22 +315,22 @@ def find_old_filenames(path, show_title=None):
 
 def load_renamed_file():
     """
-    Loads the json file of renamed shows into Settings['backup_list']
+    Loads the json file of renamed shows into Settings.backup_list
     """
     logging.info("Loading the renamed episode json file")
-    if not file_exists_in_resources(Settings['rename_backup']):
+    if not file_exists_in_resources(Settings.rename_backup):
         msg = "File [{}] with old name information was not be found, recreating"
-        msg = msg.format(Settings['rename_backup'])
+        msg = msg.format(Settings.rename_backup)
         logging.warn(msg)
         create_new_backup_file()
-        Settings['backup_list'] = {}
+        Settings.backup_list = {}
     else:
-        with open_file_in_resources(Settings['rename_backup']) as file_:
+        with open_file_in_resources(Settings.rename_backup) as file_:
             try:
-                Settings['backup_list'] = json.load(file_)
+                Settings.backup_list = json.load(file_)
             except ValueError:
                 logging.warning("The json file is empty")
-                Settings['backup_list'] = {}
+                Settings.backup_list = {}
 
 
 ########################
@@ -361,7 +361,7 @@ def get_input(msg):
     """
     Get user input in a compatible way
     """
-    if Settings['py3k']:
+    if Settings.py3k:
         return input(msg)
     else:
         return raw_input(msg)
@@ -468,7 +468,7 @@ def encode(text, encoding='utf-8'):
     return text
 
 ## Strings in python3 are unicode by default (awesome!)
-if Settings['py3k']:
+if Settings.py3k:
     encode = lambda text: text
 
 
@@ -484,18 +484,18 @@ def able_to_poll(site, delay=None, wait=False):
     Prevents flooding by waiting two seconds from the last poll
     """
     if not delay:
-        delay = Settings['poll_delay']
+        delay = Settings.poll_delay
 
-    if not Settings['access_dict']:
-        Settings['access_dict'] = load_last_access_times()
+    if not Settings.access_dict:
+        Settings.access_dict = load_last_access_times()
 
-    last_access = Settings['access_dict'].get(site, -1)
+    last_access = Settings.access_dict.get(site, -1)
     now = int(time.time())
 
     flooding = True
 
     if (last_access < 0) or (now - last_access >= delay):
-        Settings['access_dict'][site] = now
+        Settings.access_dict[site] = now
         flooding = False
 
     if flooding and wait:
@@ -539,11 +539,11 @@ def save_last_access_times():
     """
     Save the last access times dictionary to a file in resources
     """
-    if not Settings['access_dict']:
+    if not Settings.access_dict:
         return False
 
-    with open_file_in_resources(Settings['access_time_file'], 'w') as file_:
-        json.dump(Settings['access_dict'], file_)
+    with open_file_in_resources(Settings.access_time_file, 'w') as file_:
+        json.dump(Settings.access_dict, file_)
 
     return True
 
@@ -552,10 +552,10 @@ def load_last_access_times():
     """
     Load the access times dictionary from the file in resource path
     """
-    if not file_exists_in_resources(Settings['access_time_file']):
+    if not file_exists_in_resources(Settings.access_time_file):
         return {}
 
-    with open_file_in_resources(Settings['access_time_file']) as file_:
+    with open_file_in_resources(Settings.access_time_file) as file_:
         return json.load(file_)
 
 
@@ -582,7 +582,7 @@ def create_new_backup_file():
     Create an empty backup file in the resources folder
     """
     logging.info("Creating a new rename info backup file")
-    with open_file_in_resources(Settings['rename_backup'], 'w') as file_:
+    with open_file_in_resources(Settings.rename_backup, 'w') as file_:
         json.dump({}, file_)
 
 
@@ -597,14 +597,14 @@ def update_db():
         """
         perform the grabbing of the file
         """
-        with open_file_in_resources(Settings['anidb_db_file'], 'w') as file_:
+        with open_file_in_resources(Settings.anidb_db_file, 'w') as file_:
             logging.info("Retrieving AniDB Database file")
-            url = get_url_descriptor(Settings['anidb_db_url'])
+            url = get_url_descriptor(Settings.anidb_db_url)
 
             file_.write(url.content)
         logging.info("Successfully updated anidb_db_file")
 
-    if not file_exists_in_resources(Settings['anidb_db_file']):
+    if not file_exists_in_resources(Settings.anidb_db_file):
         _download()
     elif able_to_poll('db_download', one_unix_day):
         _download()

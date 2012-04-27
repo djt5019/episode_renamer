@@ -83,36 +83,36 @@ def main():
     args = cmd.parse_args()
 
     if 'title' in args:
-        Settings['title'] = args.title
+        Settings.title = args.title
     else:
-        Settings['title'] = ""
+        Settings.title = ""
 
     # Set the correct working path
     if args.pathname:
-        Settings['path'] = os.path.realpath(args.pathname)
+        Settings.path = os.path.realpath(args.pathname)
     else:
-        Settings['path'] = os.path.realpath(os.getcwd())
+        Settings.path = os.path.realpath(os.getcwd())
 
     # If we are acting on files then load the old names into memory
     if args.pathname or args.undo_rename:
         utils.load_renamed_file()
 
     if args.filter:
-        Settings['filter'] = args.filter
+        Settings.filter = args.filter
 
-    cache = Cache(Settings['db_name'])
+    cache = Cache(Settings.db_name)
     atexit.register(cache.close)
 
     if args.delete_cache:
         cache.recreate_cache()
 
-    if Settings['title'] in ('-', '.', 'pwd'):
+    if Settings.title in ('-', '.', 'pwd'):
         # If a dash is entered use the current basename of the path
-        Settings['title'] = os.path.split(os.getcwd())[1]
-        print("Searching for {}".format(Settings['title']))
+        Settings.title = os.path.split(os.getcwd())[1]
+        print("Searching for {}".format(Settings.title))
 
     if args.verbose:
-        Settings['verbose'] = True
+        Settings.verbose = True
         l = logging.getLogger()
         for handle in l.handlers:
             handle.setLevel(logging.NOTSET)
@@ -126,7 +126,7 @@ def main():
         utils.update_db()
 
     if args.undo_rename:
-        files = utils.find_old_filenames(Settings['path'], Settings['title'])
+        files = utils.find_old_filenames(Settings.path, Settings.title)
         do_rename(files)
         sys.exit(0)
 
@@ -135,11 +135,11 @@ def main():
     if rename and not os.path.exists(args.pathname):
         sys.exit("ERROR - Path provided does not exist")
 
-    if not Settings['title']:
+    if not Settings.title:
         cmd.print_usage()
         sys.exit(1)
 
-    episodeParser = ShowFinder(Settings['title'], cache)
+    episodeParser = ShowFinder(Settings.title, cache)
 
     show = episodeParser.getShow()
     formatter = episode.EpisodeFormatter(show, args.format)
@@ -157,21 +157,21 @@ def main():
 
     ## Renaming functionality
     if rename:
-        files = utils.prepare_filenames(Settings['path'], show)
+        files = utils.prepare_filenames(Settings.path, show)
         do_rename(files)
         sys.exit(0)
 
     if args.verify:
         if not all(e.file for e in show.episodes):
-            utils.prepare_filenames(Settings['path'], show)
+            utils.prepare_filenames(Settings.path, show)
 
         verify_files(show.episodes)
         sys.exit(1)
 
-    if Settings['filter'] in ('both', 'episodes'):
+    if Settings.filter in ('both', 'episodes'):
         display_episodes(show, show.episodes, args.display_header)
 
-    if Settings['filter'] in ('specials', 'both'):
+    if Settings.filter in ('specials', 'both'):
         display_specials(show, args.display_header)
 
 
@@ -179,7 +179,7 @@ def do_rename(files):
     print_renamed_files(files)
     old_order, errors = utils.rename(files)
 
-    utils.save_renamed_file_info(old_order, Settings['title'])
+    utils.save_renamed_file_info(old_order, Settings.title)
 
     if not old_order:
         print ("Changes were not committed to the files")
@@ -194,9 +194,9 @@ def do_rename(files):
 def filter_episodes(show, args):
     eps = []
 
-    if Settings['filter'].lower() == "episodes":
+    if Settings.filter.lower() == "episodes":
         eps = show.episodes
-    elif Settings['filter'].lower() == "specials":
+    elif Settings.filter.lower() == "specials":
         eps = show.specials
     else:
         eps = show.specials + show.episodes
@@ -205,7 +205,7 @@ def filter_episodes(show, args):
         s_range = list(utils.parse_range(args.season))
 
         if s_range[-1] > show.num_seasons:
-            print ("{} Season {} not found".format(Settings['title'], args.season))
+            print ("{} Season {} not found".format(Settings.title, args.season))
             sys.exit(1)
 
         eps = [x for x in eps if x.season in s_range]
@@ -235,7 +235,7 @@ def display_episodes(show, episodes, header=False):
             print ("\nSeason {0}".format(eps.season))
             print ("----------")
 
-        print (show.formatter.display(eps).encode(Settings['encoding'], 'ignore'))
+        print (show.formatter.display(eps).encode(Settings.encoding, 'ignore'))
         curr_season = eps.season
 
 
@@ -245,7 +245,7 @@ def display_specials(show, header=False):
         print ("---------")
 
     for eps in show.specials:
-        print (show.formatter.display(eps).encode(Settings['encoding'], 'ignore'))
+        print (show.formatter.display(eps).encode(Settings.encoding, 'ignore'))
 
 
 def verify_files(episodes):
@@ -275,8 +275,8 @@ def print_renamed_files(files):
     print ("-------" + '-' * len(p))
 
     for old, new in files:
-        print ("OLD: {0}".format(os.path.split(old)[1]).encode(Settings['encoding'], 'ignore'))
-        print ("NEW: {0}".format(os.path.split(new)[1]).encode(Settings['encoding'], 'ignore'))
+        print ("OLD: {0}".format(os.path.split(old)[1]).encode(Settings.encoding, 'ignore'))
+        print ("NEW: {0}".format(os.path.split(new)[1]).encode(Settings.encoding, 'ignore'))
         print()
 
 

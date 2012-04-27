@@ -22,7 +22,7 @@ priority = 1
 
 
 def poll(title):
-    api_key = Settings['tvdb_key']
+    api_key = Settings.tvdb_key
 
     if not api_key:
         logging.warn("The TvDB Api key was not found, unable to poll the TvDB")
