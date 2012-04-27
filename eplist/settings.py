@@ -84,4 +84,7 @@ class _SettingsDict(dict):
         else:
             return super(_SettingsDict, self).__getattribute__(val)
 
+    def __setattr__(self, name, value):
+        self[name] = value
+
 Settings = _SettingsDict(Settings)
