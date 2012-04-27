@@ -106,7 +106,7 @@ def regex_search(filename):
     if 'junk' in result:
         return info_dict
 
-    result['checksum'] = int(result.get('checksum', '0x0'), base=16)
+    result['checksum'] = result.get('checksum', None)
 
     if 'special' in result:
         result['special_number'] = int(result['special_number'])
@@ -148,8 +148,12 @@ def clean_filenames(path):
         info = regex_search(file_)
 
         if info:
-            file_path = os.path.join(path, file_)
-            episode_data = episode.EpisodeFile(file_path, **info)
+            info['path'] = os.path.join(path, file_)
+            info['ext'] = os.path.splitext(info['path'])[1]
+            info['name'] = encode(os.path.split(info['path'])[1])
+
+            episode_data = episode.EpisodeFile(**info)
+
             cleanFiles.append(episode_data)
 
     if not cleanFiles:
@@ -167,7 +171,6 @@ def prepare_filenames(path, show):
     the show objects episodeList/specialsList
     """
     path = os.path.abspath(path)
-    sameCount = 0
     cleanFiles = []
     episode_files = clean_filenames(path)
     #Match the list of EpisodeFiles to the list of shows in the 'show' variable
@@ -196,27 +199,13 @@ def prepare_filenames(path, show):
         # attach the episode_data file to the corresponding episode_data entry
         episode_data.file = file_
 
-        fileName = encode(file_.name)
         new = show.formatter.display(episode_data) + file_.ext
         new = replace_invalid_path_chars(new)
-
-        if new == fileName:
-            msg = "File {} and Episode {} have same name"
-            logging.info(msg.format(file_.name, episode_data.title))
-            sameCount += 1
-            continue
-
         new = os.path.join(path, trim_long_filename(new))
-        episode_data.file.new_name = new
-        cleanFiles.append((file_.path, new))
 
-    if sameCount > 0:
-        if sameCount == 1:
-            num = "1 file doesn't"
-        else:
-            num = "{} files don't".format(sameCount)
-        msg = "{} need to be renamed".format(num)
-        logging.warning(msg)
+        episode_data.file.new_name = new
+
+        cleanFiles.append((file_.path, new))
 
     return cleanFiles
 
@@ -238,6 +227,9 @@ def rename(files, resp=""):
         return old_order, errors
 
     for old, new in files:
+        if old == new:
+            continue
+
         try:
             os.rename(old, new)
             old_order.append((new, old))

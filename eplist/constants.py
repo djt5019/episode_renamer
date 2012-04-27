@@ -51,7 +51,7 @@ regex_vars = {
 'sep': r'[\-\~\.\_\s]',
 'sum': r'.*[\[\(](?P<checksum>[a-z0-9]{{8}}[\]\)])',
 'year': r'(:P<year>(19|20)?\d\d)',
-'episode': r'(e|ep|episode)?{sep}*?(?P<episode_number>\d+)(?:v\d)?',  # ex: e3v2
+'episode': r'(e|ep|episode)?{sep}?(?P<episode_number>\d+)(?:v\d)?',  # ex: e3v2
 'season': r'(s|season)?{sep}*?(?P<season>\d+)',
 'series': r'(?P<series>.*)',
 'subgroup': r'(?P<group>\[.*\])',
@@ -66,8 +66,8 @@ regex_vars = {key: regex_vars[key].format(**regex_vars) for key in regex_vars}
 regexList = [
    r'^{special}',
    r'^{episode}',
-   r'^{series}{sep}+{special}',
-   r'^{series}{sep}+{episode}',
+   r'^{series}{sep}+{special}{sep}+',
+   r'^{series}{sep}+{episode}{sep}+',
    r'^{series}{sep}+{season}{sep}*{episode}',
    r'^{series}{sep}+{season}{sep}*{episode}{sep}*{sum}?',
    r'^{series}{sep}*(op|ed|trailer){sep}*(?P<junk>\d*)',  # intro /outro music
@@ -80,7 +80,7 @@ regexList = [
 regexList = [r.format(**regex_vars) for r in regexList]
 regexList = [re.compile(regex) for regex in regexList]
 
-checksum_regex = re.compile(r'[\[\(](?P<sum>[a-f0-9]{8})[\]\)]', re.I)
+checksum_regex = re.compile(r'[\[\(](?P<checksum>[a-f0-9]{8})[\]\)]', re.I)
 
 remove_junk_regex = re.compile(r'[\[\(].*?[\]\]]', re.I)
 
