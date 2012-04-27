@@ -5,7 +5,6 @@ Module contains logic and containers for dealing with shows/episodes/specials
 from __future__ import unicode_literals, absolute_import
 
 import re
-import os
 import zlib
 import string
 import logging
@@ -24,34 +23,33 @@ class Episode(object):
         A container for an episode's information collected from the web
         """
         self.title = utils.encode(title)
-        self.season = int(season)
-        self.number = int(number)
-        self.count = int(count)
+        self.season = season
+        self.number = number
+        self.count = count
         self.file = None
         self.type = type_
-        self.is_special = (type_.lower() != "episode")
+
+    @property
+    def is_special(self):
+        return (self.type.lower() != "episode")
 
 
-class EpisodeFile(object):
+class EpisodeFile(dict):
     """
     Represents a TV show file.  Used for renaming purposes
     """
-    def __init__(self, path, **kwargs):
-        """
-        A physical episode on disk
-        """
-        self.path = path
-        self.ext = os.path.splitext(self.path)[1]
-        self.name = utils.encode(os.path.split(self.path)[1])
-        self.new_name = ""
-        self.verified = False
-        self.is_special = ('special_number' in kwargs)
-        self.given_checksum = kwargs.get('checksum', 0)
-        self.episode_number = kwargs.get('episode_number', -1)
-        self.encoding = kwargs.get('encoding', None)
-        self.multipart = False
-        self.__dict__.update(kwargs)
-        ## TODO: Add multi part functionality later
+    def __init__(self, *args, **kwargs):
+        super(EpisodeFile, self).__init__(kwargs)
+
+    def __getattribute__(self, val):
+        if val in self:
+            return self[val]
+        else:
+            return super(EpisodeFile, self).__getattribute__(val)
+
+    @property
+    def is_special(self):
+        return 'special_number' in self
 
     def crc32(self):
         """
@@ -69,12 +67,8 @@ class EpisodeFile(object):
         """
         Compares the checksum in the filename to the calculated one
         """
-        if self.verified:
-            return True
-
-        if self.given_checksum > 0:
-            if self.given_checksum == self.crc32():
-                self.verified = True
+        if self.checksum:
+            if self.crc32() == int(self.checksum, base=16):
                 return True
         return False
 
@@ -387,8 +381,8 @@ class EpisodeFormatter(object):
         if not episode.file:
             return "00000000"
 
-        if episode.file.checksum > 0:
-            checksum = hex(episode.file.checksum)
+        if episode.file.checksum:
+            checksum = episode.file.checksum
         else:
             # To remove the 0x from the hex string
             checksum = hex(episode.file.crc32())
