@@ -20,14 +20,14 @@ import logging
 import argparse
 import atexit
 
-from . import utils
-from . import episode
-from . import constants
+from eplist import utils
+from eplist import episode
+from eplist import constants
 
-from .logger import init_logging
-from .cache import Cache
-from .show_finder import ShowFinder
-from .settings import Settings
+from eplist.logger import init_logging
+from eplist.cache import Cache
+from eplist.show_finder import ShowFinder
+from eplist.settings import Settings
 
 if not os.path.exists(constants.RESOURCE_PATH):
     utils.init_resource_folder()
@@ -162,10 +162,9 @@ def main():
         sys.exit(0)
 
     if args.verify:
-        if not all(e.file for e in show.episodes):
-            utils.prepare_filenames(Settings.path, show)
+        files = utils.clean_filenames(Settings.path)
 
-        verify_files(show.episodes)
+        verify_files(files)
         sys.exit(1)
 
     if Settings.filter in ('both', 'episodes'):
@@ -177,6 +176,13 @@ def main():
 
 def do_rename(files):
     print_renamed_files(files)
+
+    files = [(old, new) for old, new in files if old != new]
+
+    if not files:
+        print("No changes to files were needed")
+        sys.exit(1)
+
     old_order, errors = utils.rename(files)
 
     utils.save_renamed_file_info(old_order, Settings.title)
@@ -248,21 +254,16 @@ def display_specials(show, header=False):
         print (show.formatter.display(eps).encode(Settings.encoding, 'ignore'))
 
 
-def verify_files(episodes):
-    for f in episodes:
-        if not f.file:
+def verify_files(files):
+    for f in files:
+        if not f.checksum:
+            print("Episode {} dosen't have a checksum to compare to".format(f.name))
             continue
 
-        ep_file = f.file
-
-        if ep_file.given_checksum <= 0:
-            print("Episode {} dosen't have a checksum to compare to".format(ep_file.name))
-            continue
-
-        if ep_file.verify_integrity():
-            print("Episode {} has passed verification".format(ep_file.name))
+        if f.verify_integrity():
+            print("Episode {} has passed verification".format(f.name))
         else:
-            print("Episode {} has failed verification".format(ep_file.name))
+            print("Episode {} has failed verification".format(f.name))
 
 
 def print_renamed_files(files):
@@ -274,10 +275,22 @@ def print_renamed_files(files):
     print ("PATH = {}".format(p))
     print ("-------" + '-' * len(p))
 
+    same = 0
     for old, new in files:
+        if old == new:
+            same += 1
+            continue
+
         print ("OLD: {0}".format(os.path.split(old)[1]).encode(Settings.encoding, 'ignore'))
         print ("NEW: {0}".format(os.path.split(new)[1]).encode(Settings.encoding, 'ignore'))
         print()
+
+    if same > 0:
+        if same == 1:
+            num = "1 file doesn't"
+        else:
+            num = "{} files don't".format(same)
+        print("{} need to be renamed".format(num))
 
 
 if __name__ == '__main__':
