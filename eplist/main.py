@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from __future__ import unicode_literals, print_function, absolute_import
+from __future__ import unicode_literals, print_function
 
 # This command line program will take a T.V. show as input and
 # will return information about each episode, such as the title
@@ -241,7 +241,8 @@ def display_episodes(show, episodes, header=False):
             print ("\nSeason {0}".format(eps.season))
             print ("----------")
 
-        print (show.formatter.display(eps).encode(Settings.encoding, 'ignore'))
+        line = show.formatter.display(eps).encode(Settings.encoding, 'ignore')
+        print(utils.from_bytes(line))
         curr_season = eps.season
 
 
@@ -251,7 +252,8 @@ def display_specials(show, header=False):
         print ("---------")
 
     for eps in show.specials:
-        print (show.formatter.display(eps).encode(Settings.encoding, 'ignore'))
+        line = show.formatter.display(eps).encode(Settings.encoding, 'ignore')
+        print(utils.from_bytes(line))
 
 
 def verify_files(files):
@@ -281,8 +283,11 @@ def print_renamed_files(files):
             same += 1
             continue
 
-        print ("OLD: {0}".format(os.path.split(old)[1]).encode(Settings.encoding, 'ignore'))
-        print ("NEW: {0}".format(os.path.split(new)[1]).encode(Settings.encoding, 'ignore'))
+        old = os.path.split(old)[1].encode(Settings.encoding, 'ignore')
+        new = os.path.split(new)[1].encode(Settings.encoding, 'ignore')
+
+        print ("OLD: {0}".format(utils.from_bytes(old)))
+        print ("NEW: {0}".format(utils.from_bytes(new)))
         print()
 
     if same > 0:

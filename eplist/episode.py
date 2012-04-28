@@ -23,9 +23,9 @@ class Episode(object):
         A container for an episode's information collected from the web
         """
         self.title = utils.encode(title)
-        self.season = season
-        self.number = number
-        self.count = count
+        self.season = int(season)
+        self.number = int(number)
+        self.count = int(count)
         self.file = None
         self.type = type_
 
@@ -157,15 +157,16 @@ class Show(object):
         """
         Returns a specific episode from a specific season or None
         """
-        if not 0 < episode < len(self.episodes) + 1:
+        if episode < 0 or episode > self.num_episodes:
             return None
 
         # Adjust by one since episodes start count at 1 not 0
         episode -= 1
-        season = self._episodes_by_season.get(season, None)
 
-        if season > 0 and len(season) > episode:
-            return season[episode]
+        season_list = self._episodes_by_season.get(season, None)
+
+        if season > 1 and len(season) > episode and season_list:
+            return season_list['episode']
         else:
             return self.episodes[episode]
 
@@ -266,7 +267,7 @@ class EpisodeFormatter(object):
             else:
                 args.append(token)
 
-        return utils.encode(''.join(args))
+        return utils.encode(''.join(args)).strip()
 
     def _parse_modifiers(self, tag):
         """ Handle tag modifiers such as number padding and caps """
