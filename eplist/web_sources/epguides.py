@@ -39,7 +39,7 @@ def poll(title):
 
     count = 1
     for line in fd.iter_lines():
-        info = epguides_regex.match(line)
+        info = epguides_regex.match(utils.from_bytes(line))
 
         if info is not None:
             name = info.group('name')

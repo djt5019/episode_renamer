@@ -13,10 +13,10 @@ from itertools import chain
 
 from sqlite3 import PARSE_DECLTYPES, connect, OperationalError
 
-from .episode import Episode
-from .constants import RESOURCE_PATH
-from .settings import Settings
-from .utils import encode
+from eplist import utils
+from eplist.episode import Episode
+from eplist.constants import RESOURCE_PATH
+from eplist.settings import Settings
 
 
 class Cache(object):
@@ -39,7 +39,7 @@ class Cache(object):
             raise reason
         else:
             #Make sure everything is utf-8
-            self.connection.text_factory = lambda x: encode(x)
+            self.connection.text_factory = lambda x: utils.encode(x)
 
     def close(self):
         """ Commits any changes to the database then closes connections to it"""
@@ -121,11 +121,11 @@ class Cache(object):
             return eps
 
         for episode in result:
-            title = episode[0]
+            title = utils.from_bytes(episode[0])
             season = episode[1]
             number = episode[2]
             count = episode[3]
-            type_ = episode[4]
+            type_ = utils.from_bytes(episode[4])
             eps.append(Episode(title, number, season, count, type_))
 
         return eps

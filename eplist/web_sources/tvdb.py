@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 import zipfile
 import logging
 import tempfile
+import functools
 
 from eplist import utils
 
@@ -11,7 +12,7 @@ from eplist.episode import Episode
 from eplist.settings import Settings
 
 try:
-    from bs4 import BeautifulStoneSoup as Soup
+    from bs4 import BeautifulSoup as Soup
 except ImportError:
     try:
         from BeautifulSoup import BeautifulStoneSoup as Soup

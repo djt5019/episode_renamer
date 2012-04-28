@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 import re
 import difflib
 import logging
+import functools
 
 from string import punctuation as punct
 
@@ -13,7 +14,8 @@ from eplist.episode import Episode
 from eplist.settings import Settings
 
 try:
-    from bs4 import BeautifulStoneSoup as Soup
+    from bs4 import BeautifulSoup
+    Soup = functools.partial(BeautifulSoup)
 except ImportError:
     try:
         from BeautifulSoup import BeautifulStoneSoup as Soup
@@ -64,10 +66,10 @@ def _parse_local(title):
             clean_title = utils.remove_punctuation(utils.encode(res.group('title'))).lower()
 
             if title in (original_title, clean_title):
-                return res.group('aid')
+                return int(res.group('aid'))
 
             if title.replace(' ', '') in (original_title.replace(' ', ''), clean_title.replace(' ', '')):
-                return res.group('aid')
+                return int(res.group('aid'))
 
             sequence.set_seq2(clean_title.lower())
             ratio = sequence.ratio()
@@ -84,7 +86,6 @@ def _parse_local(title):
         logging.error("Closest show to '{}' is '{}'' with id {}".format(title, name, aid))
 
         for guess in guesses[1:]:
-            print guess
             logging.info("Similar show {} [{}] also found".format(guess['title'], guess['aid']))
 
     return -1
@@ -124,7 +125,13 @@ def _connect_HTTP(aid):
 
     for e in episodes:
         # 1 is a normal episode, 2 is a special
-        ep_type = e.epno.attrs[0][1]
+        # with beautifulsoup3 it returns a list of attribute dictionaries
+        # rather than just a single dictionary like in bs4
+        if 'type' in e.epno.attrs:
+            ep_type = e.epno.attrs['type']
+        else:
+            ep_type = e.epno.attrs[0][1]
+
         if ep_type not in ('1', '2'):
             continue
 
