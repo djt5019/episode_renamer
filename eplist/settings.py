@@ -7,7 +7,7 @@ just change the entries below.
 
 from __future__ import unicode_literals, absolute_import
 
-from .constants import RESOURCE_PATH
+from eplist.constants import RESOURCE_PATH
 from sys import getdefaultencoding, version_info
 
 
@@ -58,14 +58,15 @@ Settings = {
     'tag_config': 'tags.cfg',
     'tag_start': '<',
     'tag_end': '>',
-    'tags': {'episode_name_tags': ['name', 'episode', 'title'],
-             'episode_number_tags': ['epnum', 'number', 'num'],
-             'episode_count_tags': ['count', 'ep'],
-             'series_name_tags': ['series', 'show'],
-             'season_number_tags': ['season', 'seasons'],
-             'hash_tags': ['hash', 'crc32', 'checksum'],
-             'type_tags': ['type', 'format']
-             },
+    'tags': {
+        'episode_name_tags': ['name', 'episode', 'title'],
+        'episode_number_tags': ['epnum', 'number', 'num'],
+        'episode_count_tags': ['count', 'ep'],
+        'series_name_tags': ['series', 'show'],
+        'season_number_tags': ['season', 'seasons'],
+        'hash_tags': ['hash', 'crc32', 'checksum'],
+        'type_tags': ['type', 'format']
+    },
 
 
     ## The current working directory

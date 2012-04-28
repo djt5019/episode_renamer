@@ -150,9 +150,8 @@ def main():
 
     # If the user specified a specific season we will filter our results
     # this also checks to make sure its a reasonable season number
-    eps = filter_episodes(show, args)
-    show.episodes = []
-    show.specials = []
+    eps = filter_episodes(show, args.season, args.episode)
+
     show.add_episodes(eps)
 
     ## Renaming functionality
@@ -197,7 +196,7 @@ def do_rename(files):
         sys.exit(1)
 
 
-def filter_episodes(show, args):
+def filter_episodes(show, season, episode):
     eps = []
 
     if Settings.filter.lower() == "episodes":
@@ -207,20 +206,20 @@ def filter_episodes(show, args):
     else:
         eps = show.specials + show.episodes
 
-    if args.season:
-        s_range = list(utils.parse_range(args.season))
+    if season:
+        s_range = list(utils.parse_range(season))
 
         if s_range[-1] > show.num_seasons:
-            print ("{} Season {} not found".format(Settings.title, args.season))
+            print ("{} Season {} not found".format(Settings.title, season))
             sys.exit(1)
 
         eps = [x for x in eps if x.season in s_range]
 
-    if args.episode:
-        e_range = list(utils.parse_range(args.episode))
+    if episode:
+        e_range = list(utils.parse_range(episode))
 
-        if not args.season:
-            eps = [x for x in eps if x.count in e_range]
+        if not season:
+            eps = [x for x in eps if x.number in e_range]
         else:
             eps = eps[e_range[0] - 1:e_range[-1]]
 
@@ -257,6 +256,10 @@ def display_specials(show, header=False):
 
 
 def verify_files(files):
+    """
+    Verify the file by using the given checksum and comparing it to a newly
+    computed checksum
+    """
     for f in files:
         if not f.checksum:
             print("Episode {} dosen't have a checksum to compare to".format(f.name))
@@ -269,6 +272,9 @@ def verify_files(files):
 
 
 def print_renamed_files(files):
+    """
+    Present the files that need to be renamed to the user.
+    """
     if not files:
         print ("Failed to find any files to rename")
         sys.exit(1)

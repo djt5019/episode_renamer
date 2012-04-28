@@ -9,9 +9,9 @@ import zlib
 import string
 import logging
 
-from . import utils
+from eplist import utils
 
-from .settings import Settings
+from eplist.settings import Settings
 
 
 class Episode(object):
@@ -36,11 +36,8 @@ class Episode(object):
 
 class EpisodeFile(dict):
     """
-    Represents a TV show file.  Used for renaming purposes
+    Represents a TV episode file on disk.  Used for renaming purposes
     """
-    def __init__(self, *args, **kwargs):
-        super(EpisodeFile, self).__init__(kwargs)
-
     def __getattribute__(self, val):
         if val in self:
             return self[val]
@@ -97,6 +94,9 @@ class Show(object):
         """
         if not eplist:
             return
+
+        self.episodes = []
+        self.specials = []
 
         eps, spc = [], []
 
