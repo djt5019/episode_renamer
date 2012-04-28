@@ -186,7 +186,7 @@ def prepare_filenames(path, show):
                 msg = "Could not find a special episode for {}".format(file_)
                 logging.info(msg)
                 continue
-        elif 1 < show.max_episode < file_.episode_number:
+        elif 1 < show.num_episodes < file_.episode_number:
             episode_data = show.get_special(file_.episode_number - show.max_episode)
         else:
             episode_data = show.get_episode(file_.episode_number, file_.season)
@@ -464,6 +464,13 @@ if Settings.py3k:
     encode = lambda text: text
 
 
+def from_bytes(text):
+    if not Settings.py3k:
+        return encode(text)
+    else:
+        return str(text, 'utf-8')
+
+
 ###############################
 ##  Web Source Functionality
 ###############################
@@ -592,8 +599,8 @@ def update_db():
         with open_file_in_resources(Settings.anidb_db_file, 'w') as file_:
             logging.info("Retrieving AniDB Database file")
             url = get_url_descriptor(Settings.anidb_db_url)
+            file_.write(url.content.decode('utf-8'))
 
-            file_.write(url.content)
         logging.info("Successfully updated anidb_db_file")
 
     if not file_exists_in_resources(Settings.anidb_db_file):
