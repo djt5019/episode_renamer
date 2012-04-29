@@ -11,26 +11,20 @@ import logging
 
 from PySide import QtGui, QtCore
 
-from eplist.show_finder import Parser
+from eplist.show_finder import ShowFinder
 from eplist.episode import Show, EpisodeFormatter
 from eplist.cache import Cache
 from eplist.settings import Settings
 
 from eplist import utils
 
-cache = Cache(Settings['db_name'])
-parser = Parser(cache=cache)
+cache = Cache(Settings.db_name)
+show_locater = ShowFinder(cache=cache)
 utils.load_renamed_file()
 
-Settings['title'] = ""
+Settings.title = ""
 
 ## Snuff the console output for the gui
-log = logging.getLogger()
-for handler in log.handlers:
-    if isinstance(handler, logging.StreamHandler):
-        handler.setLevel(logging.CRITICAL)
-        del log
-        break
 
 
 class UpdateDisplaySignal(QtCore.QObject):
@@ -69,6 +63,8 @@ class Window(QtGui.QMainWindow):
 
         self.setWindowTitle('Menubar')
 
+        self.setGeometry(200, 200, 750, 500)
+
     def printHelp(self):
         QtGui.QMessageBox.information(self, "Help Dialog", "Help Text")
 
@@ -78,12 +74,18 @@ class Form(QtGui.QWidget):
         super(Form, self).__init__(parent)
 
         self.epLine = QtGui.QLineEdit()
-        self.seasonBox = QtGui.QComboBox(self)
         self.findShowBtn = QtGui.QPushButton("&Find Show")
-        self.epList = QtGui.QListWidget()
+        self.episode_list = QtGui.QListWidget()
         self.fmtLine = QtGui.QLineEdit()
 
-        self.seasonBox.addItem("All")
+        self.filterBox = QtGui.QGroupBox()
+        self.seasonBox = QtGui.QComboBox(self)
+        self.typeBox = QtGui.QComboBox(self)
+
+        self.seasonBox.addItem("All Seasons")
+        self.typeBox.addItem("All Types")
+        self.typeBox.addItem("Episodes Only")
+        self.typeBox.addItem("Specials Only")
 
         self.findDirBtn = QtGui.QPushButton("&Find Dir")
         self.dirList = QtGui.QListWidget()
@@ -96,11 +98,20 @@ class Form(QtGui.QWidget):
         self.renameBtn.clicked.connect(self.displayRenameDialog)
         self.fmtLine.editingFinished.connect(self.updateFormat)
         self.seasonBox.activated[str].connect(self.filterSeasons)
+        self.typeBox.activated[str].connect(self.filterType)
 
         # Prepare the display update signals
         self.updater = UpdateDisplaySignal()
         self.updater.update_directory.connect(self.updateDirectoryListing)
         self.updater.update_episodes.connect(self.updateEpisodeListing)
+
+        # Stack the combo boxes into a horizontal line
+        layout = QtGui.QHBoxLayout()
+        layout.addWidget(self.seasonBox)
+        layout.addWidget(self.typeBox)
+        layout.addStretch(0)
+        self.filterBox.setFlat(True)
+        self.filterBox.setLayout(layout)
 
         #Set the left layout
         leftWidget = QtGui.QWidget()
@@ -108,11 +119,11 @@ class Form(QtGui.QWidget):
         topLayout = QtGui.QVBoxLayout()
         vertLayout = QtGui.QFormLayout()
         vertLayout.addRow("&Search for show", self.epLine)
-        vertLayout.addRow("&Season", self.seasonBox)
         vertLayout.addRow("&Episode Format", self.fmtLine)
+        vertLayout.addRow("&Filter by", self.filterBox)
         stackedWidget.setLayout(vertLayout)
         topLayout.addWidget(stackedWidget)
-        topLayout.addWidget(self.epList)
+        topLayout.addWidget(self.episode_list)
         topLayout.addWidget(self.findShowBtn)
         leftWidget.setLayout(topLayout)
 
@@ -143,10 +154,11 @@ class Form(QtGui.QWidget):
         self.fmtLine.setText(self.show.formatter.format_string)
 
     def updateDirectoryListing(self):
-        self.epLine.setText(os.path.split(self.renameDir)[1])
+        if not self.epLine.text().strip():
+            self.epLine.setText(os.path.split(self.renameDir)[1])
+
         self.currentDirLabel.setText(os.path.abspath(self.renameDir))
         self.dirList.clear()
-        self.epList.clear()
         for ep in utils.clean_filenames(self.renameDir):
             self.dirList.addItem(ep.name)
 
@@ -155,17 +167,27 @@ class Form(QtGui.QWidget):
             InfoMessage(self, "Find Show", "Unable to find show, check spelling and try again")
             return
 
-        self.epList.clear()
+        self.episode_list.clear()
         for ep in self.episodes:
-            self.epList.addItem(self.show.formatter.display(ep))
+            self.episode_list.addItem(self.show.formatter.display(ep))
+
+    def filterType(self, text):
+        if 'all' in text.lower():
+            self.episodes = self.show.episodes + self.show.specials
+        elif 'episodes' in text.lower():
+            self.episodes = self.show.episodes
+        else:
+            self.episodes = self.show.specials
+
+        self.updater.update_episodes.emit()
 
     def filterSeasons(self, text):
-        if text == 'All':
+        if 'all' in text.lower():
+            self.episodes = self.show.episodes + self.show.specials
             self.updater.update_episodes.emit()
-            return
-
-        season = int(text)
-        self.episodes = self.show.get_season(season)
+        else:
+            season = int(text)
+            self.episodes = self.show.get_season(season)
 
         self.updater.update_episodes.emit()
 
@@ -183,15 +205,15 @@ class Form(QtGui.QWidget):
             InfoMessage(self, "Find Show", "No show specified")
             return
 
-        Settings['title'] = showTitle
+        Settings.title = showTitle
 
-        parser.setShow(showTitle)
-        self.show = parser.getShow()
+        show_locater.setShow(showTitle)
+        self.show = show_locater.getShow()
         self.formatter.show = self.show
         self.show.formatter = self.formatter
-        self.episodes = self.show.episodes
+        self.episodes = self.show.episodes + self.show.specials
         self.seasonBox.clear()
-        self.seasonBox.addItem("All")
+        self.seasonBox.addItem("All Seasons")
         if self.episodes:
             for s in xrange(self.show.num_seasons):
                 self.seasonBox.addItem(str(s + 1))
@@ -200,20 +222,19 @@ class Form(QtGui.QWidget):
 
     def displayDirDialog(self):
         newDir = QtGui.QFileDialog.getExistingDirectory(self, 'Choose Directory', r'G:\TV\Misc')
-        if newDir == '':
-            return
 
-        self.renameDir = newDir
-        self.dirList.clear()
+        if newDir:
+            self.renameDir = newDir
+            self.dirList.clear()
 
         self.updater.update_directory.emit()
 
     def displayRenameDialog(self):
-        if self.renameDir == "":
+        if not self.renameDir:
             InfoMessage(self, "Rename Files", "No Directory Selected")
             return
 
-        if not self.epList.count():
+        if not self.episode_list.count():
             InfoMessage(self, "Rename Files", "No Show Information Retrieved")
             return
 
@@ -227,8 +248,8 @@ class Form(QtGui.QWidget):
     def displayUndoRenameDialog(self):
         items = []
 
-        for d in Settings['backup_list']:
-            items.append(Settings['backup_list'][d]['name'])
+        for d in Settings.backup_list:
+            items.append(Settings.backup_list[d]['name'])
 
         text, ok = QtGui.QInputDialog.getItem(self, "Select show", "", items, editable=False)
 
@@ -236,8 +257,8 @@ class Form(QtGui.QWidget):
             return
 
         items = []
-        for d in Settings['backup_list']:
-            renamed_entry = Settings['backup_list'][d]
+        for d in Settings.backup_list:
+            renamed_entry = Settings.backup_list[d]
             if text == renamed_entry['name']:
                 self.renameDir = d
                 items = renamed_entry['file_list']
@@ -283,7 +304,12 @@ class RenameDialog(QtGui.QDialog, object):
             self.buttonBox.accepted.connect(self.close)
             self.buttonBox.accepted.connect(self.close)
         else:
-            self.buttonBox.accepted.connect(self.rename)
+
+            self.files, self.same_count = self.prepare_renamed_files(self.files)
+
+            if not self.files:
+                self.print_renamed_files()
+
             for old, new in self.files:
                 item = QtGui.QStandardItem()
 
@@ -297,6 +323,8 @@ class RenameDialog(QtGui.QDialog, object):
 
                 if item.text():
                     self.model.appendRow(item)
+
+            self.buttonBox.accepted.connect(self.rename)
 
         self.view.show()
         self.show()
@@ -313,16 +341,47 @@ class RenameDialog(QtGui.QDialog, object):
         self.model.clear()
         self.buttonBox.accepted.disconnect()
 
-        utils.save_renamed_file_info(old_order, Settings['title'])
+        utils.save_renamed_file_info(old_order, Settings.title)
 
-        if errors:
-            self.model.appendRow(QtGui.QStandardItem("&The following files could not be renamed\n"))
-            for e in errors:
-                self.model.appendRow(QtGui.QStandardItem(e[0]))
-                logging.error('Unable to rename: {}'.format(e))
+        self.print_renamed_files(errors)
+
+    def prepare_renamed_files(self, files):
+        """
+        Present the files that need to be renamed to the user.
+        """
+        same = 0
+        files_that_need_renaming = []
+        for old, new in files:
+            if old == new:
+                same += 1
+                continue
+
+            files_that_need_renaming.append((old, new))
+
+        return (files_that_need_renaming, same)
+
+    def print_renamed_files(self, errors=None):
+        if self.same_count and self.files:
+            if self.same_count == 1:
+                num = "1 file doesn't"
+            elif self.same_count == len(self.files):
+                num = "No files"
+            else:
+                num = "{} files don't".format(self.same_count)
+
+            self.model.appendRow(QtGui.QStandardItem("{} need to be renamed".format(num)))
         else:
-            self.model.appendRow(QtGui.QStandardItem("The files were renamed successfully"))
-            logging.info("Filenames renamed succesfully")
+            self.model.appendRow(QtGui.QStandardItem("No files need to be renamed"))
+
+        if self.same_count != len(self.files) and self.files:
+            if errors:
+                self.model.appendRow(QtGui.QStandardItem("&The following files could not be renamed\n"))
+                for e in errors:
+                    self.model.appendRow(QtGui.QStandardItem(e[0]))
+                    logging.error('Unable to rename: {}'.format(e))
+            else:
+                self.model.appendRow(QtGui.QStandardItem("The files were renamed successfully"))
+                logging.info("Filenames renamed succesfully")
 
         self.buttonBox.accepted.connect(self.close)
         self.buttonBox.rejected.connect(self.close)

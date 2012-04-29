@@ -87,17 +87,17 @@ def regex_search(filename):
             logging.info(msg)
             break
 
-    if not regex_result and not season:
-        msg = "Unable to find information on: {}".format(filename)
-        logging.error(msg)
-        raise Exception(msg)
-
     # Work with the result dict rather than the annoying groupdicts
     result = {}
     result.update(encoding.groupdict() if encoding else {})
     result.update(checksum.groupdict() if checksum else {})
     result.update(season.groupdict() if season else {})
     result.update(regex_result.groupdict() if regex_result else {})
+
+    if not regex_result:
+        msg = "Unable to find information on: {}".format(filename)
+        logging.error(msg)
+        return {}
 
     logging.info(result)
 
@@ -108,7 +108,7 @@ def regex_search(filename):
 
     result['checksum'] = result.get('checksum', None)
 
-    if 'special' in result:
+    if 'special_number' in result:
         result['special_number'] = int(result['special_number'])
         result['special_type'] = result.get('special_type', 'OVA')
     else:

@@ -189,7 +189,7 @@ class EpisodeFormatter(object):
         self.show = show
         self._format_string = utils.encode(fmt) if fmt else Settings.format
 
-        ## Use negative lookahead assertion to ensure that the
+        ## Use a negative lookahead assertion to ensure that the
         ## tag had not been escaped
         regex = r'(?<!\\)(?P<tag>\{start}.*?\{end})'
 
