@@ -49,11 +49,12 @@ regex_vars = {
 'sep': r'[\-\~\.\_\s]',
 'sum': r'.*[\[\(](?P<checksum>[a-z0-9]{{8}}[\]\)])',
 'year': r'(:P<year>(19|20)?\d\d)',
-'episode': r'(e|ep|episode)?{sep}?(?P<episode_number>\d+)(?:v\d)?',  # ex: e3v2
+'episode': r'(e|ep|episode)?{sep}(?P<episode_number>\d+)(?:v\d)?',  # ex: e3v2
 'season': r'(s|season)?{sep}*?(?P<season>\d+)',
 'series': r'(?P<series>.*)',
 'subgroup': r'(?P<group>\[.*\])',
 'special': r'(?P<special_type>{specical_types}){sep}*?(?P<special_number>\d+)',
+'title': r'(?P<title>.*?)',
 'specical_types': types,
 }
 
@@ -62,14 +63,14 @@ regex_vars = {
 regex_vars = {key: regex_vars[key].format(**regex_vars) for key in regex_vars}
 
 regexList = [
-   r'^{series}{sep}*(op|ed|trailer){sep}*(?P<junk>\d*)',  # intro /outro music
    r'^(?P<series>.*?) - Season (?P<season>\d+) - Episode (?P<episode>\d*) - .*',
-   r'^(?P<series>.*?) - Episode (?P<episode>\d*) - .*',  # My usual formats
-   r'^{series}{sep}+{season}{sep}+{episode}',
-   r'^{series}{sep}+{special}{sep}+',
-   r'^{series}{sep}+{episode}{sep}+',
+   r'^(?P<series>.*?) - Episode (?P<episode>\d+) - .*',  # My usual formats
+   r'^{series}{sep}+{season}{sep}+?{episode}{sep}+?{title}',
+   r'^{series}{sep}+{special}{sep}+?{title}',
+   r'^{series}{sep}+{episode}{sep}+?{title}',
    r'^{special}',
    r'^{episode}',
+   r'(op|ed|trailer){sep}*(?P<junk>\d*)',  # intro /outro music
    r'{episode}',  # General catch-all, look for the first set of numbers
 ]
 
