@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 from fabric.api import  local, env
 import os
 
@@ -33,3 +36,4 @@ def get_reqs():
     """
     Install the necessary requirements for our virtualenv
     """
+    pass

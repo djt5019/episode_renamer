@@ -7,7 +7,7 @@ until one of them returns a list of episodes.  The user can create their
 own web source just by defining a poll method and saving the source in the
 web_sources directory.
 """
-from __future__ import unicode_literals, absolute_import
+from __future__ import unicode_literals
 
 import sys
 import logging

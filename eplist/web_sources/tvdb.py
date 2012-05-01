@@ -4,7 +4,6 @@ from __future__ import unicode_literals
 import zipfile
 import logging
 import tempfile
-import functools
 
 from eplist import utils
 

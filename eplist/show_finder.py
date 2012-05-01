@@ -4,14 +4,14 @@ Provides funtionality for locating a show.  First tries polling the cache
 then calls the locate_show in poll_sources to attempt to locate the show
 online
 """
-from __future__ import unicode_literals, absolute_import
+from __future__ import unicode_literals
 
 import logging
 
-from . import poll_sources
-from . import utils
+from eplist import poll_sources
+from eplist import utils
 
-from .episode import Show
+from eplist.episode import Show
 
 
 class ShowFinder(object):

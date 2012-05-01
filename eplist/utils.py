@@ -3,7 +3,7 @@
 A module containing general utilites and text functions / parsing
 functionality for the program
 """
-from __future__ import unicode_literals, absolute_import
+from __future__ import unicode_literals
 
 import os
 import sys
@@ -11,9 +11,9 @@ import json
 import time
 import logging
 
-from . import constants
+from eplist import constants
 
-from .settings import Settings
+from eplist.settings import Settings
 
 import requests
 import requests.exceptions

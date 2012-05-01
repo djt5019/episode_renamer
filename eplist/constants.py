@@ -3,7 +3,7 @@
 Listing of constants that will be used throughout the program
 """
 
-from __future__ import unicode_literals, absolute_import
+from __future__ import unicode_literals
 
 import re
 
@@ -13,7 +13,7 @@ from os.path import join, split, realpath
 
 VIDEO_EXTENSIONS = set(['.mkv', '.ogm', '.asf', '.asx', '.avi', '.flv',
                         '.mov', '.mp4', '.mpg', '.rm', '.swf', '.vob',
-                        '.wmv', '.mpeg'])
+                        '.wmv', '.mpeg', '.m4v'])
 
 PROJECT_SOURCE_PATH = split(realpath(__file__))[0]
 PROJECT_PATH = split(PROJECT_SOURCE_PATH)[0]
@@ -62,15 +62,14 @@ regex_vars = {
 regex_vars = {key: regex_vars[key].format(**regex_vars) for key in regex_vars}
 
 regexList = [
-   r'^{special}',
-   r'^{episode}',
-   r'^{series}{sep}+{special}{sep}+',
-   r'^{series}{sep}+{episode}{sep}+',
-   r'^{series}{sep}+{season}{sep}*{episode}',
-   r'^{series}{sep}+{season}{sep}*{episode}{sep}*{sum}?',
    r'^{series}{sep}*(op|ed|trailer){sep}*(?P<junk>\d*)',  # intro /outro music
    r'^(?P<series>.*?) - Season (?P<season>\d+) - Episode (?P<episode>\d*) - .*',
    r'^(?P<series>.*?) - Episode (?P<episode>\d*) - .*',  # My usual formats
+   r'^{series}{sep}+{season}{sep}+{episode}',
+   r'^{series}{sep}+{special}{sep}+',
+   r'^{series}{sep}+{episode}{sep}+',
+   r'^{special}',
+   r'^{episode}',
    r'{episode}',  # General catch-all, look for the first set of numbers
 ]
 

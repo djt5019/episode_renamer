@@ -3,7 +3,7 @@
 Provides the logic of keeping a cache of show information to avoid slow lookups
 on the internet
 """
-from __future__ import unicode_literals, absolute_import
+from __future__ import unicode_literals
 
 import os
 import datetime
@@ -157,6 +157,20 @@ CREATE TABLE IF NOT EXISTS episodes (
     count INTEGER NOT NULL,
     type TEXT NOT NULL
 );
+
+-- CREATE TABLE IF NOT EXISTS backup_info (
+--     bid INTEGER PRIMARY KEY,
+--     path STRING NOT NULL,
+--     show STRING NOT NULL,
+--     old_name STRING NOT NULL,
+--     new_name STRING NOT NULL
+--     );
+
+-- CREATE TABLE IF NOT EXISTS access_times (
+--     site_id INTEGER PRIMARY KEY,
+--     site STRING NOT NULL,
+--     last_access TIMESTAMP NOT NULL
+--     )
 """
 
 delete_database = """

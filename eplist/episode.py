@@ -165,8 +165,8 @@ class Show(object):
 
         season_list = self._episodes_by_season.get(season, None)
 
-        if season > 1 and len(season) > episode and season_list:
-            return season_list['episode']
+        if season > 1 and len(season_list) > episode and season_list:
+            return season_list[episode]
         else:
             return self.episodes[episode]
 
