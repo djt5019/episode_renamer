@@ -63,12 +63,9 @@ def _parse_local(title):
                 continue
 
             original_title = utils.encode(res.group('title').lower())
-            clean_title = utils.remove_punctuation(utils.encode(res.group('title'))).lower()
+            clean_title = utils.prepare_title(utils.encode(res.group('title'))).lower()
 
-            if title in (original_title, clean_title):
-                return int(res.group('aid'))
-
-            if title.replace(' ', '') in (original_title.replace(' ', ''), clean_title.replace(' ', '')):
+            if utils.prepare_title(title) in (original_title, clean_title):
                 return int(res.group('aid'))
 
             sequence.set_seq2(clean_title.lower())
@@ -145,7 +142,7 @@ def _connect_HTTP(aid):
             epNum = int(e.epno.getText()[1:])
             type_ = "OVA"
 
-        e = Episode(utils.encode(title), epNum, 1, epNum, type_)
+        e = Episode(title=title, number=epNum, count=epNum, type=type_)
 
         eplist.append(e)
 

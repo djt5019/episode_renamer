@@ -98,7 +98,8 @@ def poll(title):
             count = num
             season = 1
 
-        eps.append(Episode(name, num, season, count, type_))
+        eps.append(Episode(name=name, number=num, season=season,
+                           count=count, type=type_))
 
         count += 1
 

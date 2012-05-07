@@ -53,7 +53,7 @@ def poll(title):
             if name == "TBA":
                 continue
 
-            episodes.append(Episode(name, episode, season, count))
+            episodes.append(Episode(title=name, number=episode, season=season, count=count))
             count += 1
 
     return episodes
