@@ -80,7 +80,7 @@ def _parse_local(title):
         guesses = sorted(guesses, key=lambda x: x['ratio'])
         aid = guesses[0]['aid']
         name = guesses[0]['title']
-        logging.error("Closest show to '{}' is '{}'' with id {}".format(title, name, aid))
+        logging.error("Closest show to '{}' on AniDB is '{}'' with id {}".format(title, name, aid))
 
         for guess in guesses[1:]:
             logging.info("Similar show {} [{}] also found".format(guess['title'], guess['aid']))

@@ -11,7 +11,8 @@ import os
 import sys
 from os.path import join, split, realpath
 
-video_extensions = {'.mkv', '.ogm', '.asf', '.asx', '.avi', '.flv', '.mov', '.mp4', '.mpg', '.rm', '.swf', '.vob',
+video_extensions = {'.mkv', '.ogm', '.asf', '.asx', '.avi', '.flv', '.mov',
+                    '.mp4', '.mpg', '.rm', '.swf', '.vob',
                     '.wmv', '.mpeg', '.m4v'}
 
 project_source_path = split(realpath(__file__))[0]
