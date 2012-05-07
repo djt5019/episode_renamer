@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-A module containing general utilites and text functions / parsing
+A module containing general utilities and text functions / parsing
 functionality for the program
 """
 from __future__ import unicode_literals
@@ -16,7 +16,6 @@ from eplist import constants
 from eplist.settings import Settings
 
 import requests
-import requests.exceptions
 
 if Settings.py3k:
     from urllib.parse import quote_plus
@@ -153,7 +152,7 @@ def clean_filenames(path):
             info['ext'] = os.path.splitext(info['path'])[1]
             info['name'] = encode(os.path.split(info['path'])[1])
 
-            episode_data = episode.EpisodeFile(**info)
+            episode_data = episode.EpisodeFile(info)
 
             cleanFiles.append(episode_data)
 
@@ -333,7 +332,7 @@ def load_renamed_file():
 
 def parse_range(num_range):
     """
-    Returns a list contaning a range of numbers from the range passed
+    Returns a list containing a range of numbers from the range passed
     """
     num_range = constants.num_range_regex.split(num_range)
     num_range = [int(val) for val in num_range if val.strip()]

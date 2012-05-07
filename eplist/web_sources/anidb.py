@@ -69,7 +69,7 @@ def _parse_local(title):
                 return int(res.group('aid'))
 
             sequence.set_seq2(clean_title.lower())
-            ratio = sequence.ratio()
+            ratio = sequence.quick_ratio()
 
             if ratio > .80:
                 d = dict(ratio=ratio, aid=res.group('aid'), title=original_title)
