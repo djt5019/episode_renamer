@@ -121,11 +121,11 @@ class Cache(object):
             return eps
 
         for episode in result:
-            title = utils.from_bytes(episode[0])
+            title = utils.encode(episode[0])
             season = episode[1]
             number = episode[2]
             count = episode[3]
-            type_ = utils.from_bytes(episode[4])
+            type_ = utils.encode(episode[4])
             eps.append(Episode(title=title, number=number, season=season,
                                count=count, type=type_))
 

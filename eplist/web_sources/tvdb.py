@@ -33,7 +33,7 @@ def poll(title):
     except NameError:
         return utils.show_not_found
 
-    cleanTitle = utils.url_quote(title)
+    cleanTitle = utils.quote_plus(title)
 
     #1) First we need to find the series ID
     seriesIdLoc = "http://www.thetvdb.com/api/GetSeries.php?seriesname={0}".format(cleanTitle)

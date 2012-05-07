@@ -20,10 +20,11 @@ import requests.exceptions
 
 if Settings.py3k:
     from urllib.parse import quote_plus
-    url_quote = quote_plus
+    basestring = bytes
+    unicode = str
+    raw_input = input
 else:
     from urllib import quote_plus
-    url_quote = quote_plus
 
 
 def get_url_descriptor(url):
@@ -220,7 +221,7 @@ def rename(files, resp=""):
     old_order = []
 
     if resp == '':
-        resp = get_input("\nDo you wish to rename these files [y|N]: ").lower()
+        resp = raw_input("\nDo you wish to rename these files [y|N]: ").lower()
 
     if not resp.startswith('y'):
         logging.info("Changes were not committed to the files")
@@ -339,16 +340,6 @@ def parse_range(num_range):
     return range(min(num_range), max(num_range) + 1)
 
 
-def get_input(msg):
-    """
-    Get user input in a compatible way
-    """
-    if Settings.py3k:
-        return input(msg)
-    else:
-        return raw_input(msg)
-
-
 def trim_long_filename(name):
     """
     Trim a long filename on a windows platform to conform to 256 char limit
@@ -448,17 +439,6 @@ def encode(text, encoding='utf-8'):
         if not isinstance(text, unicode):
             text = unicode(text, encoding, 'ignore')
     return text
-
-## Strings in python3 are unicode by default (awesome!)
-if Settings.py3k:
-    encode = lambda text: text
-
-
-def from_bytes(text):
-    if not Settings.py3k:
-        return encode(text)
-    else:
-        return str(text, 'utf-8')
 
 
 ###############################

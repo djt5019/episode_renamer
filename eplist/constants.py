@@ -90,3 +90,12 @@ encoding_regex = re.compile(r'(?P<encoding>\d{3,4}x\d{3,4}|\d{3,4}p)')
 # Used to split ranges of numbers, eg: "1-2-3-4-5"
 # becomes [1,2,3,4,5] or range(1, 6) depending of python 2.* or 3
 num_range_regex = re.compile(r'[^\d]')
+
+
+class AttributeDict(dict):
+    """docstring for AttributeDict"""
+    def __getattribute__(self, val):
+        return self[val] if val in self else dict.__getattribute__(self, val)
+
+    def __setattr__(self, name, value):
+        self[name] = value

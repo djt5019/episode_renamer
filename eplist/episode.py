@@ -12,9 +12,10 @@ import logging
 from eplist import utils
 
 from eplist.settings import Settings
+from eplist.constants import AttributeDict
 
 
-class Episode(dict):
+class Episode(AttributeDict):
     """
     A simple class to organize the episodes/specials
     """
@@ -32,29 +33,11 @@ class Episode(dict):
         self.file = kwargs.get('file', None)
         self.is_special = (self.type.lower() != "episode")
 
-    def __getattribute__(self, val):
-        if val in self:
-            return self[val]
-        else:
-            return super(EpisodeFile, self).__getattribute__(val)
 
-    def __setattr__(self, name, value):
-        self[name] = value
-
-
-class EpisodeFile(dict):
+class EpisodeFile(AttributeDict):
     """
     Represents a TV episode file on disk.  Used for renaming purposes
     """
-    def __getattribute__(self, val):
-        if val in self:
-            return self[val]
-        else:
-            return super(EpisodeFile, self).__getattribute__(val)
-
-    def __setattr__(self, name, value):
-        self[name] = value
-
     @property
     def is_special(self):
         return 'special_number' in self

@@ -241,7 +241,7 @@ def display_episodes(show, episodes, header=False):
             print ("----------")
 
         line = show.formatter.display(eps).encode(Settings.encoding, 'ignore')
-        print(utils.from_bytes(line))
+        print(utils.encode(line))
         curr_season = eps.season
 
 
@@ -252,7 +252,7 @@ def display_specials(show, header=False):
 
     for eps in show.specials:
         line = show.formatter.display(eps).encode(Settings.encoding, 'ignore')
-        print(utils.from_bytes(line))
+        print(utils.encode(line))
 
 
 def verify_files(files):
@@ -292,8 +292,8 @@ def print_renamed_files(files):
         old = os.path.split(old)[1].encode(Settings.encoding, 'ignore')
         new = os.path.split(new)[1].encode(Settings.encoding, 'ignore')
 
-        print ("OLD: {0}".format(utils.from_bytes(old)))
-        print ("NEW: {0}".format(utils.from_bytes(new)))
+        print ("OLD: {0}".format(utils.encode(old)))
+        print ("NEW: {0}".format(utils.encode(new)))
         print()
 
     if same > 0:
