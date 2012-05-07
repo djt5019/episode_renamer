@@ -5,13 +5,13 @@ is running more settings will be added or modified.  To edit the defaults
 just change the entries below.
 """
 
-from __future__ import unicode_literals, absolute_import
+from __future__ import unicode_literals
 
-from eplist.constants import RESOURCE_PATH
+from eplist.constants import resource_path, AttributeDict
 from sys import getdefaultencoding, version_info
 
 
-Settings = {
+Settings = AttributeDict({
     ## Filter to output episodes, specials, or both (both is default)
     'filter': 'both',
 
@@ -70,22 +70,9 @@ Settings = {
 
 
     ## The current working directory
-    'path': RESOURCE_PATH,
+    'path': resource_path,
 
     ## This is true if the current python distribution is py3k, Boolean
     'py3k': (version_info >= (3, 0))
 
-}
-
-
-class _SettingsDict(dict):
-    def __getattribute__(self, val):
-        if val in self:
-            return self[val]
-        else:
-            return super(_SettingsDict, self).__getattribute__(val)
-
-    def __setattr__(self, name, value):
-        self[name] = value
-
-Settings = _SettingsDict(Settings)
+})
