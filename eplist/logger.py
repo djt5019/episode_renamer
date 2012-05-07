@@ -10,7 +10,7 @@ import logging.config
 from os.path import join
 from datetime import datetime
 
-from eplist.constants import RESOURCE_PATH
+from eplist.constants import resource_path
 from eplist.settings import Settings
 
 
@@ -46,7 +46,7 @@ log_config = {
             'level': 'DEBUG',
             'class': 'logging.handlers.RotatingFileHandler',
             'formatter': 'file_format',
-            'filename': r'{}'.format(join(RESOURCE_PATH, Settings.log_file)),
+            'filename': r'{}'.format(join(resource_path, Settings.log_file)),
             'maxBytes': 2 ** 20,
             'backupCount': 3
         },

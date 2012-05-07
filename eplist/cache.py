@@ -15,7 +15,7 @@ from sqlite3 import PARSE_DECLTYPES, connect, OperationalError
 
 from eplist import utils
 from eplist.episode import Episode
-from eplist.constants import RESOURCE_PATH
+from eplist.constants import resource_path
 from eplist.settings import Settings
 
 
@@ -28,7 +28,7 @@ class Cache(object):
             raise ValueError("Empty database name passed to cache")
 
         if dbName != ':memory:':
-            dbName = os.path.join(RESOURCE_PATH, dbName)
+            dbName = os.path.join(resource_path, dbName)
 
         try:
             self.connection = connect(dbName, detect_types=PARSE_DECLTYPES)
@@ -115,7 +115,7 @@ class Cache(object):
 
         if diffDays.days >= expiration:
             #If the show is older than a week remove it then return not found
-            logging.warning("Show is older than a week, removing...")
+            logging.warning("Show is older than a week, updating...")
             sid = result[0][-2]
             self.remove_show(sid)
             return eps
@@ -126,7 +126,8 @@ class Cache(object):
             number = episode[2]
             count = episode[3]
             type_ = utils.from_bytes(episode[4])
-            eps.append(Episode(title, number, season, count, type_))
+            eps.append(Episode(title=title, number=number, season=season,
+                               count=count, type=type_))
 
         return eps
 

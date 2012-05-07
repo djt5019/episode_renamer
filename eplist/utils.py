@@ -48,7 +48,7 @@ def is_valid_file(filename):
     """
     ext = os.path.splitext(filename)[1].lower()
 
-    return os.path.isfile(filename) and ext in constants.VIDEO_EXTENSIONS
+    return os.path.isfile(filename) and ext in constants.video_extensions
 
 
 ##############################
@@ -110,7 +110,7 @@ def regex_search(filename):
 
     if 'special_number' in result:
         result['special_number'] = int(result['special_number'])
-        result['special_type'] = result.get('special_type', 'OVA')
+        result['special_type'] = result.get('special_type', 'ova')
     else:
         result['episode_number'] = int(result['episode_number'])
         result['season'] = int(result.get('season', '1'))
@@ -316,37 +316,27 @@ def load_renamed_file():
         logging.warn(msg)
         create_new_backup_file()
         Settings.backup_list = {}
-    else:
-        with open_file_in_resources(Settings.rename_backup) as file_:
-            try:
-                Settings.backup_list = json.load(file_)
-            except ValueError:
-                logging.warning("The json file is empty")
-                Settings.backup_list = {}
+        return None
+
+    with open_file_in_resources(Settings.rename_backup) as file_:
+        try:
+            Settings.backup_list = json.load(file_)
+        except ValueError:
+            logging.warning("The json file is empty")
+            Settings.backup_list = {}
 
 
 ########################
 ## Text based functions
 #######################
 
-def parse_range(range_):
+def parse_range(num_range):
     """
     Returns a list contaning a range of numbers from the range passed
     """
-    if '-' in range_:
-        high, low = range_.split('-')
-        high = int(high)
-        low = int(low)
-    else:
-        high = low = int(range_)
-
-    low = max(low, 1)
-    high = max(high, 1)
-
-    if low > high:
-        low, high = high, low
-
-    return range(low, high + 1)
+    num_range = constants.num_range_regex.split(num_range)
+    num_range = [int(val) for val in num_range if val.strip()]
+    return range(min(num_range), max(num_range) + 1)
 
 
 def get_input(msg):
@@ -414,7 +404,7 @@ def prepare_title(title):
         try:
             value = num_to_text(int(number))
             out.append(value)
-        except ValueError:
+        except (ValueError, KeyError):
             out.append(number)
 
     return ''.join(out)
@@ -429,7 +419,7 @@ def num_to_text(num):
     # The 12 kingdoms and twelve kingdoms will yield the same result in the DB
 
     if num < 20:
-        return constants.NUM_DICT[str(num)]
+        return constants.num_dict[str(num)]
 
     args = []
     num = str(num)
@@ -439,11 +429,11 @@ def num_to_text(num):
         length = len(num)
 
         if length == 3:
-            args.append(constants.NUM_DICT[num[0]])
+            args.append(constants.num_dict[num[0]])
             args.append("hundred")
         else:
             value = str(digit * (10 ** (length - 1)))
-            args.append(constants.NUM_DICT[value])
+            args.append(constants.num_dict[value])
 
         num = num[1:]
 
@@ -475,7 +465,7 @@ def from_bytes(text):
 ##  Web Source Functionality
 ###############################
 
-show_not_found = constants.SHOW_NOT_FOUND
+show_not_found = constants.show_not_found
 
 
 def able_to_poll(site, delay=None, wait=False):
@@ -514,7 +504,7 @@ def open_file_in_resources(name, mode='r'):
     Returns a file object if the filename exists in the resources directory
     """
     name = os.path.split(name)[1]
-    name = os.path.join(constants.RESOURCE_PATH, name)
+    name = os.path.join(constants.resource_path, name)
 
     if mode in ('w', 'wb'):
         return open(name, mode)
@@ -530,7 +520,7 @@ def file_exists_in_resources(name):
     Returns true if the filename exists in the resources directory
     """
     name = os.path.split(name)[1]
-    name = os.path.join(constants.RESOURCE_PATH, name)
+    name = os.path.join(constants.resource_path, name)
     return os.path.exists(name)
 
 
@@ -568,8 +558,8 @@ def init_resource_folder():
     anidb database file
     """
     print("[+] Creating resource path")
-    print("[+] Path = {}".format(constants.RESOURCE_PATH))
-    os.makedirs(constants.RESOURCE_PATH, 0o755)
+    print("[+] Path = {}".format(constants.resource_path))
+    os.makedirs(constants.resource_path, 0o755)
     print("[+] Updating the AniDb database file")
     update_db()
     print("[+] Creating a renamed file backup listing")

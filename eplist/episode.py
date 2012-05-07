@@ -14,24 +14,32 @@ from eplist import utils
 from eplist.settings import Settings
 
 
-class Episode(object):
+class Episode(dict):
     """
     A simple class to organize the episodes/specials
     """
-    def __init__(self, title, number, season=1, count=-1, type_="Episode"):
+    def __init__(self, **kwargs):
         """
         A container for an episode's information collected from the web
         """
-        self.title = utils.encode(title)
-        self.season = int(season)
-        self.number = int(number)
-        self.count = int(count)
-        self.file = None
-        self.type = type_
+        #title, number, season=1, count=-1,
+        super(Episode, self).__init__(kwargs)
+        self.title = utils.encode(kwargs['title'])
+        self.season = int(kwargs.get('season', 1))
+        self.number = int(kwargs['number'])
+        self.count = int(kwargs.get('count', '-1'))
+        self.type = kwargs.get('type', 'Episode')
+        self.file = kwargs.get('file', None)
+        self.is_special = (self.type.lower() != "episode")
 
-    @property
-    def is_special(self):
-        return (self.type.lower() != "episode")
+    def __getattribute__(self, val):
+        if val in self:
+            return self[val]
+        else:
+            return super(EpisodeFile, self).__getattribute__(val)
+
+    def __setattr__(self, name, value):
+        self[name] = value
 
 
 class EpisodeFile(dict):
@@ -43,6 +51,9 @@ class EpisodeFile(dict):
             return self[val]
         else:
             return super(EpisodeFile, self).__getattribute__(val)
+
+    def __setattr__(self, name, value):
+        self[name] = value
 
     @property
     def is_special(self):
@@ -165,7 +176,7 @@ class Show(object):
 
         season_list = self._episodes_by_season.get(season, None)
 
-        if season > 1 and len(season_list) > episode and season_list:
+        if season_list and season > 1 and len(season_list) > episode:
             return season_list[episode]
         else:
             return self.episodes[episode]
@@ -203,15 +214,15 @@ class EpisodeFormatter(object):
         self.modifier_settings = {'upper': False, 'lower': False,
                                   'pad': False, 'proper': False}
 
-        self.episode_number_tags = None
-        self.type_tags = None
-        self.season_number_tags = None
-        self.episode_count_tags = None
-        self.episode_name_tags = None
-        self.hash_tags = None
-        self.series_name_tags = None
+        self.episode_number_tags = Settings.tags['episode_number_tags']
+        self.type_tags = Settings.tags['type_tags']
+        self.season_number_tags = Settings.tags['season_number_tags']
+        self.episode_count_tags = Settings.tags['episode_count_tags']
+        self.episode_name_tags = Settings.tags['episode_name_tags']
+        self.hash_tags = Settings.tags['hash_tags']
+        self.series_name_tags = Settings.tags['series_name_tags']
 
-        self.load_format_config()
+        self.check_for_duplicate_tokens()
 
     @property
     def format_string(self):
@@ -231,7 +242,7 @@ class EpisodeFormatter(object):
         else:
             raise AttributeError("Empty format string set")
 
-    def load_format_config(self):
+    def check_for_duplicate_tokens(self):
         """
         Load tokens from the format setting in settings.py
         """
@@ -248,8 +259,6 @@ class EpisodeFormatter(object):
                 raise AttributeError(msg)
 
             allTokens = allTokens.union(tokens)
-
-            self.__dict__[tag] = tokens
 
     def display(self, episode):
         """

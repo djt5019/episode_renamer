@@ -12,7 +12,7 @@ from eplist import utils
 from eplist import logger
 from eplist import constants
 
-if not os.path.exists(constants.RESOURCE_PATH):
+if not os.path.exists(constants.resource_path):
     utils.init_resource_folder()
 
 logger.init_logging()

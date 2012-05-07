@@ -14,19 +14,19 @@ import logging
 
 from os import listdir
 
-from . import constants
+from eplist import constants
 
 
 def locate_show(title):
     """Polls the web sources looking for the show"""
     modules = []
 
-    sys.path.append(constants.WEB_SOURCES_PATH)
+    sys.path.append(constants.web_sources_path)
     # This will import all the modules within the web_sources directory so that
     # we can easily plug in new sources for finding episode information so long
     # as they define a poll function
 
-    for mod in listdir(constants.WEB_SOURCES_PATH):
+    for mod in listdir(constants.web_sources_path):
         if mod.endswith('.py') and not mod.startswith('__'):
             logging.info("Importing web resource {}".format(mod[:-3]))
 
@@ -47,7 +47,7 @@ def locate_show(title):
 
     logging.info("Searching for {}".format(title))
 
-    episodes = constants.SHOW_NOT_FOUND
+    episodes = constants.show_not_found
 
     for source in modules:
         logging.info("Polling {0}".format(source.__name__))
@@ -55,7 +55,7 @@ def locate_show(title):
         episodes = source.poll(title)
 
         if episodes:
-            logging.info("LOCATED {0}".format(title))
+            logging.info("located {0}".format(title))
             break
 
         msg = "Unable to locate {0} at {1}".format(title, source.__name__)

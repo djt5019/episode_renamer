@@ -29,7 +29,7 @@ from eplist.cache import Cache
 from eplist.show_finder import ShowFinder
 from eplist.settings import Settings
 
-if not os.path.exists(constants.RESOURCE_PATH):
+if not os.path.exists(constants.resource_path):
     utils.init_resource_folder()
 
 init_logging()
