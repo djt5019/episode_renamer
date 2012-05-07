@@ -11,26 +11,26 @@ import os
 import sys
 from os.path import join, split, realpath
 
-VIDEO_EXTENSIONS = set(['.mkv', '.ogm', '.asf', '.asx', '.avi', '.flv',
+video_extensions = set(['.mkv', '.ogm', '.asf', '.asx', '.avi', '.flv',
                         '.mov', '.mp4', '.mpg', '.rm', '.swf', '.vob',
                         '.wmv', '.mpeg', '.m4v'])
 
-PROJECT_SOURCE_PATH = split(realpath(__file__))[0]
-PROJECT_PATH = split(PROJECT_SOURCE_PATH)[0]
-WEB_SOURCES_PATH = join(PROJECT_SOURCE_PATH, 'web_sources')
+project_source_path = split(realpath(__file__))[0]
+project_path = split(project_source_path)[0]
+web_sources_path = join(project_source_path, 'web_sources')
 
-RESOURCE_PATH = "eplist"
+resource_path = "eplist"
 
 if sys.platform == "win32":
-    RESOURCE_PATH = os.path.join(os.environ['APPDATA'], RESOURCE_PATH)
+    resource_path = os.path.join(os.environ['appdata'], resource_path)
 else:  # *nix / solaris
-    RESOURCE_PATH = os.path.join("~", ".{}".format(RESOURCE_PATH))
-    RESOURCE_PATH = os.path.expanduser(RESOURCE_PATH)
+    resource_path = os.path.join("~", ".{}".format(resource_path))
+    resource_path = os.path.expanduser(resource_path)
 
 
-SHOW_NOT_FOUND = []
+show_not_found = []
 
-NUM_DICT = {'0': '', '1': 'one', '2': 'two', '3': 'three', '4': 'four',
+num_dict = {'0': '', '1': 'one', '2': 'two', '3': 'three', '4': 'four',
         '5': 'five', '6': 'six', '7': 'seven', '8': 'eight', '9': 'nine',
         '10': 'ten', '11': 'eleven', '12': 'twelve', '13': 'thirteen',
         '14': 'fourteen', '15': 'fifteen', '16': 'sixteen', '17': 'seventeen',
@@ -86,3 +86,7 @@ bracket_season_regex = re.compile(
                    r'[\[\(]{season}X{episode}[\]\)]'.format(**regex_vars), re.I)
 
 encoding_regex = re.compile(r'(?P<encoding>\d{3,4}x\d{3,4}|\d{3,4}p)')
+
+# Used to split ranges of numbers, eg: "1-2-3-4-5"
+# becomes [1,2,3,4,5] or range(1, 6) depending of python 2.* or 3
+num_range_regex = re.compile(r'[^\d]')
