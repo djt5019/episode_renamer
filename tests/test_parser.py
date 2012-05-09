@@ -2,7 +2,7 @@
 __author__ = 'Dan Tracy'
 __email__ = 'djt5019 at gmail dot com'
 
-from eplist.show_finder import Parser
+from eplist.show_finder import ShowFinder
 
 from nose.tools import nottest
 
@@ -39,4 +39,4 @@ class MockPollSources(object):
 
 
 def test_get_show():
-    parser = Parser()
+    parser = ShowFinder()

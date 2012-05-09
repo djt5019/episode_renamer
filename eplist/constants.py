@@ -11,9 +11,9 @@ import os
 import sys
 from os.path import join, split, realpath
 
-video_extensions = {'.mkv', '.ogm', '.asf', '.asx', '.avi', '.flv', '.mov',
+video_extensions = set(['.mkv', '.ogm', '.asf', '.asx', '.avi', '.flv', '.mov',
                     '.mp4', '.mpg', '.rm', '.swf', '.vob',
-                    '.wmv', '.mpeg', '.m4v'}
+                    '.wmv', '.mpeg', '.m4v'])
 
 project_source_path = split(realpath(__file__))[0]
 project_path = split(project_source_path)[0]
@@ -60,7 +60,7 @@ regex_vars = {
 
 # Substitute any regex variables that may have been used
 # within later dictionary entries
-regex_vars = {key: regex_vars[key].format(**regex_vars) for key in regex_vars}
+regex_vars = dict([(key, regex_vars[key].format(**regex_vars)) for key in regex_vars])
 
 regexList = [
    r'^(?P<series>.*?) - Season (?P<season>\d+) - Episode (?P<episode>\d*) - .*',

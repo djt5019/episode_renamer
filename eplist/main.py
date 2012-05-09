@@ -126,8 +126,7 @@ def main():
         utils.update_db()
 
     if args.undo_rename:
-        files = utils.find_old_filenames(Settings.path, Settings.title)
-        do_rename(files)
+        do_rename(utils.find_old_filenames(Settings.path, Settings.title))
         sys.exit(0)
 
     rename = args.pathname is not None
@@ -156,8 +155,7 @@ def main():
 
     ## Renaming functionality
     if rename:
-        files = utils.prepare_filenames(Settings.path, show)
-        do_rename(files)
+        do_rename(utils.prepare_filenames(Settings.path, show))
         sys.exit(0)
 
     if args.verify:
@@ -174,9 +172,9 @@ def main():
 
 
 def do_rename(files):
+    files = [(old, new) if old != new else None for old, new in files]
     print_renamed_files(files)
-
-    files = [(old, new) for old, new in files if old != new]
+    files = [t for t in files if t]
 
     if not files:
         print("No changes to files were needed")
@@ -279,15 +277,16 @@ def print_renamed_files(files):
         print ("Failed to find any files to rename")
         sys.exit(1)
 
-    p = os.path.dirname(files[0][0])
-    print ("PATH = {}".format(p))
-    print ("-------" + '-' * len(p))
+    print ("PATH = {}".format(Settings.path))
+    print ("-------" + '-' * len(Settings.path))
 
     same = 0
-    for old, new in files:
-        if old == new:
+    for tuple_ in files:
+        if not tuple_:
             same += 1
             continue
+        else:
+            old, new = tuple_
 
         old = os.path.split(old)[1].encode(Settings.encoding, 'ignore')
         new = os.path.split(new)[1].encode(Settings.encoding, 'ignore')

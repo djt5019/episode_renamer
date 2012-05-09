@@ -22,6 +22,7 @@ if Settings.py3k:
     basestring = bytes
     unicode = str
     raw_input = input
+    xrange = range
 else:
     from urllib import quote_plus
 
@@ -125,26 +126,15 @@ def clean_filenames(path):
     Attempts to extract order information about the files passed
     returns: list of EpisodeFiles
     """
-
     from eplist import episode
-    # Filter out anything that doesnt have the correct extension and
-    # filter out any directories
-    files = []
-    for file_ in os.listdir(path):
-        if is_valid_file(os.path.join(path, file_)):
-            files.append(file_)
-        else:
-            logging.info("Invalid file: {}".format(file_))
-
-    if not files:
-        logging.error("No video files were found in {}".format(path))
-        return []
-
-    cleanFiles = []
     # We are going to store the episode number and path in a tuple then
     # sort on the episodes number.  Special episodes will be appended to the
     # end of the clean list
-    for file_ in files:
+    for file_ in os.listdir(path):
+        if not is_valid_file(file_):
+            logging.info("Invalid file: {}".format(file_))
+            continue
+
         info = regex_search(file_)
 
         if info:
@@ -152,17 +142,7 @@ def clean_filenames(path):
             info['ext'] = os.path.splitext(info['path'])[1]
             info['name'] = encode(os.path.split(info['path'])[1])
 
-            episode_data = episode.EpisodeFile(info)
-
-            cleanFiles.append(episode_data)
-
-    if not cleanFiles:
-        logging.error("The files could not be matched")
-        return cleanFiles
-
-    logging.info("Successfully cleaned the file names")
-
-    return cleanFiles
+            yield episode.EpisodeFile(info)
 
 
 def prepare_filenames(path, show):
@@ -170,15 +150,7 @@ def prepare_filenames(path, show):
     Rename the files located in 'path' to those in the list 'show', modifies
     the show objects episodeList/specialsList
     """
-    path = os.path.abspath(path)
-    cleanFiles = []
-    episode_files = clean_filenames(path)
-    #Match the list of EpisodeFiles to the list of shows in the 'show' variable
-    if not episode_files:
-        logging.info("No files were able to be renamed")
-        return
-
-    for file_ in episode_files:
+    for file_ in clean_filenames(os.path.abspath(path)):
         if file_.is_special:
             episode_data = show.get_special(file_.special_number)
 
@@ -205,9 +177,7 @@ def prepare_filenames(path, show):
 
         episode_data.file.new_name = new
 
-        cleanFiles.append((file_.path, new))
-
-    return cleanFiles
+        yield (file_.path, new)
 
 
 def rename(files, resp=""):
@@ -336,7 +306,7 @@ def parse_range(num_range):
     """
     num_range = constants.num_range_regex.split(num_range)
     num_range = [int(val) for val in num_range if val.strip()]
-    return range(min(num_range), max(num_range) + 1)
+    return xrange(min(num_range), max(num_range) + 1)
 
 
 def trim_long_filename(name):
