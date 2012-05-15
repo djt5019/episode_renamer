@@ -194,9 +194,6 @@ class EpisodeFormatter(object):
         self.tokens = self.tag_regex.split(self._format_string)
         self.strip_whitespace_regex = re.compile(r'[\s]+')
 
-        self.modifier_settings = {'upper': False, 'lower': False,
-                                  'pad': False, 'proper': False}
-
         self.episode_number_tags = Settings.tags['episode_number_tags']
         self.type_tags = Settings.tags['type_tags']
         self.season_number_tags = Settings.tags['season_number_tags']
@@ -263,90 +260,87 @@ class EpisodeFormatter(object):
 
     def _parse_modifiers(self, tag):
         """ Handle tag modifiers such as number padding and caps """
+        modifier_settings = {'upper': False, 'lower': False,
+                                  'pad': False, 'proper': False}
+
         if ':' in tag:
             res = re.split(':', tag)
             tag = res[0]
             modifiers = res[1:]
         else:
-            return tag
+            return tag, modifier_settings
 
         if 'pad' in modifiers:
-            self.modifier_settings['pad'] = True
-
+            modifier_settings['pad'] = True
         if 'caps' in modifiers or 'upper' in modifiers:
-            self.modifier_settings['upper'] = True
+            modifier_settings['upper'] = True
         elif 'lower' in modifiers:
-            self.modifier_settings['lower'] = True
+            modifier_settings['lower'] = True
         elif 'proper' in modifiers:
-            self.modifier_settings['proper'] = True
+            modifier_settings['proper'] = True
 
-        return tag
+        return tag, modifier_settings
 
     def _parse(self, episode, tag):
         """
         Tokenize and substitute tags for their values using an episode
-        as well as the episode file for reference
         """
-        self.modifier_settings['proper'] = False
-        self.modifier_settings['upper'] = False
-        self.modifier_settings['lower'] = False
-        self.modifier_settings['pad'] = False
 
-        tag = self._parse_modifiers(tag.lower())
+        tag, mods = self._parse_modifiers(tag.lower())
 
         if tag in self.episode_number_tags:
-            return self._handle_episode_number(episode)
+            return self._handle_episode_number(episode, mods)
 
         elif tag in self.type_tags:
-            return self._handle_string(episode.type)
+            return self._handle_string(episode.type, mods)
 
         elif tag in self.season_number_tags:
-            return self._handle_season(episode)
+            return self._handle_season(episode, mods)
 
         elif tag in self.episode_count_tags:
-            return self._handle_episode_counter(episode)
+            return self._handle_episode_counter(episode, mods)
 
         elif tag in self.episode_name_tags:
-            return self._handle_string(episode.title)
+            return self._handle_string(episode.title, mods)
 
         elif tag in self.series_name_tags:
-            return self._handle_string(self.show.title)
+            return self._handle_string(self.show.title, mods)
 
         elif tag in self.hash_tags:
-            return self._handle_hash(episode)
+            return self._handle_hash(episode, mods)
 
         else:
             # If it reaches this case it's most likely an invalid tag
             return Settings.tag_start + tag + Settings.tag_end
 
-    def _handle_string(self, string_):
+    def _handle_string(self, string_, mods):
         """ Applies modifiers to strings in the format """
-        if self.modifier_settings['lower']:
+        if mods['lower']:
             return string_.lower()
-        elif self.modifier_settings['upper']:
+        elif mods['upper']:
             return string_.upper()
-        elif self.modifier_settings['proper']:
+        elif mods['proper']:
             return string.capwords(string_)
         else:
             return string_
 
-    def _handle_number(self, number, pad_length):
+    def _handle_number(self, number, pad_length, mods):
         """ Applies padding to numbers then converts them to strings """
-        if self.modifier_settings['pad']:
+        if mods['pad']:
             return str(number).zfill(pad_length)
         else:
             return str(number)
 
-    def _handle_season(self, episode):
+    def _handle_season(self, episode, mods):
         """ Applies padding to season number """
         if episode.is_special:
             # Going on the basis that specials don't have seasons
             return ""
 
         pad = len(str(self.show.num_seasons))
-        return self._handle_number(episode.season, pad)
+        return self._handle_number(episode.season, pad, mods)
 
-    def _handle_episode_number(self, episode):
+    def _handle_episode_number(self, episode, mods):
         """ Applies modifiers to the episode number """
         number = episode.number
         if not episode.is_special:
@@ -354,9 +348,9 @@ class EpisodeFormatter(object):
         else:
             pad = len(str(self.show.num_specials))
 
-        return self._handle_number(number, pad)
+        return self._handle_number(number, pad, mods)
 
-    def _handle_episode_counter(self, episode):
+    def _handle_episode_counter(self, episode, mods):
         """ Applies modifiers to the episodes overall count """
         number = episode.count
         if not episode.is_special:
@@ -364,9 +358,9 @@ class EpisodeFormatter(object):
         else:
             pad = len(str(self.show.num_specials))
 
-        return self._handle_number(number, pad)
+        return self._handle_number(number, pad, mods)
 
-    def _handle_hash(self, episode):
+    def _handle_hash(self, episode, mods):
         """
         Applies string modifiers to the episodes checksum.  Calculates it
         if it is necessary.
@@ -387,4 +381,4 @@ class EpisodeFormatter(object):
             checksum = checksum[:-1]
 
         ## If the checksum is less than 8 digits, pad to to 8
-        return self._handle_string(checksum.zfill(8))
+        return self._handle_string(checksum.zfill(8), mods)
