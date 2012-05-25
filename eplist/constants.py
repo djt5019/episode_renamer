@@ -47,25 +47,28 @@ types = r'|'.join(types)
 
 regex_vars = {
 'sep': r'[\-\~\.\_\s]',
-'sum': r'.*[\[\(](?P<checksum>[a-z0-9]{{8}}[\]\)])',
-'year': r'(:P<year>(19|20)?\d\d)',
-'episode': r'(e|ep|episode)?{sep}(?P<episode_number>\d+)(?:v\d)?',  # ex: e3v2
-'season': r'(s|season)?{sep}*?(?P<season>\d+)',
-'series': r'(?P<series>.*)',
+'ep_string': r'(e|ep|episode)',
+'season_string': r'(s|season)',
 'subgroup': r'(?P<group>\[.*\])',
+'year': r'(:P<year>(19|20)?\d\d)',
+'series': r'(?P<series>.*)',
+'season': r'(?P<season>\d+)',
+'episode': r'(?P<episode_number>\d+)(?:v\d)?',  # ex: e3v2
+'sum': r'.*[\[\(](?P<checksum>[a-z0-9]{{8}}[\]\)])',
 'special': r'(?P<special_type>{specical_types}){sep}*?(?P<special_number>\d+)',
-'title': r'(?P<title>.*?)',
+'title': r'(?P<title>.*)',
 'specical_types': types,
 }
 
 # Substitute any regex variables that may have been used
 # within later dictionary entries
-regex_vars = dict([(key, regex_vars[key].format(**regex_vars)) for key in regex_vars])
+regex_vars = dict((key, regex_vars[key].format(**regex_vars)) for key in regex_vars)
 
 regexList = [
    r'^(?P<series>.*?) - Season (?P<season>\d+) - Episode (?P<episode>\d*) - .*',
    r'^(?P<series>.*?) - Episode (?P<episode>\d+) - .*',  # My usual formats
-   r'^{series}{sep}+{season}{sep}+?{episode}{sep}+?{title}',
+   r'^{series}{sep}+{season_string}{sep}?{season}{sep}+{ep_string}{sep}?{episode}{sep}+?{title}',
+   r'^{series}{sep}+{ep_string}{sep}?{episode}{sep}+{title}',
    r'^{series}{sep}+{special}{sep}+?{title}',
    r'^{series}{sep}+{episode}{sep}+?{title}',
    r'^{special}',

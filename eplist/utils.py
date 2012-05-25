@@ -64,26 +64,26 @@ def regex_search(filename):
 
     logging.info("Matching '{}'".format(filename))
     # deal with anything in brackets, they tend to throw off the regexes
-    filename = filename.lower()
+    fname = filename.lower()
 
-    encoding = constants.encoding_regex.search(filename)
-    filename = constants.encoding_regex.sub("", filename)
+    encoding = constants.encoding_regex.search(fname)
+    fname = constants.encoding_regex.sub("", fname)
 
-    checksum = constants.checksum_regex.search(filename)
-    filename = constants.checksum_regex.sub("", filename)
+    checksum = constants.checksum_regex.search(fname)
+    fname = constants.checksum_regex.sub("", fname)
 
-    season = constants.bracket_season_regex.search(filename)
-    filename = constants.bracket_season_regex.sub('', filename)
+    season = constants.bracket_season_regex.search(fname)
+    fname = constants.bracket_season_regex.sub('', fname)
 
-    filename = filename.replace('h.264', '')
+    fname = fname.replace('h.264', '')
 
-    filename = constants.remove_junk_regex.sub("", filename)
+    fname = constants.remove_junk_regex.sub("", fname)
 
     regex_result = None
     for count, regex in enumerate(constants.regexList):
-        regex_result = regex.search(filename)
+        regex_result = regex.search(fname)
         if regex_result:
-            name = filename.encode(Settings.encoding, 'ignore')
+            name = fname.encode(Settings.encoding, 'ignore')
             msg = "Regex #{} matched {}".format(count, name)
             logging.info(msg)
             break
@@ -124,14 +124,11 @@ def regex_search(filename):
 def clean_filenames(path):
     """
     Attempts to extract order information about the files passed
-    returns: list of EpisodeFiles
     """
     from eplist import episode
-    # We are going to store the episode number and path in a tuple then
-    # sort on the episodes number.  Special episodes will be appended to the
-    # end of the clean list
+
     for file_ in os.listdir(path):
-        if not is_valid_file(file_):
+        if not is_valid_file(os.path.join(path, file_)):
             logging.info("Invalid file: {}".format(file_))
             continue
 
@@ -171,13 +168,13 @@ def prepare_filenames(path, show):
         # attach the episode_data file to the corresponding episode_data entry
         episode_data.file = file_
 
-        new = show.formatter.display(episode_data) + file_.ext
-        new = replace_invalid_path_chars(new)
-        new = os.path.join(path, trim_long_filename(new))
+        new_name = show.formatter.display(episode_data) + file_.ext
+        new_name = replace_invalid_path_chars(new_name)
+        new_name = os.path.join(path, trim_long_filename(new_name))
 
-        episode_data.file.new_name = new
+        episode_data.file.new_name = new_name
 
-        yield (file_.path, new)
+        yield (file_.path, new_name)
 
 
 def rename(files, resp=""):
@@ -245,7 +242,9 @@ def save_renamed_file_info(old_order=None, show_title=None, path=None):
     else:
         name = os.path.split(path)[1]
 
-    fmt = dict(num_files=len(old_order), file_list=old_order, name=name)
+    files = find_old_filenames(path, name)
+    files = list(set(files + old_order))
+    fmt = dict(num_files=len(old_order), file_list=files, name=name)
     Settings.backup_list[path] = fmt
 
     with open_file_in_resources(Settings.rename_backup, 'w') as file_:

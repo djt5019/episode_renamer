@@ -9,6 +9,8 @@ import zlib
 import string
 import logging
 
+from collections import defaultdict
+
 from eplist import utils
 
 from eplist.settings import Settings
@@ -74,7 +76,7 @@ class Show(object):
         self.proper_title = utils.prepare_title(seriesTitle.lower())
         self.episodes = []
         self.specials = []
-        self._episodes_by_season = {}
+        self._episodes_by_season = defaultdict(list)
         self.formatter = None
 
         if episodes:
@@ -102,7 +104,7 @@ class Show(object):
                 spc.append(e)
             else:
                 eps.append(e)
-                self._episodes_by_season.setdefault(e.season, []).append(e)
+                self._episodes_by_season[e.season].append(e)
 
         self.episodes = sorted(eps, key=lambda x: x.count)
         self.specials = sorted(spc, key=lambda x: x.number)
@@ -145,7 +147,7 @@ class Show(object):
         """
         Returns a list of episodes within the season or an empty list
         """
-        return self._episodes_by_season.get(season, [])
+        return self._episodes_by_season[season]
 
     def get_episode(self, episode, season):
         """
@@ -157,7 +159,7 @@ class Show(object):
         # Adjust by one since episodes start count at 1 not 0
         episode -= 1
 
-        season_list = self._episodes_by_season.get(season, None)
+        season_list = self._episodes_by_season[season]
 
         if season_list and season > 1 and len(season_list) > episode:
             return season_list[episode]
